@@ -9,13 +9,15 @@ short limitAgi
 short limitSpd
 short limitEnd
 short limitPer
-short limitLuc
+short limitLck
 short limitAttr
 short limitPotion
 short limit
 short active
 short maxFatigue
 short drinkCount
+short drinkOverdose
+short drinkDeath
 float timer
 
 short maxCount
@@ -23,6 +25,8 @@ short oldCount
 
 set maxValue to 201
 set potionTime to 20
+set drinkOverdose to 90
+set drinkDeath to 100
 
 if ( active == 0 )
 	set maxCount to ( player->GetAlchemy )
@@ -85,9 +89,9 @@ else
 endif
 
 if ( ( player->GetLuck ) < maxValue )
-	set limitLuc to 0
+	set limitLck to 0
 else
-	set limitLuc to 1
+	set limitLck to 1
 endif
 
 if ( limitStr == 1 )
@@ -104,7 +108,7 @@ elseif ( limitEnd == 1 )
 	set limitAttr to 1
 elseif ( limitPer == 1 )
 	set limitAttr to 1
-elseif ( limitLuc == 1 )
+elseif ( limitLck == 1 )
 	set limitAttr to 1
 else
 	set limitAttr to 0
@@ -122,30 +126,30 @@ if ( player->GetSoundPlaying "drink" == 1 )
 	player->StopSound "drink"
 	if ( timer < potionTime )
 		
-		if ( drinkCount < 9 )
+		if ( drinkCount < drinkOverdose )
 			if ( maxCount < drinkCount )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			endif
 		endif
 	
-		if ( drinkCount == 10 )
+		if ( drinkCount == drinkDeath )
 			MessageBox "You have died from the potion overdose!"
 			player->SetHealth 0
 			set timer to 0
 			MenuTest
-		elseif ( drinkCount == 9 )
+		elseif ( drinkCount == drinkOverdose )
 			MessageBox "You have overdosed the potions!"
 			player->Equip "raffll_tox9"
 			player->StopSound "drink"
 			set limitPotion to 1
 			set timer to 0
-			set drinkCount to 10
+			set drinkCount to drinkDeath
 		elseif ( drinkCount == 7 )
 			player->Equip "raffll_tox8"
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 8 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 8
 			endif
@@ -154,7 +158,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 7 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 7
 			endif
@@ -163,7 +167,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 6 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 6
 			endif
@@ -172,7 +176,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 5 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 5
 			endif
@@ -181,7 +185,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 4 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 4
 			endif
@@ -190,7 +194,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 3 )
-				set drinkCount to 9
+				set drinkCount to drinkOverdose
 			else
 				set drinkCount to 3
 			endif
