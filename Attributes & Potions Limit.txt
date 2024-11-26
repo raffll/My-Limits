@@ -1,0 +1,269 @@
+begin raffll_limits
+
+short maxValue
+short potionTime
+short limitStr
+short limitInt
+short limitWil
+short limitAgi
+short limitSpd
+short limitEnd
+short limitPer
+short limitLuc
+short limitAttr
+short limitPotion
+short limit
+short active
+short maxFatigue
+short drinkCount
+float timer
+
+short maxCount
+short oldCount
+
+set maxValue to 201
+set potionTime to 20
+
+if ( active == 0 )
+	set maxCount to ( player->GetAlchemy )
+	set maxCount to ( ( maxCount / 20 ) + 3 )
+
+	if ( maxCount < 3 )
+		set maxCount to 3
+	endif
+
+	if ( maxCount > 8 )
+		set maxCount to 8
+	endif
+
+	if ( maxCount != oldCount )
+		MessageBox "You can drink up to %G potions!", maxCount
+		set oldCount to maxCount
+	endif
+endif
+
+if ( ( player->GetStrength ) < maxValue )
+	set limitStr to 0
+else
+	set limitStr to 1
+endif
+
+if ( ( player->GetIntelligence ) < maxValue )
+	set limitInt to 0
+else
+	set limitInt to 1
+endif
+
+if ( ( player->GetWillpower ) < maxValue )
+	set limitWil to 0
+else
+	set limitWil to 1
+endif
+
+if ( ( player->GetAgility ) < maxValue )
+	set limitAgi to 0
+else
+	set limitAgi to 1
+endif
+
+if ( ( player->GetSpeed ) < ( maxValue + 100 ) )
+	set limitSpd to 0
+else
+	set limitSpd to 1
+endif
+
+if ( ( player->GetEndurance ) < maxValue )
+	set limitEnd to 0
+else
+	set limitEnd to 1
+endif
+
+if ( ( player->GetPersonality ) < maxValue )
+	set limitPer to 0
+else
+	set limitPer to 1
+endif
+
+if ( ( player->GetLuck ) < maxValue )
+	set limitLuc to 0
+else
+	set limitLuc to 1
+endif
+
+if ( limitStr == 1 )
+	set limitAttr to 1
+elseif ( limitInt == 1 )
+	set limitAttr to 1
+elseif ( limitWil == 1 )
+	set limitAttr to 1
+elseif ( limitAgi == 1 )
+	set limitAttr to 1
+elseif ( limitSpd == 1 )
+	set limitAttr to 1
+elseif ( limitEnd == 1 )
+	set limitAttr to 1
+elseif ( limitPer == 1 )
+	set limitAttr to 1
+elseif ( limitLuc == 1 )
+	set limitAttr to 1
+else
+	set limitAttr to 0
+endif
+
+if ( active == 0 )
+	if ( limitAttr == 1 )
+		MessageBox "You reach your body's physical limit!"
+	endif
+endif
+
+;;;
+
+if ( player->GetSoundPlaying "drink" == 1 )
+	player->StopSound "drink"
+	if ( timer < potionTime )
+		
+		if ( drinkCount < 9 )
+			if ( maxCount < drinkCount )
+				set drinkCount to 9
+			endif
+		endif
+	
+		if ( drinkCount == 10 )
+			MessageBox "You have died from the potion overdose!"
+			player->SetHealth 0
+			set timer to 0
+			MenuTest
+		elseif ( drinkCount == 9 )
+			MessageBox "You have overdosed the potions!"
+			player->Equip "raffll_tox9"
+			player->StopSound "drink"
+			set limitPotion to 1
+			set timer to 0
+			set drinkCount to 10
+		elseif ( drinkCount == 7 )
+			player->Equip "raffll_tox8"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 8 )
+				set drinkCount to 9
+			else
+				set drinkCount to 8
+			endif
+		elseif ( drinkCount == 6 )
+			player->Equip "raffll_tox7"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 7 )
+				set drinkCount to 9
+			else
+				set drinkCount to 7
+			endif
+		elseif ( drinkCount == 5 )
+			player->Equip "raffll_tox6"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 6 )
+				set drinkCount to 9
+			else
+				set drinkCount to 6
+			endif
+		elseif ( drinkCount == 4 )
+			player->Equip "raffll_tox5"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 5 )
+				set drinkCount to 9
+			else
+				set drinkCount to 5
+			endif
+		elseif ( drinkCount == 3 )
+			player->Equip "raffll_tox4"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 4 )
+				set drinkCount to 9
+			else
+				set drinkCount to 4
+			endif
+		elseif ( drinkCount == 2 )
+			player->Equip "raffll_tox3"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 3 )
+				set drinkCount to 9
+			else
+				set drinkCount to 3
+			endif
+		elseif ( drinkCount == 1 )
+			player->Equip "raffll_tox2"
+			player->StopSound "drink"
+			set timer to 0
+			set drinkCount to 2
+		else
+			player->Equip "raffll_tox1"
+			player->StopSound "drink"
+			set timer to 0
+			set drinkCount to 1
+		endif
+	endif
+endif
+
+if ( drinkCount > 0 )
+	if ( MenuMode == 0 )
+		set timer to ( timer + GetSecondsPassed )
+		if ( timer >= potionTime )		
+			MessageBox "You have recovered from the potion toxic effect!"
+			set limitPotion to 0
+			set timer to 0
+			set drinkCount to 0
+		endif
+	endif
+endif
+
+;;;
+
+if ( limitAttr == 1 )
+	set limit to 1
+elseif ( limitPotion == 1 )
+	set limit to 1
+else
+	set limit to 0
+endif
+
+if ( active == 0 )
+	if ( limit == 0 )
+		return
+	endif
+endif
+
+if ( active == 1 )
+	if ( limit == 1 )
+		player->SetFatigue 0
+		return
+	endif
+endif
+
+if ( active == 0 )
+	if ( limit == 1 )
+		player->AddSpell "raffll_overload"
+		player->SetFatigue 0
+		set active to 1
+		MenuTest
+		return
+	endif
+endif
+
+if ( active == 1 )
+	if ( limit == 0 )
+		MessageBox "You have fully recovered!"
+		player->RemoveSpell "raffll_overload"
+		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
+		player->SetFatigue maxFatigue
+		set maxFatigue to ( maxFatigue * -1 )
+		player->ModCurrentFatigue maxFatigue
+		set active to 0
+		return
+	endif
+endif
+
+end
