@@ -4,15 +4,15 @@ short maxValue
 short oldValue
 short speedOffset
 short potionTime
-short limitStr
-short limitInt
-short limitWil
-short limitAgi
-short limitSpd
-short limitEnd
-short limitPer
-short limitLck
-short limitAttr
+short limitStrength
+short limitIntelligence
+short limitWillpower
+short limitAgility
+short limitSpeed
+short limitEndurance
+short limitPersonality
+short limitLuck
+short limitAttribute
 short limitPotion
 short limit
 short active
@@ -20,12 +20,13 @@ short maxFatigue
 short drinkCount
 short drinkOverdose
 short drinkDeath
-short playerEnd
-short playerWil
+short playerEndurance
+short playerWillpower
 short playerLevel
 float timer
 short maxCount
 short oldCount
+short message
 
 set speedOffset to 0
 set potionTime to 20
@@ -33,29 +34,25 @@ set drinkOverdose to 90
 set drinkDeath to 100
 
 if ( active == 0 )
-	set playerEnd to ( player->GetEndurance )
-	if ( playerEnd > 100 )
-		set playerEnd to 100
+	set playerEndurance to ( player->GetEndurance )
+	if ( playerEndurance > 100 )
+		set playerEndurance to 100
 	endif
 
-	set playerWil to ( player->GetWillpower )
-	if ( playerWil > 100 )
-		set playerWil to 100
+	set playerWillpower to ( player->GetWillpower )
+	if ( playerWillpower > 100 )
+		set playerWillpower to 100
 	endif
 
 	set playerLevel to ( player->GetLevel )
 
-	set maxValue to ( 101 + playerEnd + playerWil + playerLevel )
+	set maxValue to ( 101 + playerEndurance + playerWillpower + playerLevel )
 	
 	if ( maxValue != oldValue )
-		set maxValue to ( maxValue - 1 )
-		MessageBox "Your can raise your attributes up to %G!", maxValue
-		set maxValue to ( maxValue + 1 )
+		set message to 1
 		set oldValue to maxValue
 	endif
-endif
 
-if ( active == 0 )
 	set maxCount to ( player->GetAlchemy )
 	set maxCount to ( ( maxCount / 20 ) + 3 )
 
@@ -68,81 +65,88 @@ if ( active == 0 )
 	endif
 
 	if ( maxCount != oldCount )
-		MessageBox "You can drink up to %G potions!", maxCount
+		set message to 1
 		set oldCount to maxCount
+	endif
+	
+	if ( message == 1)
+		set maxValue to ( maxValue - 1 )
+		MessageBox "You can drink up to %G potions.\nYour attributes cap is %G.", maxCount, maxValue
+		set maxValue to ( maxValue + 1 )
+		set message to 0
 	endif
 endif
 
 if ( ( player->GetStrength ) < maxValue )
-	set limitStr to 0
+	set limitStrength to 0
 else
-	set limitStr to 1
+	set limitStrength to 1
 endif
 
 if ( ( player->GetIntelligence ) < maxValue )
-	set limitInt to 0
+	set limitIntelligence to 0
 else
-	set limitInt to 1
+	set limitIntelligence to 1
 endif
 
 if ( ( player->GetWillpower ) < maxValue )
-	set limitWil to 0
+	set limitWillpower to 0
 else
-	set limitWil to 1
+	set limitWillpower to 1
 endif
 
 if ( ( player->GetAgility ) < maxValue )
-	set limitAgi to 0
+	set limitAgility to 0
 else
-	set limitAgi to 1
+	set limitAgility to 1
 endif
 
 if ( ( player->GetSpeed ) < ( maxValue + speedOffset ) )
-	set limitSpd to 0
+	set limitSpeed to 0
 else
-	set limitSpd to 1
+	set limitSpeed to 1
 endif
 
 if ( ( player->GetEndurance ) < maxValue )
-	set limitEnd to 0
+	set limitEndurance to 0
 else
-	set limitEnd to 1
+	set limitEndurance to 1
 endif
 
 if ( ( player->GetPersonality ) < maxValue )
-	set limitPer to 0
+	set limitPersonality to 0
 else
-	set limitPer to 1
+	set limitPersonality to 1
 endif
 
 if ( ( player->GetLuck ) < maxValue )
-	set limitLck to 0
+	set limitLuck to 0
 else
-	set limitLck to 1
+	set limitLuck to 1
 endif
 
-if ( limitStr == 1 )
-	set limitAttr to 1
-elseif ( limitInt == 1 )
-	set limitAttr to 1
-elseif ( limitWil == 1 )
-	set limitAttr to 1
-elseif ( limitAgi == 1 )
-	set limitAttr to 1
-elseif ( limitSpd == 1 )
-	set limitAttr to 1
-elseif ( limitEnd == 1 )
-	set limitAttr to 1
-elseif ( limitPer == 1 )
-	set limitAttr to 1
-elseif ( limitLck == 1 )
-	set limitAttr to 1
+if ( limitStrength == 1 )
+	set limitAttribute to 1
+elseif ( limitIntelligence == 1 )
+	set limitAttribute to 1
+elseif ( limitWillpower == 1 )
+	set limitAttribute to 1
+elseif ( limitAgility == 1 )
+	set limitAttribute to 1
+elseif ( limitSpeed == 1 )
+	set limitAttribute to 1
+elseif ( limitEndurance == 1 )
+	set limitAttribute to 1
+elseif ( limitPersonality == 1 )
+	set limitAttribute to 1
+elseif ( limitLuck == 1 )
+	set limitAttribute to 1
 else
-	set limitAttr to 0
+	set limitAttribute to 0
 endif
 
 if ( active == 0 )
-	if ( limitAttr == 1 )
+	if ( limitAttribute == 1 )
 		MessageBox "You reach your body's physical limit!"
 	endif
 endif
@@ -262,7 +266,7 @@ endif
 
 ;;;
 
-if ( limitAttr == 1 )
+if ( limitAttribute == 1 )
 	set limit to 1
 elseif ( limitPotion == 1 )
 	set limit to 1
