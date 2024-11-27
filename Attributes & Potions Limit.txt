@@ -1,6 +1,8 @@
 begin raffll_limits
 
 short maxValue
+short oldValue
+short speedOffset
 short potionTime
 short limitStr
 short limitInt
@@ -18,15 +20,40 @@ short maxFatigue
 short drinkCount
 short drinkOverdose
 short drinkDeath
+short playerEnd
+short playerWil
+short playerLevel
 float timer
-
 short maxCount
 short oldCount
 
-set maxValue to 201
+set speedOffset to 0
 set potionTime to 20
 set drinkOverdose to 90
 set drinkDeath to 100
+
+if ( active == 0 )
+	set playerEnd to ( player->GetEndurance )
+	if ( playerEnd > 100 )
+		set playerEnd to 100
+	endif
+
+	set playerWil to ( player->GetWillpower )
+	if ( playerWil > 100 )
+		set playerWil to 100
+	endif
+
+	set playerLevel to ( player->GetLevel )
+
+	set maxValue to ( 101 + playerEnd + playerWil + playerLevel )
+	
+	if ( maxValue != oldValue )
+		set maxValue to ( maxValue - 1 )
+		MessageBox "Your can raise your attributes up to %G!", maxValue
+		set maxValue to ( maxValue + 1 )
+		set oldValue to maxValue
+	endif
+endif
 
 if ( active == 0 )
 	set maxCount to ( player->GetAlchemy )
@@ -70,7 +97,7 @@ else
 	set limitAgi to 1
 endif
 
-if ( ( player->GetSpeed ) < ( maxValue + 100 ) )
+if ( ( player->GetSpeed ) < ( maxValue + speedOffset ) )
 	set limitSpd to 0
 else
 	set limitSpd to 1
@@ -258,7 +285,7 @@ endif
 
 if ( active == 0 )
 	if ( limit == 1 )
-		player->AddSpell "raffll_overload"
+		player->AddSpell "raffll_limit"
 		player->SetFatigue 0
 		set active to 1
 		MenuTest
@@ -269,7 +296,7 @@ endif
 if ( active == 1 )
 	if ( limit == 0 )
 		MessageBox "You have fully recovered!"
-		player->RemoveSpell "raffll_overload"
+		player->RemoveSpell "raffll_limit"
 		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
 		player->SetFatigue maxFatigue
 		set maxFatigue to ( maxFatigue * -1 )
