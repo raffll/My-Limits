@@ -147,8 +147,10 @@ if ( active == 0 )
 	endif
 
 	if ( maxCount != oldCount )
-		MessageBox "You can drink up to %G potions.", maxCount
-		set oldCount to maxCount
+		if ( ( player->GetAlchemy ) != 0 )
+			MessageBox "You can drink up to %G potions.", maxCount
+			set oldCount to maxCount
+		endif
 	endif
 endif
 
