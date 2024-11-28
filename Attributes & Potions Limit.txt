@@ -277,7 +277,7 @@ if ( active == 1 )
 			set limitArmorer to 0
 		endif
 		set currentHourR to GameHour
-		set deltaHourR to ( currentHourE - armorerHour )
+		set deltaHourR to ( currentHourR - armorerHour )
 		if ( deltaHourR < 0 )
 			set deltaHourR to ( deltaHourR * -1 )
 		endif
@@ -531,7 +531,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 8 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 8
 			endif
@@ -542,7 +541,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 7 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 7
 			endif
@@ -553,7 +551,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 6 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 6
 			endif
@@ -564,7 +561,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 5 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 5
 			endif
@@ -575,7 +571,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 4 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 4
 			endif
@@ -586,7 +581,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 3 )
 				set drinkCount to drinkOverdose
-				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 3
 			endif
@@ -603,6 +597,11 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			set drinkCount to 1
 		endif
+		
+		if ( drinkCount == drinkOverdose )
+			MessageBox "You have reached the limit of potions!"
+		endif
+		
 	endif
 endif
 
