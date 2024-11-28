@@ -1,7 +1,6 @@
 begin raffll_limits
 
 short init
-short message
 
 short maxValueAttribute
 short oldValueAttribute
@@ -11,6 +10,7 @@ short maxCount
 short oldCount
 
 short speedOffset
+short acrobaticsOffset
 short potionTime
 
 short limitStrength
@@ -68,8 +68,29 @@ short playerIntelligence
 short maxFatigue
 float timer
 
+float currentHour
+float drinkHour
+float deltaHour
+
+float currentHourA
+float alchemyHour
+float deltaHourA
+
+float currentHourE
+float enchantHour
+float deltaHourE
+
+float currentHourR
+float armorerHour
+float deltaHourR
+
+if ( CharGenState != -1 )
+	return
+endif
+
 if ( init == 0 )
-	set speedOffset to 0
+	set speedOffset to 200
+	set acrobaticsOffset to 1000
 	set potionTime to 20
 	set drinkOverdose to 90
 	set drinkDeath to 100
@@ -94,24 +115,14 @@ if ( active == 0 )
 		set playerIntelligence to 100
 	endif
 
-	set maxValueAttribute to ( 100 + playerEndurance + playerWillpower + playerLevel )
-	;if ( maxValueAttribute > 350 )
-	;	set maxValueAttribute to 350
-	;endif
-	
-	if ( maxValueAttribute != oldValueAttribute )
-		set message to 1
-		set oldValueAttribute to maxValueAttribute
+	set maxValueAttribute to ( 100 + ( playerLevel * 4 ) )
+	if ( maxValueAttribute > 250 )
+		set maxValueAttribute to 250
 	endif
-
-	set maxValueSkill to ( 100 + playerIntelligence + playerLevel )
-	;if ( maxValueSkill > 250 )
-	;	set maxValueSkill to 250
-	;endif
-
-	if ( maxValueSkill != oldValueSkill )
-		set message to 1
-		set oldValueSkill to maxValueSkill
+	
+	set maxValueSkill to ( 100 + playerLevel )
+	if ( maxValueSkill > 200 )
+		set maxValueSkill to 200
 	endif
 
 	set maxCount to ( player->GetAlchemy )
@@ -125,14 +136,19 @@ if ( active == 0 )
 		set maxCount to 8
 	endif
 
-	if ( maxCount != oldCount )
-		set message to 1
-		set oldCount to maxCount
+	if ( maxValueAttribute != oldValueAttribute )
+		MessageBox "Your attribute cap is now %G.", maxValueAttribute
+		set oldValueAttribute to maxValueAttribute
 	endif
 
-	if ( message == 1 )
-		MessageBox "You can drink up to %G potions.\nYour attribute cap is %G.\nYour skill cap is %G.", maxCount, maxValueAttribute, maxValueSkill
-		set message to 0
+	if ( maxValueSkill != oldValueSkill )
+		MessageBox "Your skill cap is now %G.", maxValueSkill
+		set oldValueSkill to maxValueSkill
+	endif
+
+	if ( maxCount != oldCount )
+		MessageBox "You can drink up to %G potions.", maxCount
+		set oldCount to maxCount
 	endif
 endif
 
@@ -215,14 +231,17 @@ endif
 if ( active == 0 )
 	if ( ( player->GetAlchemy ) > maxValueSkill )
 		set limitAlchemy to 1
+		set alchemyHour to GameHour
 	endif
 	
 	if ( ( player->GetEnchant ) > maxValueSkill )
 		set limitEnchant to 1
+		set enchantHour to GameHour
 	endif
 	
 	if ( ( player->GetArmorer ) > maxValueSkill )
 		set limitArmorer to 1
+		set armorerHour to GameHour
 	endif
 endif
 
@@ -231,14 +250,38 @@ if ( active == 1 )
 		if ( player->GetEffect sEffectFortifySkill == 0 )
 			set limitAlchemy to 0
 		endif
+		set currentHourA to GameHour
+		set deltaHourA to ( currentHourA - alchemyHour )
+		if ( deltaHourA < 0 )
+			set deltaHourA to ( deltaHourA * -1 )
+		endif
+		if ( deltaHourA > 1 )
+			set limitAlchemy to 0
+		endif
 	endif
 	if ( limitEnchant == 1 )
 		if ( player->GetEffect sEffectFortifySkill == 0 )
 			set limitEnchant to 0
 		endif
+		set currentHourE to GameHour
+		set deltaHourE to ( currentHourE - enchantHour )
+		if ( deltaHourE < 0 )
+			set deltaHourE to ( deltaHourE * -1 )
+		endif
+		if ( deltaHourE > 1 )
+			set limitEnchant to 0
+		endif
 	endif
 	if ( limitArmorer == 1 )
 		if ( player->GetEffect sEffectFortifySkill == 0 )
+			set limitArmorer to 0
+		endif
+		set currentHourR to GameHour
+		set deltaHourR to ( currentHourE - armorerHour )
+		if ( deltaHourR < 0 )
+			set deltaHourR to ( deltaHourR * -1 )
+		endif
+		if ( deltaHourR > 1 )
 			set limitArmorer to 0
 		endif
 	endif
@@ -250,7 +293,7 @@ else
     set limitLongBlade to 0
 endif
 
-if ( ( player->GetAcrobatics ) > maxValueSkill )
+if ( ( player->GetAcrobatics ) > ( maxValueSkill + acrobaticsOffset ) )
     set limitAcrobatics to 1
 else
     set limitAcrobatics to 0
@@ -474,12 +517,13 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			MenuTest
 			
 		elseif ( drinkCount == drinkOverdose )
-			MessageBox "You have overdosed the potions!"
+			MessageBox "You have overdosed potions!"
 			player->Equip "raffll_tox90"
 			player->StopSound "drink"
 			set limitPotion to 1
 			set timer to 0
 			set drinkCount to drinkDeath
+			set drinkHour to GameHour
 			
 		elseif ( drinkCount == 7 )
 			player->Equip "raffll_tox8"
@@ -487,6 +531,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 8 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 8
 			endif
@@ -497,6 +542,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 7 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 7
 			endif
@@ -507,6 +553,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 6 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 6
 			endif
@@ -517,6 +564,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 5 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 5
 			endif
@@ -527,6 +575,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 4 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 4
 			endif
@@ -537,6 +586,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set timer to 0
 			if ( maxCount == 3 )
 				set drinkCount to drinkOverdose
+				MessageBox "You have reached limit of potions!"
 			else
 				set drinkCount to 3
 			endif
@@ -564,6 +614,20 @@ if ( drinkCount > 0 )
 			set limitPotion to 0
 			set timer to 0
 			set drinkCount to 0
+		endif
+	endif
+endif
+
+if ( active == 1 )
+	if ( limitPotion == 1 )
+		set currentHour to GameHour
+		;MessageBox "%.2f, %.2f, %.2f", timer, drinkHour, currentHour
+		set deltaHour to ( currentHour - drinkHour )
+		if ( deltaHour < 0 )
+			set deltaHour to ( deltaHour * -1 )
+		endif
+		if ( deltaHour > 0.30 )
+			set timer to ( potionTime + 1 )
 		endif
 	endif
 endif
