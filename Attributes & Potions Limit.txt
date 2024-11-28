@@ -115,14 +115,14 @@ if ( active == 0 )
 		set playerIntelligence to 100
 	endif
 
-	set maxValueAttribute to ( 100 + ( playerLevel * 4 ) )
-	if ( maxValueAttribute > 250 )
-		set maxValueAttribute to 250
+	set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
+	if ( maxValueAttribute > 300 )
+		set maxValueAttribute to 300
 	endif
 	
 	set maxValueSkill to ( 100 + playerLevel )
-	if ( maxValueSkill > 200 )
-		set maxValueSkill to 200
+	if ( maxValueSkill > 150 )
+		set maxValueSkill to 150
 	endif
 
 	set maxCount to ( player->GetAlchemy )
