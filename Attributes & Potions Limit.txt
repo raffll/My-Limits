@@ -1,9 +1,18 @@
 begin raffll_limits
 
-short maxValue
-short oldValue
+short init
+short message
+
+short maxValueAttribute
+short oldValueAttribute
+short maxValueSkill
+short oldValueSkill
+short maxCount
+short oldCount
+
 short speedOffset
 short potionTime
+
 short limitStrength
 short limitIntelligence
 short limitWillpower
@@ -12,28 +21,63 @@ short limitSpeed
 short limitEndurance
 short limitPersonality
 short limitLuck
+
+short limitAlchemy
+short limitLongBlade
+short limitAcrobatics
+short limitBluntWeapon
+short limitEnchant
+short limitSecurity
+short limitAxe
+short limitConjuration
+short limitSneak
+short limitArmorer
+short limitAlteration
+short limitLightArmor
+short limitMediumArmor
+short limitDestruction
+short limitMarksman
+short limitHeavyArmor
+short limitMysticism
+short limitShortBlade
+short limitSpear
+short limitRestoration
+short limitHandToHand
+short limitBlock
+short limitIllusion
+short limitMercantile
+short limitAthletics
+short limitUnarmored
+short limitSpeechcraft
+
 short limitAttribute
+short limitSkill
 short limitPotion
 short limit
 short active
-short maxFatigue
+
 short drinkCount
 short drinkOverdose
 short drinkDeath
+
+short playerLevel
 short playerEndurance
 short playerWillpower
-short playerLevel
-float timer
-short maxCount
-short oldCount
-short message
 
-set speedOffset to 0
-set potionTime to 20
-set drinkOverdose to 90
-set drinkDeath to 100
+short maxFatigue
+float timer
+
+if ( init == 0 )
+	set speedOffset to 0
+	set potionTime to 20
+	set drinkOverdose to 90
+	set drinkDeath to 100
+	set init to 1
+endif
 
 if ( active == 0 )
+	set playerLevel to ( player->GetLevel )
+
 	set playerEndurance to ( player->GetEndurance )
 	if ( playerEndurance > 100 )
 		set playerEndurance to 100
@@ -44,13 +88,18 @@ if ( active == 0 )
 		set playerWillpower to 100
 	endif
 
-	set playerLevel to ( player->GetLevel )
-
-	set maxValue to ( 101 + playerEndurance + playerWillpower + playerLevel )
+	set maxValueAttribute to ( 100 + playerEndurance + playerWillpower + playerLevel )
 	
-	if ( maxValue != oldValue )
+	if ( maxValueAttribute != oldValueAttribute )
 		set message to 1
-		set oldValue to maxValue
+		set oldValueAttribute to maxValueAttribute
+	endif
+
+	set maxValueSkill to ( 101 + playerLevel )
+
+	if ( maxValueSkill != oldValueSkill )
+		set message to 1
+		set oldValueSkill to maxValueSkill
 	endif
 
 	set maxCount to ( player->GetAlchemy )
@@ -68,58 +117,58 @@ if ( active == 0 )
 		set message to 1
 		set oldCount to maxCount
 	endif
-	
-	if ( message == 1)
-		set maxValue to ( maxValue - 1 )
-		MessageBox "You can drink up to %G potions.\nYour attributes cap is %G.", maxCount, maxValue
-		set maxValue to ( maxValue + 1 )
+
+	if ( message == 1 )
+		set maxValueSkill to ( maxValueSkill - 1 )
+		MessageBox "You can drink up to %G potions.\nYour attribute cap is %G.\nYour skill cap is %G.", maxCount, maxValueAttribute, maxValueSkill
+		set maxValueSkill to ( maxValueSkill + 1 )
 		set message to 0
 	endif
 endif
 
-if ( ( player->GetStrength ) < maxValue )
+if ( ( player->GetStrength ) <= maxValueAttribute )
 	set limitStrength to 0
 else
 	set limitStrength to 1
 endif
 
-if ( ( player->GetIntelligence ) < maxValue )
+if ( ( player->GetIntelligence ) <= maxValueAttribute )
 	set limitIntelligence to 0
 else
 	set limitIntelligence to 1
 endif
 
-if ( ( player->GetWillpower ) < maxValue )
+if ( ( player->GetWillpower ) <= maxValueAttribute )
 	set limitWillpower to 0
 else
 	set limitWillpower to 1
 endif
 
-if ( ( player->GetAgility ) < maxValue )
+if ( ( player->GetAgility ) <= maxValueAttribute )
 	set limitAgility to 0
 else
 	set limitAgility to 1
 endif
 
-if ( ( player->GetSpeed ) < ( maxValue + speedOffset ) )
+if ( ( player->GetSpeed ) <= ( maxValueAttribute + speedOffset ) )
 	set limitSpeed to 0
 else
 	set limitSpeed to 1
 endif
 
-if ( ( player->GetEndurance ) < maxValue )
+if ( ( player->GetEndurance ) <= maxValueAttribute )
 	set limitEndurance to 0
 else
 	set limitEndurance to 1
 endif
 
-if ( ( player->GetPersonality ) < maxValue )
+if ( ( player->GetPersonality ) <= maxValueAttribute )
 	set limitPersonality to 0
 else
 	set limitPersonality to 1
 endif
 
-if ( ( player->GetLuck ) < maxValue )
+if ( ( player->GetLuck ) <= maxValueAttribute )
 	set limitLuck to 0
 else
 	set limitLuck to 1
@@ -147,7 +196,254 @@ endif
 
 if ( active == 0 )
 	if ( limitAttribute == 1 )
-		MessageBox "You reach your body's physical limit!"
+		MessageBox "You have reached your attribute limit!"
+	endif
+endif
+
+;;;
+
+if ( active == 0 )
+	if ( ( player->GetAlchemy ) >= maxValueSkill )
+		set limitAlchemy to 1
+	endif
+	
+	if ( ( player->GetEnchant ) >= maxValueSkill )
+		set limitEnchant to 1
+	endif
+	
+	if ( ( player->GetArmorer ) >= maxValueSkill )
+		set limitArmorer to 1
+	endif
+endif
+
+if ( active == 1 )
+	if ( limitAlchemy == 1 )
+		if ( player->GetEffect sEffectFortifySkill == 0 )
+			set limitAlchemy to 0
+		endif
+	endif
+	if ( limitEnchant == 1 )
+		if ( player->GetEffect sEffectFortifySkill == 0 )
+			set limitEnchant to 0
+		endif
+	endif
+	if ( limitArmorer == 1 )
+		if ( player->GetEffect sEffectFortifySkill == 0 )
+			set limitArmorer to 0
+		endif
+	endif
+endif
+
+;;;
+
+if ( ( player->GetLongBlade ) < maxValueSkill )
+	set limitLongBlade to 0
+else
+	set limitLongBlade to 1
+endif
+
+if ( ( player->GetAcrobatics ) < maxValueSkill )
+	set limitAcrobatics to 0
+else
+	set limitAcrobatics to 1
+endif
+
+if ( ( player->GetBluntWeapon ) < maxValueSkill )
+	set limitBluntWeapon to 0
+else
+	set limitBluntWeapon to 1
+endif
+
+if ( ( player->GetSecurity ) < maxValueSkill )
+	set limitSecurity to 0
+else
+	set limitSecurity to 1
+endif
+
+if ( ( player->GetAxe ) < maxValueSkill )
+	set limitAxe to 0
+else
+	set limitAxe to 1
+endif
+
+if ( ( player->GetConjuration ) < maxValueSkill )
+	set limitConjuration to 0
+else
+	set limitConjuration to 1
+endif
+
+if ( ( player->GetSneak ) < maxValueSkill )
+	set limitSneak to 0
+else
+	set limitSneak to 1
+endif
+
+if ( ( player->GetAlteration ) < maxValueSkill )
+	set limitAlteration to 0
+else
+	set limitAlteration to 1
+endif
+
+if ( ( player->GetLightArmor ) < maxValueSkill )
+	set limitLightArmor to 0
+else
+	set limitLightArmor to 1
+endif
+
+if ( ( player->GetMediumArmor ) < maxValueSkill )
+	set limitMediumArmor to 0
+else
+	set limitMediumArmor to 1
+endif
+
+if ( ( player->GetDestruction ) < maxValueSkill )
+	set limitDestruction to 0
+else
+	set limitDestruction to 1
+endif
+
+if ( ( player->GetMarksman ) < maxValueSkill )
+	set limitMarksman to 0
+else
+	set limitMarksman to 1
+endif
+
+if ( ( player->GetHeavyArmor ) < maxValueSkill )
+	set limitHeavyArmor to 0
+else
+	set limitHeavyArmor to 1
+endif
+
+if ( ( player->GetMysticism ) < maxValueSkill )
+	set limitMysticism to 0
+else
+	set limitMysticism to 1
+endif
+
+if ( ( player->GetShortBlade ) < maxValueSkill )
+	set limitShortBlade to 0
+else
+	set limitShortBlade to 1
+endif
+
+if ( ( player->GetSpear ) < maxValueSkill )
+	set limitSpear to 0
+else
+	set limitSpear to 1
+endif
+
+if ( ( player->GetRestoration ) < maxValueSkill )
+	set limitRestoration to 0
+else
+	set limitRestoration to 1
+endif
+
+if ( ( player->GetHandToHand ) < maxValueSkill )
+	set limitHandToHand to 0
+else
+	set limitHandToHand to 1
+endif
+
+if ( ( player->GetBlock ) < maxValueSkill )
+	set limitBlock to 0
+else
+	set limitBlock to 1
+endif
+
+if ( ( player->GetIllusion ) < maxValueSkill )
+	set limitIllusion to 0
+else
+	set limitIllusion to 1
+endif
+
+if ( ( player->GetMercantile ) < maxValueSkill )
+	set limitMercantile to 0
+else
+	set limitMercantile to 1
+endif
+
+if ( ( player->GetAthletics ) < maxValueSkill )
+	set limitAthletics to 0
+else
+	set limitAthletics to 1
+endif
+
+if ( ( player->GetUnarmored ) < maxValueSkill )
+	set limitUnarmored to 0
+else
+	set limitUnarmored to 1
+endif
+
+if ( ( player->GetSpeechcraft ) < maxValueSkill )
+	set limitSpeechcraft to 0
+else
+	set limitSpeechcraft to 1
+endif
+
+if ( limitLongBlade == 1 )
+	set limitSkill to 1
+elseif ( limitAcrobatics == 1 )
+	set limitSkill to 1
+elseif ( limitBluntWeapon == 1 )
+	set limitSkill to 1
+elseif ( limitSecurity == 1 )
+	set limitSkill to 1
+elseif ( limitAxe == 1 )
+	set limitSkill to 1
+elseif ( limitConjuration == 1 )
+	set limitSkill to 1
+elseif ( limitSneak == 1 )
+	set limitSkill to 1
+elseif ( limitAlteration == 1 )
+	set limitSkill to 1
+elseif ( limitLightArmor == 1 )
+	set limitSkill to 1
+elseif ( limitMediumArmor == 1 )
+	set limitSkill to 1
+elseif ( limitDestruction == 1 )
+	set limitSkill to 1
+elseif ( limitMarksman == 1 )
+	set limitSkill to 1
+elseif ( limitHeavyArmor == 1 )
+	set limitSkill to 1
+elseif ( limitMysticism == 1 )
+	set limitSkill to 1
+elseif ( limitShortBlade == 1 )
+	set limitSkill to 1
+elseif ( limitSpear == 1 )
+	set limitSkill to 1
+elseif ( limitRestoration == 1 )
+	set limitSkill to 1
+elseif ( limitHandToHand == 1 )
+	set limitSkill to 1
+elseif ( limitBlock == 1 )
+	set limitSkill to 1
+elseif ( limitIllusion == 1 )
+	set limitSkill to 1
+elseif ( limitMercantile == 1 )
+	set limitSkill to 1
+elseif ( limitAthletics == 1 )
+	set limitSkill to 1
+elseif ( limitUnarmored == 1 )
+	set limitSkill to 1
+elseif ( limitSpeechcraft == 1 )
+	set limitSkill to 1
+else
+	set limitSkill to 0
+endif
+
+if ( active == 0 )
+	if ( limitAlchemy == 1 )
+		MessageBox "You have reached your skill limit!"
+	endif
+	if ( limitEnchant == 1 )
+		MessageBox "You have reached your skill limit!"
+	endif
+	if ( limitArmorer == 1 )
+		MessageBox "You have reached your skill limit!"
+	endif
+	if ( limitSkill == 1 )
+		MessageBox "You have reached your skill limit!"
 	endif
 endif
 
@@ -267,6 +563,14 @@ endif
 ;;;
 
 if ( limitAttribute == 1 )
+	set limit to 1
+elseif ( limitAlchemy == 1 )
+	set limit to 1
+elseif ( limitEnchant == 1 )
+	set limit to 1
+elseif ( limitArmorer == 1 )
+	set limit to 1
+elseif ( limitSkill == 1 )
 	set limit to 1
 elseif ( limitPotion == 1 )
 	set limit to 1
