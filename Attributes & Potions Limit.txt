@@ -504,6 +504,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 	player->StopSound "drink"
 	if ( timer < potionTime )
 		
+		set drinkHour to GameHour
+		
 		if ( drinkCount < drinkOverdose )
 			if ( maxCount < drinkCount )
 				set drinkCount to drinkOverdose
@@ -523,7 +525,6 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			set limitPotion to 1
 			set timer to 0
 			set drinkCount to drinkDeath
-			set drinkHour to GameHour
 			
 		elseif ( drinkCount == 7 )
 			player->Equip "raffll_tox8"
@@ -615,19 +616,15 @@ if ( drinkCount > 0 )
 			set drinkCount to 0
 		endif
 	endif
-endif
-
-if ( active == 1 )
-	if ( limitPotion == 1 )
-		set currentHour to GameHour
-		;MessageBox "%.2f, %.2f, %.2f", timer, drinkHour, currentHour
-		set deltaHour to ( currentHour - drinkHour )
-		if ( deltaHour < 0 )
-			set deltaHour to ( deltaHour * -1 )
-		endif
-		if ( deltaHour > 0.30 )
-			set timer to ( potionTime + 1 )
-		endif
+	
+	set currentHour to GameHour
+	;MessageBox "%.2f, %.2f, %.2f, %.2f", timer, drinkHour, currentHour, deltaHour
+	set deltaHour to ( currentHour - drinkHour )
+	if ( deltaHour < 0 )
+		set deltaHour to ( deltaHour * -1 )
+	endif
+	if ( deltaHour > 1 )
+		set timer to ( potionTime + 1 )
 	endif
 endif
 
