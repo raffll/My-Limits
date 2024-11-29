@@ -8,11 +8,10 @@ This is my second approach to creating a cap on attributes, but this time it is 
 
 #### Negative effect
 
-Once the player exceeds the limit, Fatigue, Alchemy, Enchant, and Armorer skills will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal, or in the case of potions, until the 20-second cooldown ends.
+Once the player exceeds the limit, Fatigue, Intelligence, Luck, Alchemy, Enchant, and Armorer skills will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal, or in the case of potions, until the 20-second cooldown ends.
 
 - To recover, for most attributes and skills, you just have to get rid of the fortify effect.
-- Alchemy, Enchant, and Armorer are special cases where you have to get rid of the fortify effect and wait at least one hour.
-- You can still make a potion, repair, and enchant, but chance and effect will be very weak.
+- Intelligence, Luck, Alchemy, Enchant, and Armorer are special cases where you have to get rid of all fortify effects or get rid of the corresponding fortify effect and wait at least one hour. When you have a fortify attribute or skill permanent power, only the second option is available.
 - You can wait until fortify effects run out; for most vanilla items, 1 hour should be enough.
 - Waiting while potion cooldown is running, just recover you from negative effect, because cooldown is always 20 seconds, but you have to wait at least 1 hour.
 - Keep in mind that when you levitate, you cannot wait.
@@ -31,13 +30,13 @@ Increasing skills beyond 100 is more or less overpowered at all, but this is why
 
 Potion limit depends on Alchemy level:
 
- 0 - 19 -> 3 potions
+0 - 19 -> 3 potions
 20 - 39 -> 4 potions
 40 - 59 -> 5 potions
 60 - 79 -> 6 potions
 80 - 99 -> 7 potions
-100+    -> 8 potions 
- 
+100+ -> 8 potions 
+ 
 - After every potion drunk, the cooldown timer is starting to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
 - When you drink one more potion over the limit, you collapse.
@@ -49,10 +48,14 @@ There is a small Poison Resist 1% effect after every potion, just to visualize t
 Probably incompatible with everything that changes how Fatigue is calculated.
 
 #### Changelog
-1.0 - Initial version
+1.0
+- Initial version
+1.1
+- Intelligence and Luck also drop to 0.
+- Negative effect increased from 1000 to 2000.
 
 #### Credits
-Rosynant for creating Alchemical Hustle from where I took the idea how to limit potions.
+Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
 
 #### Permissions
 Do whatever you want.

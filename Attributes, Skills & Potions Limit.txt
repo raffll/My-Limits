@@ -68,20 +68,28 @@ short playerIntelligence
 short maxFatigue
 float timer
 
+float currentHourI
+float hourI
+float deltaHourI
+
+float currentHourL
+float hourL
+float deltaHourL
+
 float currentHour
 float drinkHour
 float deltaHour
 
 float currentHourA
-float alchemyHour
+float hourA
 float deltaHourA
 
 float currentHourE
-float enchantHour
+float hourE
 float deltaHourE
 
 float currentHourR
-float armorerHour
+float hourR
 float deltaHourR
 
 if ( CharGenState != -1 )
@@ -99,21 +107,6 @@ endif
 
 if ( active == 0 )
 	set playerLevel to ( player->GetLevel )
-
-	set playerEndurance to ( player->GetEndurance )
-	if ( playerEndurance > 100 )
-		set playerEndurance to 100
-	endif
-
-	set playerWillpower to ( player->GetWillpower )
-	if ( playerWillpower > 100 )
-		set playerWillpower to 100
-	endif
-
-	set playerIntelligence to ( player->GetIntelligence )
-	if ( playerIntelligence > 100 )
-		set playerIntelligence to 100
-	endif
 
 	set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
 	if ( maxValueAttribute > 300 )
@@ -154,16 +147,54 @@ if ( active == 0 )
 	endif
 endif
 
+;;;
+
+if ( active == 0 )
+	if ( ( player->GetIntelligence ) > maxValueAttribute )
+		set limitIntelligence to 1
+		set hourI to GameHour
+	endif
+	
+	if ( ( player->GetLuck ) > maxValueAttribute )
+		set limitLuck to 1
+		set hourL to GameHour
+	endif
+endif
+
+if ( active == 1 )
+	if ( limitIntelligence == 1 )
+		if ( player->GetEffect sEffectFortifyAttribute == 0 )
+			set limitIntelligence to 0
+		endif
+		set currentHourI to GameHour
+		;MessageBox "%.2f, %.2f, %.2f", hourI, currentHourI, deltaHourI
+		set deltaHourI to ( currentHourI - hourI )
+		if ( deltaHourI < 0 )
+			set deltaHourI to ( deltaHourI * -1 )
+		endif
+		if ( deltaHourI > 1 )
+			set limitIntelligence to 0
+		endif
+	endif
+	if ( limitLuck == 1 )
+		if ( player->GetEffect sEffectFortifyAttribute == 0 )
+			set limitLuck to 0
+		endif
+		set currentHourL to GameHour
+		set deltaHourL to ( currentHourL - hourL )
+		if ( deltaHourL < 0 )
+			set deltaHourL to ( deltaHourL * -1 )
+		endif
+		if ( deltaHourL > 1 )
+			set limitLuck to 0
+		endif
+	endif
+endif
+
 if ( ( player->GetStrength ) > maxValueAttribute )
     set limitStrength to 1
 else
     set limitStrength to 0
-endif
-
-if ( ( player->GetIntelligence ) > maxValueAttribute )
-    set limitIntelligence to 1
-else
-    set limitIntelligence to 0
 endif
 
 if ( ( player->GetWillpower ) > maxValueAttribute )
@@ -196,15 +227,7 @@ else
     set limitPersonality to 0
 endif
 
-if ( ( player->GetLuck ) > maxValueAttribute )
-    set limitLuck to 1
-else
-    set limitLuck to 0
-endif
-
 if ( limitStrength == 1 )
-	set limitAttribute to 1
-elseif ( limitIntelligence == 1 )
 	set limitAttribute to 1
 elseif ( limitWillpower == 1 )
 	set limitAttribute to 1
@@ -216,13 +239,17 @@ elseif ( limitEndurance == 1 )
 	set limitAttribute to 1
 elseif ( limitPersonality == 1 )
 	set limitAttribute to 1
-elseif ( limitLuck == 1 )
-	set limitAttribute to 1
 else
 	set limitAttribute to 0
 endif
 
 if ( active == 0 )
+	if ( limitIntelligence == 1 )
+		MessageBox "You have reached your attribute limit!"
+	endif
+	if ( limitLuck == 1 )
+		MessageBox "You have reached your attribute limit!"
+	endif
 	if ( limitAttribute == 1 )
 		MessageBox "You have reached your attribute limit!"
 	endif
@@ -233,17 +260,17 @@ endif
 if ( active == 0 )
 	if ( ( player->GetAlchemy ) > maxValueSkill )
 		set limitAlchemy to 1
-		set alchemyHour to GameHour
+		set hourA to GameHour
 	endif
 	
 	if ( ( player->GetEnchant ) > maxValueSkill )
 		set limitEnchant to 1
-		set enchantHour to GameHour
+		set hourE to GameHour
 	endif
 	
 	if ( ( player->GetArmorer ) > maxValueSkill )
 		set limitArmorer to 1
-		set armorerHour to GameHour
+		set hourR to GameHour
 	endif
 endif
 
@@ -253,7 +280,7 @@ if ( active == 1 )
 			set limitAlchemy to 0
 		endif
 		set currentHourA to GameHour
-		set deltaHourA to ( currentHourA - alchemyHour )
+		set deltaHourA to ( currentHourA - hourA )
 		if ( deltaHourA < 0 )
 			set deltaHourA to ( deltaHourA * -1 )
 		endif
@@ -266,7 +293,7 @@ if ( active == 1 )
 			set limitEnchant to 0
 		endif
 		set currentHourE to GameHour
-		set deltaHourE to ( currentHourE - enchantHour )
+		set deltaHourE to ( currentHourE - hourE )
 		if ( deltaHourE < 0 )
 			set deltaHourE to ( deltaHourE * -1 )
 		endif
@@ -279,7 +306,7 @@ if ( active == 1 )
 			set limitArmorer to 0
 		endif
 		set currentHourR to GameHour
-		set deltaHourR to ( currentHourR - armorerHour )
+		set deltaHourR to ( currentHourR - hourR )
 		if ( deltaHourR < 0 )
 			set deltaHourR to ( deltaHourR * -1 )
 		endif
@@ -632,7 +659,11 @@ endif
 
 ;;;
 
-if ( limitAttribute == 1 )
+if ( limitIntelligence == 1 )
+	set limit to 1
+elseif ( limitLuck == 1 )
+	set limit to 1
+elseif ( limitAttribute == 1 )
 	set limit to 1
 elseif ( limitAlchemy == 1 )
 	set limit to 1
