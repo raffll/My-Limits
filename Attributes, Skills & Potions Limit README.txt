@@ -46,13 +46,13 @@ Potion limit depends on Alchemy level:
 There is a small Poison Resist 1% effect after every potion, just to visualize the cooldown timer. I chose Poison Resist because it cannot be resisted or cured and still somehow fits into the entire idea.
 
 #### Compatibility
-- Probably incompatible with everything that changes how Fatigue is calculated.
+Probably incompatible with everything that changes how Fatigue is calculated.
 
-#### Changelog 1.0
-- Initial version
+#### Changelog
+1.0 - Initial version
 
 #### Credits
-- Rosynant for creating Alchemical Hustle from where I took the idea how to limit potions.
+Rosynant for creating Alchemical Hustle from where I took the idea how to limit potions.
 
 #### Permissions
-- Do whatever you want.
+Do whatever you want.
