@@ -1,4 +1,4 @@
-## Attributes & Potions Limit (OpenMW)
+## Attributes, Skills & Potions Limit (OpenMW)
 
 This mod introduces attributes, skills, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to use sometimes potions with negative effects or create multieffect potions.
 
@@ -50,3 +50,9 @@ There is a small Poison Resist 1% effect after every potion, just to visualize t
 
 #### Changelog 1.0
 - Initial version
+
+#### Credits
+- Rosynant for creating Alchemical Hustle from where I took the idea how to limit potions.
+
+#### Permissions
+- Do whatever you want.
