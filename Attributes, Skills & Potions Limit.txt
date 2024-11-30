@@ -68,6 +68,10 @@ short playerIntelligence
 short maxFatigue
 float timer
 
+float currentHourS
+float hourS
+float deltaHourS
+
 float currentHourI
 float hourI
 float deltaHourI
@@ -75,10 +79,6 @@ float deltaHourI
 float currentHourL
 float hourL
 float deltaHourL
-
-float currentHour
-float drinkHour
-float deltaHour
 
 float currentHourA
 float hourA
@@ -91,6 +91,10 @@ float deltaHourE
 float currentHourR
 float hourR
 float deltaHourR
+
+float currentHour
+float drinkHour
+float deltaHour
 
 if ( CharGenState != -1 )
 	return
@@ -150,6 +154,11 @@ endif
 ;;;
 
 if ( active == 0 )
+	if ( ( player->GetStrength ) > maxValueAttribute )
+		set limitStrength to 1
+		set hourS to GameHour
+	endif
+
 	if ( ( player->GetIntelligence ) > maxValueAttribute )
 		set limitIntelligence to 1
 		set hourI to GameHour
@@ -162,12 +171,24 @@ if ( active == 0 )
 endif
 
 if ( active == 1 )
+	if ( limitStrength == 1 )
+		if ( player->GetEffect sEffectFortifyAttribute == 0 )
+			set limitStrength to 0
+		endif
+		set currentHourS to GameHour
+		set deltaHourS to ( currentHourS - hourS )
+		if ( deltaHourS < 0 )
+			set deltaHourS to ( deltaHourS * -1 )
+		endif
+		if ( deltaHourS > 1 )
+			set limitStrength to 0
+		endif
+	endif
 	if ( limitIntelligence == 1 )
 		if ( player->GetEffect sEffectFortifyAttribute == 0 )
 			set limitIntelligence to 0
 		endif
 		set currentHourI to GameHour
-		;MessageBox "%.2f, %.2f, %.2f", hourI, currentHourI, deltaHourI
 		set deltaHourI to ( currentHourI - hourI )
 		if ( deltaHourI < 0 )
 			set deltaHourI to ( deltaHourI * -1 )
@@ -189,12 +210,6 @@ if ( active == 1 )
 			set limitLuck to 0
 		endif
 	endif
-endif
-
-if ( ( player->GetStrength ) > maxValueAttribute )
-    set limitStrength to 1
-else
-    set limitStrength to 0
 endif
 
 if ( ( player->GetWillpower ) > maxValueAttribute )
@@ -227,9 +242,7 @@ else
     set limitPersonality to 0
 endif
 
-if ( limitStrength == 1 )
-	set limitAttribute to 1
-elseif ( limitWillpower == 1 )
+if ( limitWillpower == 1 )
 	set limitAttribute to 1
 elseif ( limitAgility == 1 )
 	set limitAttribute to 1
@@ -244,6 +257,9 @@ else
 endif
 
 if ( active == 0 )
+	if ( limitStrength == 1 )
+		MessageBox "You have reached your attribute limit!"
+	endif
 	if ( limitIntelligence == 1 )
 		MessageBox "You have reached your attribute limit!"
 	endif
@@ -442,7 +458,7 @@ else
     set limitMercantile to 0
 endif
 
-if ( ( player->GetAthletics ) > maxValueSkill )
+if ( ( player->GetAthletics ) > ( maxValueSkill + acrobaticsOffset ) )
     set limitAthletics to 1
 else
     set limitAthletics to 0
@@ -659,7 +675,9 @@ endif
 
 ;;;
 
-if ( limitIntelligence == 1 )
+if ( limitStrength == 1 )
+	set limit to 1
+elseif ( limitIntelligence == 1 )
 	set limit to 1
 elseif ( limitLuck == 1 )
 	set limit to 1

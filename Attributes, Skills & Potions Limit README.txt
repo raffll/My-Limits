@@ -8,22 +8,24 @@ This is my second approach to creating a cap on attributes, but this time it is 
 
 #### Negative effect
 
-Once the player exceeds the limit, Fatigue, Intelligence, Luck, Alchemy, Enchant, and Armorer skills will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal, or in the case of potions, until the 20-second cooldown ends.
+Once the player exceeds the limit, Fatigue, Strength, Intelligence, Luck, Alchemy, Enchant, and Armorer skills will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal, or in the case of potions, until the 20-second cooldown ends.
 
+- You can't create potions, enchant or repair.
 - To recover, for most attributes and skills, you just have to get rid of the fortify effect.
-- Intelligence, Luck, Alchemy, Enchant, and Armorer are special cases where you have to get rid of all fortify effects or get rid of the corresponding fortify effect and wait at least one hour. When you have a fortify attribute or skill permanent power, only the second option is available.
 - You can wait until fortify effects run out; for most vanilla items, 1 hour should be enough.
+- Strength, Intelligence, Luck, Alchemy, Enchant, and Armorer are special cases where you have to get rid of all fortify effects or get rid of the corresponding fortify effect and wait at least one hour. When you have a fortify attribute or skill permanent power, only the second option is available.
 - Waiting while potion cooldown is running, just recover you from negative effect, because cooldown is always 20 seconds, but you have to wait at least 1 hour.
 - Keep in mind that when you levitate, you cannot wait.
+- After recover your fatigue and magicka are set to 0.
 
 #### Attribute cap
 
-Attribute cap is set to 100 + (Level * 5). With a maximum set to 300, except for Speed, where the cap is set to 300 + (level * 5).
+Attribute cap is set to 100 + (Level * 5). With a maximum set to 300, except for Speed, where the cap is set to 300 + (level * 5) (max 500).
 That's reasonable for me; that character on level 1 can drink 1 sujamma, but on level 40 can drink up to 4.
 
 #### Skill cap
 
-Skill cap is set to 100 + Level. With a maximum set to 150, except Acrobatics, where the cap is set to 1100 + Level.
+Skill cap is set to 100 + Level. With a maximum set to 150, except Acrobatics and Athletics, where the cap is set to 1100 + Level (max 1150).
 Increasing skills beyond 100 is more or less overpowered at all, but this is why we love this game. I think 150 cap here will still satisfy some power gamers.
 
 #### Potion limit
@@ -45,14 +47,15 @@ Potion limit depends on Alchemy level:
 There is a small Poison Resist 1% effect after every potion, just to visualize the cooldown timer. I chose Poison Resist because it cannot be resisted or cured and still somehow fits into the entire idea.
 
 #### Compatibility
-Probably incompatible with everything that changes how Fatigue is calculated.
+Probably incompatible with everything that changes how fatigue is calculated.
 
 #### Changelog
 1.0
 - Initial version
 1.1
-- Intelligence and Luck also drop to 0.
+- Strength, Intelligence and Luck also drop to 0.
 - Negative effect increased from 1000 to 2000.
+- Athletics max limit same as Acrobatics.
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
