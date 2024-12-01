@@ -242,7 +242,11 @@ else
     set limitPersonality to 0
 endif
 
-if ( limitWillpower == 1 )
+if ( limitStrength == 1 )
+	set limitAttribute to 1
+elseif ( limitIntelligence == 1 )
+	set limitAttribute to 1
+elseif ( limitWillpower == 1 )
 	set limitAttribute to 1
 elseif ( limitAgility == 1 )
 	set limitAttribute to 1
@@ -252,20 +256,13 @@ elseif ( limitEndurance == 1 )
 	set limitAttribute to 1
 elseif ( limitPersonality == 1 )
 	set limitAttribute to 1
+elseif ( limitLuck == 1 )
+	set limitAttribute to 1
 else
 	set limitAttribute to 0
 endif
 
 if ( active == 0 )
-	if ( limitStrength == 1 )
-		MessageBox "You have reached your attribute limit!"
-	endif
-	if ( limitIntelligence == 1 )
-		MessageBox "You have reached your attribute limit!"
-	endif
-	if ( limitLuck == 1 )
-		MessageBox "You have reached your attribute limit!"
-	endif
 	if ( limitAttribute == 1 )
 		MessageBox "You have reached your attribute limit!"
 	endif
@@ -458,7 +455,7 @@ else
     set limitMercantile to 0
 endif
 
-if ( ( player->GetAthletics ) > ( maxValueSkill + acrobaticsOffset ) )
+if ( ( player->GetAthletics ) > maxValueSkill )
     set limitAthletics to 1
 else
     set limitAthletics to 0
@@ -476,7 +473,13 @@ else
     set limitSpeechcraft to 0
 endif
 
-if ( limitLongBlade == 1 )
+if ( limitAlchemy == 1 )
+	set limitSkill to 1
+elseif ( limitEnchant == 1 )
+	set limitSkill to 1
+elseif ( limitArmorer == 1 )
+	set limitSkill to 1
+elseif ( limitLongBlade == 1 )
 	set limitSkill to 1
 elseif ( limitAcrobatics == 1 )
 	set limitSkill to 1
@@ -529,15 +532,6 @@ else
 endif
 
 if ( active == 0 )
-	if ( limitAlchemy == 1 )
-		MessageBox "You have reached your skill limit!"
-	endif
-	if ( limitEnchant == 1 )
-		MessageBox "You have reached your skill limit!"
-	endif
-	if ( limitArmorer == 1 )
-		MessageBox "You have reached your skill limit!"
-	endif
 	if ( limitSkill == 1 )
 		MessageBox "You have reached your skill limit!"
 	endif
@@ -654,12 +648,6 @@ endif
 if ( drinkCount > 0 )
 	if ( MenuMode == 0 )
 		set timer to ( timer + GetSecondsPassed )
-		if ( timer >= potionTime )		
-			MessageBox "You have recovered from the potion toxic effect!"
-			set limitPotion to 0
-			set timer to 0
-			set drinkCount to 0
-		endif
 	endif
 	
 	set currentHour to GameHour
@@ -671,23 +659,18 @@ if ( drinkCount > 0 )
 	if ( deltaHour > 1 )
 		set timer to ( potionTime + 1 )
 	endif
+	
+	if ( timer >= potionTime )		
+		MessageBox "You have recovered from the potion toxic effect!"
+		set limitPotion to 0
+		set timer to 0
+		set drinkCount to 0
+	endif
 endif
 
 ;;;
 
-if ( limitStrength == 1 )
-	set limit to 1
-elseif ( limitIntelligence == 1 )
-	set limit to 1
-elseif ( limitLuck == 1 )
-	set limit to 1
-elseif ( limitAttribute == 1 )
-	set limit to 1
-elseif ( limitAlchemy == 1 )
-	set limit to 1
-elseif ( limitEnchant == 1 )
-	set limit to 1
-elseif ( limitArmorer == 1 )
+if ( limitAttribute == 1 )
 	set limit to 1
 elseif ( limitSkill == 1 )
 	set limit to 1

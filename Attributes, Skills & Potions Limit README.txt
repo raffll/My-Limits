@@ -16,7 +16,7 @@ Once the player exceeds the limit, Fatigue, Strength, Intelligence, Luck, Alchem
 - Strength, Intelligence, Luck, Alchemy, Enchant, and Armorer are special cases where you have to get rid of all fortify effects or get rid of the corresponding fortify effect and wait at least one hour. When you have a fortify attribute or skill permanent power, only the second option is available.
 - Waiting while potion cooldown is running, just recover you from negative effect, because cooldown is always 20 seconds, but you have to wait at least 1 hour.
 - Keep in mind that when you levitate, you cannot wait.
-- After recover your fatigue and magicka are set to 0.
+- After recovery your fatigue and magicka will be set to 0.
 
 #### Attribute cap
 
@@ -25,7 +25,7 @@ That's reasonable for me; that character on level 1 can drink 1 sujamma, but on 
 
 #### Skill cap
 
-Skill cap is set to 100 + Level. With a maximum set to 150, except Acrobatics and Athletics, where the cap is set to 1100 + Level (max 1150).
+Skill cap is set to 100 + Level. With a maximum set to 150, except Acrobatics, where the cap is set to 1100 + Level (max 1150).
 Increasing skills beyond 100 is more or less overpowered at all, but this is why we love this game. I think 150 cap here will still satisfy some power gamers.
 
 #### Potion limit
@@ -55,7 +55,7 @@ Probably incompatible with everything that changes how fatigue is calculated.
 1.1
 - Strength, Intelligence and Luck also drop to 0.
 - Negative effect increased from 1000 to 2000.
-- Athletics max limit same as Acrobatics.
+- Potion timer bugfix
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
