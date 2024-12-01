@@ -10,7 +10,7 @@ This is my second approach to creating a cap on attributes, but this time it is 
 
 Once the player exceeds the limit, Fatigue, Strength, Intelligence, Luck, Alchemy, Enchant, and Armorer skills will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal, or in the case of potions, until the 20-second cooldown ends.
 
-- You can't create potions, enchant or repair.
+- While active, you can't create potions, enchant or repair.
 - To recover, for most attributes and skills, you just have to get rid of the fortify effect.
 - You can wait until fortify effects run out; for most vanilla items, 1 hour should be enough.
 - Strength, Intelligence, Luck, Alchemy, Enchant, and Armorer are special cases where you have to get rid of all fortify effects or get rid of the corresponding fortify effect and wait at least one hour. When you have a fortify attribute or skill permanent power, only the second option is available.
@@ -53,9 +53,11 @@ Probably incompatible with everything that changes how fatigue is calculated.
 1.0
 - Initial version
 1.1
-- Strength, Intelligence and Luck also drop to 0.
-- Negative effect increased from 1000 to 2000.
+- Strength, Intelligence and Luck also drop to 0
+- Negative effect increased from 1000 to 2000
 - Potion timer bugfix
+1.2
+- Negative effect increased from 2000 to 10000
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
