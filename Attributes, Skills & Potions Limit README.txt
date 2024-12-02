@@ -53,11 +53,11 @@ Probably incompatible with everything that changes how fatigue is calculated.
 1.0
 - Initial version
 1.1
-- Strength, Intelligence and Luck also drop to 0
+- Strength, Intelligence and Luck also drop to 0 (to prevent using 800+ fortify spells)
 - Negative effect increased from 1000 to 2000
 - Potion timer bugfix
 1.2
-- Negative effect increased from 2000 to 10000
+- Negative effect increased from 2000 to 100000 (to prevent using strong restore potions)
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
