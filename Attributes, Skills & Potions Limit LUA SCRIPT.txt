@@ -1,0 +1,605 @@
+begin raffll_limits
+
+short init
+
+short maxValueAttribute
+short oldValueAttribute
+short maxValueSkill
+short oldValueSkill
+short maxCount
+short oldCount
+
+short speedOffset
+short acrobaticsOffset
+short potionTime
+
+short limitStrength
+short limitIntelligence
+short limitWillpower
+short limitAgility
+short limitSpeed
+short limitEndurance
+short limitPersonality
+short limitLuck
+
+short limitAlchemy
+short limitLongBlade
+short limitAcrobatics
+short limitBluntWeapon
+short limitEnchant
+short limitSecurity
+short limitAxe
+short limitConjuration
+short limitSneak
+short limitArmorer
+short limitAlteration
+short limitLightArmor
+short limitMediumArmor
+short limitDestruction
+short limitMarksman
+short limitHeavyArmor
+short limitMysticism
+short limitShortBlade
+short limitSpear
+short limitRestoration
+short limitHandToHand
+short limitBlock
+short limitIllusion
+short limitMercantile
+short limitAthletics
+short limitUnarmored
+short limitSpeechcraft
+
+short limitAttribute
+short limitSkill
+short limitPotion
+short limit
+short active
+
+short drinkCount
+short drinkOverdose
+short drinkDeath
+
+short playerLevel
+short maxFatigue
+float timer
+
+float currentHour
+float drinkHour
+float deltaHour
+
+if ( CharGenState != -1 )
+	return
+endif
+
+if ( init == 0 )
+	set speedOffset to 200
+	set acrobaticsOffset to 1000
+	set potionTime to 20
+	set drinkOverdose to 90
+	set drinkDeath to 100
+	set init to 1
+endif
+
+if ( active == 0 )
+	set playerLevel to ( player->GetLevel )
+
+	set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
+	if ( maxValueAttribute > 300 )
+		set maxValueAttribute to 300
+	endif
+	
+	set maxValueSkill to ( 100 + playerLevel )
+	if ( maxValueSkill > 150 )
+		set maxValueSkill to 150
+	endif
+
+	set maxCount to ( player->GetAlchemy )
+	set maxCount to ( ( maxCount / 20 ) + 3 )
+
+	if ( maxCount < 3 )
+		set maxCount to 3
+	endif
+
+	if ( maxCount > 8 )
+		set maxCount to 8
+	endif
+
+	if ( maxValueAttribute != oldValueAttribute )
+		MessageBox "Your attribute cap is now %G.", maxValueAttribute
+		set oldValueAttribute to maxValueAttribute
+	endif
+
+	if ( maxValueSkill != oldValueSkill )
+		MessageBox "Your skill cap is now %G.", maxValueSkill
+		set oldValueSkill to maxValueSkill
+	endif
+
+	if ( maxCount != oldCount )
+		MessageBox "You can drink up to %G potions.", maxCount
+		set oldCount to maxCount
+	endif
+endif
+
+;;;
+
+if ( ( player->GetStrength ) > maxValueAttribute )
+    set limitStrength to 1
+else
+    set limitStrength to 0
+endif
+
+if ( ( player->GetIntelligence ) > maxValueAttribute )
+    set limitIntelligence to 1
+else
+    set limitIntelligence to 0
+endif
+
+if ( ( player->GetLuck ) > maxValueAttribute )
+    set limitLuck to 1
+else
+    set limitLuck to 0
+endif
+
+if ( ( player->GetWillpower ) > maxValueAttribute )
+    set limitWillpower to 1
+else
+    set limitWillpower to 0
+endif
+
+if ( ( player->GetAgility ) > maxValueAttribute )
+    set limitAgility to 1
+else
+    set limitAgility to 0
+endif
+
+if ( ( player->GetSpeed ) > ( maxValueAttribute + speedOffset ) )
+    set limitSpeed to 1
+else
+    set limitSpeed to 0
+endif
+
+if ( ( player->GetEndurance ) > maxValueAttribute )
+    set limitEndurance to 1
+else
+    set limitEndurance to 0
+endif
+
+if ( ( player->GetPersonality ) > maxValueAttribute )
+    set limitPersonality to 1
+else
+    set limitPersonality to 0
+endif
+
+if ( limitStrength == 1 )
+	set limitAttribute to 1
+elseif ( limitIntelligence == 1 )
+	set limitAttribute to 1
+elseif ( limitWillpower == 1 )
+	set limitAttribute to 1
+elseif ( limitAgility == 1 )
+	set limitAttribute to 1
+elseif ( limitSpeed == 1 )
+	set limitAttribute to 1
+elseif ( limitEndurance == 1 )
+	set limitAttribute to 1
+elseif ( limitPersonality == 1 )
+	set limitAttribute to 1
+elseif ( limitLuck == 1 )
+	set limitAttribute to 1
+else
+	set limitAttribute to 0
+endif
+
+if ( active == 0 )
+	if ( limitAttribute == 1 )
+		MessageBox "You have reached your attribute limit!"
+	endif
+endif
+
+;;;
+
+if ( ( player->GetAlchemy ) > maxValueSkill )
+    set limitAlchemy to 1
+else
+    set limitAlchemy to 0
+endif
+
+if ( ( player->GetEnchant ) > maxValueSkill )
+    set limitEnchant to 1
+else
+    set limitEnchant to 0
+endif
+
+if ( ( player->GetArmorer ) > maxValueSkill )
+    set limitArmorer to 1
+else
+    set limitArmorer to 0
+endif
+
+if ( ( player->GetLongBlade ) > maxValueSkill )
+    set limitLongBlade to 1
+else
+    set limitLongBlade to 0
+endif
+
+if ( ( player->GetAcrobatics ) > ( maxValueSkill + acrobaticsOffset ) )
+    set limitAcrobatics to 1
+else
+    set limitAcrobatics to 0
+endif
+
+if ( ( player->GetBluntWeapon ) > maxValueSkill )
+    set limitBluntWeapon to 1
+else
+    set limitBluntWeapon to 0
+endif
+
+if ( ( player->GetSecurity ) > maxValueSkill )
+    set limitSecurity to 1
+else
+    set limitSecurity to 0
+endif
+
+if ( ( player->GetAxe ) > maxValueSkill )
+    set limitAxe to 1
+else
+    set limitAxe to 0
+endif
+
+if ( ( player->GetConjuration ) > maxValueSkill )
+    set limitConjuration to 1
+else
+    set limitConjuration to 0
+endif
+
+if ( ( player->GetSneak ) > maxValueSkill )
+    set limitSneak to 1
+else
+    set limitSneak to 0
+endif
+
+if ( ( player->GetAlteration ) > maxValueSkill )
+    set limitAlteration to 1
+else
+    set limitAlteration to 0
+endif
+
+if ( ( player->GetLightArmor ) > maxValueSkill )
+    set limitLightArmor to 1
+else
+    set limitLightArmor to 0
+endif
+
+if ( ( player->GetMediumArmor ) > maxValueSkill )
+    set limitMediumArmor to 1
+else
+    set limitMediumArmor to 0
+endif
+
+if ( ( player->GetDestruction ) > maxValueSkill )
+    set limitDestruction to 1
+else
+    set limitDestruction to 0
+endif
+
+if ( ( player->GetMarksman ) > maxValueSkill )
+    set limitMarksman to 1
+else
+    set limitMarksman to 0
+endif
+
+if ( ( player->GetHeavyArmor ) > maxValueSkill )
+    set limitHeavyArmor to 1
+else
+    set limitHeavyArmor to 0
+endif
+
+if ( ( player->GetMysticism ) > maxValueSkill )
+    set limitMysticism to 1
+else
+    set limitMysticism to 0
+endif
+
+if ( ( player->GetShortBlade ) > maxValueSkill )
+    set limitShortBlade to 1
+else
+    set limitShortBlade to 0
+endif
+
+if ( ( player->GetSpear ) > maxValueSkill )
+    set limitSpear to 1
+else
+    set limitSpear to 0
+endif
+
+if ( ( player->GetRestoration ) > maxValueSkill )
+    set limitRestoration to 1
+else
+    set limitRestoration to 0
+endif
+
+if ( ( player->GetHandToHand ) > maxValueSkill )
+    set limitHandToHand to 1
+else
+    set limitHandToHand to 0
+endif
+
+if ( ( player->GetBlock ) > maxValueSkill )
+    set limitBlock to 1
+else
+    set limitBlock to 0
+endif
+
+if ( ( player->GetIllusion ) > maxValueSkill )
+    set limitIllusion to 1
+else
+    set limitIllusion to 0
+endif
+
+if ( ( player->GetMercantile ) > maxValueSkill )
+    set limitMercantile to 1
+else
+    set limitMercantile to 0
+endif
+
+if ( ( player->GetAthletics ) > maxValueSkill )
+    set limitAthletics to 1
+else
+    set limitAthletics to 0
+endif
+
+if ( ( player->GetUnarmored ) > maxValueSkill )
+    set limitUnarmored to 1
+else
+    set limitUnarmored to 0
+endif
+
+if ( ( player->GetSpeechcraft ) > maxValueSkill )
+    set limitSpeechcraft to 1
+else
+    set limitSpeechcraft to 0
+endif
+
+if ( limitAlchemy == 1 )
+	set limitSkill to 1
+elseif ( limitEnchant == 1 )
+	set limitSkill to 1
+elseif ( limitArmorer == 1 )
+	set limitSkill to 1
+elseif ( limitLongBlade == 1 )
+	set limitSkill to 1
+elseif ( limitAcrobatics == 1 )
+	set limitSkill to 1
+elseif ( limitBluntWeapon == 1 )
+	set limitSkill to 1
+elseif ( limitSecurity == 1 )
+	set limitSkill to 1
+elseif ( limitAxe == 1 )
+	set limitSkill to 1
+elseif ( limitConjuration == 1 )
+	set limitSkill to 1
+elseif ( limitSneak == 1 )
+	set limitSkill to 1
+elseif ( limitAlteration == 1 )
+	set limitSkill to 1
+elseif ( limitLightArmor == 1 )
+	set limitSkill to 1
+elseif ( limitMediumArmor == 1 )
+	set limitSkill to 1
+elseif ( limitDestruction == 1 )
+	set limitSkill to 1
+elseif ( limitMarksman == 1 )
+	set limitSkill to 1
+elseif ( limitHeavyArmor == 1 )
+	set limitSkill to 1
+elseif ( limitMysticism == 1 )
+	set limitSkill to 1
+elseif ( limitShortBlade == 1 )
+	set limitSkill to 1
+elseif ( limitSpear == 1 )
+	set limitSkill to 1
+elseif ( limitRestoration == 1 )
+	set limitSkill to 1
+elseif ( limitHandToHand == 1 )
+	set limitSkill to 1
+elseif ( limitBlock == 1 )
+	set limitSkill to 1
+elseif ( limitIllusion == 1 )
+	set limitSkill to 1
+elseif ( limitMercantile == 1 )
+	set limitSkill to 1
+elseif ( limitAthletics == 1 )
+	set limitSkill to 1
+elseif ( limitUnarmored == 1 )
+	set limitSkill to 1
+elseif ( limitSpeechcraft == 1 )
+	set limitSkill to 1
+else
+	set limitSkill to 0
+endif
+
+if ( active == 0 )
+	if ( limitSkill == 1 )
+		MessageBox "You have reached your skill limit!"
+	endif
+endif
+
+;;;
+
+if ( player->GetSoundPlaying "drink" == 1 )
+	player->StopSound "drink"
+	if ( timer < potionTime )
+		
+		set drinkHour to GameHour
+		
+		if ( drinkCount < drinkOverdose )
+			if ( maxCount < drinkCount )
+				set drinkCount to drinkOverdose
+			endif
+		endif
+	
+		if ( drinkCount == drinkDeath )
+			MessageBox "You have died from the potion overdose!"
+			player->SetHealth 0
+			set timer to 0
+			MenuTest
+			
+		elseif ( drinkCount == drinkOverdose )
+			MessageBox "You have overdosed potions!"
+			player->Equip "raffll_tox90"
+			player->StopSound "drink"
+			set limitPotion to 1
+			set timer to 0
+			set drinkCount to drinkDeath
+			
+		elseif ( drinkCount == 7 )
+			player->Equip "raffll_tox8"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 8 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 8
+			endif
+			
+		elseif ( drinkCount == 6 )
+			player->Equip "raffll_tox7"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 7 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 7
+			endif
+			
+		elseif ( drinkCount == 5 )
+			player->Equip "raffll_tox6"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 6 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 6
+			endif
+			
+		elseif ( drinkCount == 4 )
+			player->Equip "raffll_tox5"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 5 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 5
+			endif
+			
+		elseif ( drinkCount == 3 )
+			player->Equip "raffll_tox4"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 4 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 4
+			endif
+			
+		elseif ( drinkCount == 2 )
+			player->Equip "raffll_tox3"
+			player->StopSound "drink"
+			set timer to 0
+			if ( maxCount == 3 )
+				set drinkCount to drinkOverdose
+			else
+				set drinkCount to 3
+			endif
+			
+		elseif ( drinkCount == 1 )
+			player->Equip "raffll_tox2"
+			player->StopSound "drink"
+			set timer to 0
+			set drinkCount to 2
+			
+		else
+			player->Equip "raffll_tox1"
+			player->StopSound "drink"
+			set timer to 0
+			set drinkCount to 1
+		endif
+		
+		if ( drinkCount == drinkOverdose )
+			MessageBox "You have reached the limit of potions!"
+		endif
+		
+	endif
+endif
+
+if ( drinkCount > 0 )
+	if ( MenuMode == 0 )
+		set timer to ( timer + GetSecondsPassed )
+	endif
+	
+	set currentHour to GameHour
+	;MessageBox "%.2f, %.2f, %.2f, %.2f", timer, drinkHour, currentHour, deltaHour
+	set deltaHour to ( currentHour - drinkHour )
+	if ( deltaHour < 0 )
+		set deltaHour to ( deltaHour * -1 )
+	endif
+	if ( deltaHour > 1 )
+		set timer to ( potionTime + 1 )
+	endif
+	
+	if ( timer >= potionTime )		
+		MessageBox "You have recovered from the potion toxic effect!"
+		set limitPotion to 0
+		set timer to 0
+		set drinkCount to 0
+	endif
+endif
+
+;;;
+
+if ( limitAttribute == 1 )
+	set limit to 1
+elseif ( limitSkill == 1 )
+	set limit to 1
+elseif ( limitPotion == 1 )
+	set limit to 1
+else
+	set limit to 0
+endif
+
+if ( active == 0 )
+	if ( limit == 0 )
+		return
+	endif
+endif
+
+if ( active == 1 )
+	if ( limit == 1 )
+		player->SetFatigue 0
+		return
+	endif
+endif
+
+if ( active == 0 )
+	if ( limit == 1 )
+		player->SetFatigue 0
+		set active to 1
+		MenuTest
+		return
+	endif
+endif
+
+if ( active == 1 )
+	if ( limit == 0 )
+		MessageBox "You have fully recovered!"
+		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
+		player->SetFatigue maxFatigue
+		set maxFatigue to ( maxFatigue * -1 )
+		player->ModCurrentFatigue maxFatigue
+		set active to 0
+		return
+	endif
+endif
+
+end
