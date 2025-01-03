@@ -61,36 +61,8 @@ short drinkOverdose
 short drinkDeath
 
 short playerLevel
-short playerEndurance
-short playerWillpower
-short playerIntelligence
-
 short maxFatigue
 float timer
-
-float currentHourS
-float hourS
-float deltaHourS
-
-float currentHourI
-float hourI
-float deltaHourI
-
-float currentHourL
-float hourL
-float deltaHourL
-
-float currentHourA
-float hourA
-float deltaHourA
-
-float currentHourE
-float hourE
-float deltaHourE
-
-float currentHourR
-float hourR
-float deltaHourR
 
 float currentHour
 float drinkHour
@@ -134,82 +106,39 @@ if ( active == 0 )
 	endif
 
 	if ( maxValueAttribute != oldValueAttribute )
-		MessageBox "Your attribute cap is now %G.", maxValueAttribute
+		;MessageBox "Your attribute cap is now %G.", maxValueAttribute
 		set oldValueAttribute to maxValueAttribute
 	endif
 
 	if ( maxValueSkill != oldValueSkill )
-		MessageBox "Your skill cap is now %G.", maxValueSkill
+		;MessageBox "Your skill cap is now %G.", maxValueSkill
 		set oldValueSkill to maxValueSkill
 	endif
 
 	if ( maxCount != oldCount )
-		if ( ( player->GetAlchemy ) != 0 )
-			MessageBox "You can drink up to %G potions.", maxCount
-			set oldCount to maxCount
-		endif
+		MessageBox "You can drink up to %G potions.", maxCount
+		set oldCount to maxCount
 	endif
 endif
 
 ;;;
 
-if ( active == 0 )
-	if ( ( player->GetStrength ) > maxValueAttribute )
-		set limitStrength to 1
-		set hourS to GameHour
-	endif
-
-	if ( ( player->GetIntelligence ) > maxValueAttribute )
-		set limitIntelligence to 1
-		set hourI to GameHour
-	endif
-	
-	if ( ( player->GetLuck ) > maxValueAttribute )
-		set limitLuck to 1
-		set hourL to GameHour
-	endif
+if ( ( player->GetStrength ) > maxValueAttribute )
+    set limitStrength to 1
+else
+    set limitStrength to 0
 endif
 
-if ( active == 1 )
-	if ( limitStrength == 1 )
-		if ( player->GetEffect sEffectFortifyAttribute == 0 )
-			set limitStrength to 0
-		endif
-		set currentHourS to GameHour
-		set deltaHourS to ( currentHourS - hourS )
-		if ( deltaHourS < 0 )
-			set deltaHourS to ( deltaHourS * -1 )
-		endif
-		if ( deltaHourS > 1 )
-			set limitStrength to 0
-		endif
-	endif
-	if ( limitIntelligence == 1 )
-		if ( player->GetEffect sEffectFortifyAttribute == 0 )
-			set limitIntelligence to 0
-		endif
-		set currentHourI to GameHour
-		set deltaHourI to ( currentHourI - hourI )
-		if ( deltaHourI < 0 )
-			set deltaHourI to ( deltaHourI * -1 )
-		endif
-		if ( deltaHourI > 1 )
-			set limitIntelligence to 0
-		endif
-	endif
-	if ( limitLuck == 1 )
-		if ( player->GetEffect sEffectFortifyAttribute == 0 )
-			set limitLuck to 0
-		endif
-		set currentHourL to GameHour
-		set deltaHourL to ( currentHourL - hourL )
-		if ( deltaHourL < 0 )
-			set deltaHourL to ( deltaHourL * -1 )
-		endif
-		if ( deltaHourL > 1 )
-			set limitLuck to 0
-		endif
-	endif
+if ( ( player->GetIntelligence ) > maxValueAttribute )
+    set limitIntelligence to 1
+else
+    set limitIntelligence to 0
+endif
+
+if ( ( player->GetLuck ) > maxValueAttribute )
+    set limitLuck to 1
+else
+    set limitLuck to 0
 endif
 
 if ( ( player->GetWillpower ) > maxValueAttribute )
@@ -264,69 +193,28 @@ endif
 
 if ( active == 0 )
 	if ( limitAttribute == 1 )
-		MessageBox "You have reached your attribute limit!"
+		;MessageBox "You have reached your attribute limit!"
 	endif
 endif
 
 ;;;
 
-if ( active == 0 )
-	if ( ( player->GetAlchemy ) > maxValueSkill )
-		set limitAlchemy to 1
-		set hourA to GameHour
-	endif
-	
-	if ( ( player->GetEnchant ) > maxValueSkill )
-		set limitEnchant to 1
-		set hourE to GameHour
-	endif
-	
-	if ( ( player->GetArmorer ) > maxValueSkill )
-		set limitArmorer to 1
-		set hourR to GameHour
-	endif
+if ( ( player->GetAlchemy ) > maxValueSkill )
+    set limitAlchemy to 1
+else
+    set limitAlchemy to 0
 endif
 
-if ( active == 1 )
-	if ( limitAlchemy == 1 )
-		if ( player->GetEffect sEffectFortifySkill == 0 )
-			set limitAlchemy to 0
-		endif
-		set currentHourA to GameHour
-		set deltaHourA to ( currentHourA - hourA )
-		if ( deltaHourA < 0 )
-			set deltaHourA to ( deltaHourA * -1 )
-		endif
-		if ( deltaHourA > 1 )
-			set limitAlchemy to 0
-		endif
-	endif
-	if ( limitEnchant == 1 )
-		if ( player->GetEffect sEffectFortifySkill == 0 )
-			set limitEnchant to 0
-		endif
-		set currentHourE to GameHour
-		set deltaHourE to ( currentHourE - hourE )
-		if ( deltaHourE < 0 )
-			set deltaHourE to ( deltaHourE * -1 )
-		endif
-		if ( deltaHourE > 1 )
-			set limitEnchant to 0
-		endif
-	endif
-	if ( limitArmorer == 1 )
-		if ( player->GetEffect sEffectFortifySkill == 0 )
-			set limitArmorer to 0
-		endif
-		set currentHourR to GameHour
-		set deltaHourR to ( currentHourR - hourR )
-		if ( deltaHourR < 0 )
-			set deltaHourR to ( deltaHourR * -1 )
-		endif
-		if ( deltaHourR > 1 )
-			set limitArmorer to 0
-		endif
-	endif
+if ( ( player->GetEnchant ) > maxValueSkill )
+    set limitEnchant to 1
+else
+    set limitEnchant to 0
+endif
+
+if ( ( player->GetArmorer ) > maxValueSkill )
+    set limitArmorer to 1
+else
+    set limitArmorer to 0
 endif
 
 if ( ( player->GetLongBlade ) > maxValueSkill )
@@ -533,7 +421,7 @@ endif
 
 if ( active == 0 )
 	if ( limitSkill == 1 )
-		MessageBox "You have reached your skill limit!"
+		;MessageBox "You have reached your skill limit!"
 	endif
 endif
 
@@ -670,11 +558,11 @@ endif
 
 ;;;
 
-if ( limitAttribute == 1 )
-	set limit to 1
-elseif ( limitSkill == 1 )
-	set limit to 1
-elseif ( limitPotion == 1 )
+;if ( limitAttribute == 1 )
+;	set limit to 1
+;elseif ( limitSkill == 1 )
+;	set limit to 1
+if ( limitPotion == 1 )
 	set limit to 1
 else
 	set limit to 0
@@ -695,7 +583,6 @@ endif
 
 if ( active == 0 )
 	if ( limit == 1 )
-		player->AddSpell "raffll_limit"
 		player->SetFatigue 0
 		set active to 1
 		MenuTest
@@ -706,7 +593,6 @@ endif
 if ( active == 1 )
 	if ( limit == 0 )
 		MessageBox "You have fully recovered!"
-		player->RemoveSpell "raffll_limit"
 		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
 		player->SetFatigue maxFatigue
 		set maxFatigue to ( maxFatigue * -1 )
