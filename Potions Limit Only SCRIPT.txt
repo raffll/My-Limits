@@ -447,15 +447,15 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			
 		elseif ( drinkCount == drinkOverdose )
 			MessageBox "You have overdosed potions!"
-			player->Equip "raffll_tox90"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox90"
+			;player->StopSound "drink"
 			set limitPotion to 1
 			set timer to 0
 			set drinkCount to drinkDeath
 			
 		elseif ( drinkCount == 7 )
-			player->Equip "raffll_tox8"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox8"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 8 )
 				set drinkCount to drinkOverdose
@@ -464,8 +464,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 6 )
-			player->Equip "raffll_tox7"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox7"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 7 )
 				set drinkCount to drinkOverdose
@@ -474,8 +474,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 5 )
-			player->Equip "raffll_tox6"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox6"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 6 )
 				set drinkCount to drinkOverdose
@@ -484,8 +484,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 4 )
-			player->Equip "raffll_tox5"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox5"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 5 )
 				set drinkCount to drinkOverdose
@@ -494,8 +494,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 3 )
-			player->Equip "raffll_tox4"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox4"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 4 )
 				set drinkCount to drinkOverdose
@@ -504,8 +504,8 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 2 )
-			player->Equip "raffll_tox3"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox3"
+			;player->StopSound "drink"
 			set timer to 0
 			if ( maxCount == 3 )
 				set drinkCount to drinkOverdose
@@ -514,14 +514,14 @@ if ( player->GetSoundPlaying "drink" == 1 )
 			endif
 			
 		elseif ( drinkCount == 1 )
-			player->Equip "raffll_tox2"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox2"
+			;player->StopSound "drink"
 			set timer to 0
 			set drinkCount to 2
 			
 		else
-			player->Equip "raffll_tox1"
-			player->StopSound "drink"
+			;player->Equip "raffll_tox1"
+			;player->StopSound "drink"
 			set timer to 0
 			set drinkCount to 1
 		endif

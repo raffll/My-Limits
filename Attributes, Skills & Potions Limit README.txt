@@ -43,7 +43,7 @@ Potion limit depends on Alchemy level:
 - When you drink one more potion over the limit, you collapse.
 - When you drink another one, you are dead.
 
-There is a small Poison Resist 1% effect after every potion, just to visualize the cooldown timer. I chose Poison Resist because it cannot be resisted or cured and still somehow fits into the entire idea.
+<s>There is a small Poison Resist 1% effect after every potion, just to visualize the cooldown timer. I chose Poison Resist because it cannot be resisted or cured and still somehow fits into the entire idea.</s> This feature unfortunately breaks invisibility potions.
 
 #### Compatibility
 Probably incompatible with everything that changes how fatigue is calculated.
@@ -59,6 +59,12 @@ Probably incompatible with everything that changes how fatigue is calculated.
 - Negative effect increased from 2000 to 100000 (to prevent using strong restore potions)
 1.3
 - Use lua to block alchemy, enchant and repair window, instead of dropping skills to 0
+1.4
+- Potion limit only added
+- Fix for invisibility potion issue, but cooldown indicator is disabled in this version
+
+TODO
+- Create potion counter and timer in lua
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
