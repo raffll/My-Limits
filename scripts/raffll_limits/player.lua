@@ -6,7 +6,7 @@ local self = require('openmw.self')
 return {
 	eventHandlers = {
 		UiModeChanged = function(data)
-			print('UiModeChanged from', data.oldMode , 'to', data.newMode, '('..tostring(data.arg)..')')
+			--print('UiModeChanged from', data.oldMode , 'to', data.newMode, '('..tostring(data.arg)..')')
 			if types.Player.stats.dynamic.fatigue(self).base <= 0 then
 				if data.newMode == 'Alchemy' then
 					ui.showMessage('You can\'t create potions right now.')

@@ -54,11 +54,6 @@ short limitAttribute
 short limitSkill
 short limitPotion
 short limit
-short active
-
-short drinkCount
-short drinkOverdose
-short drinkDeath
 
 short playerLevel
 short maxFatigue
@@ -68,6 +63,8 @@ float currentHour
 float drinkHour
 float deltaHour
 
+float countdown
+
 if ( CharGenState != -1 )
 	return
 endif
@@ -76,12 +73,38 @@ if ( init == 0 )
 	set speedOffset to 200
 	set acrobaticsOffset to 1000
 	set potionTime to 20
-	set drinkOverdose to 90
-	set drinkDeath to 100
+	set r_drinkOverdose to 90
+	set r_drinkDeath to 100
 	set init to 1
 endif
 
-if ( active == 0 )
+if ( r_drinkMsg == 1 )
+	set countdown to ( potionTime - timer )
+	MessageBox "You can't drink any more potions for %.0fs.", countdown
+	set r_drinkMsg to 0;
+endif
+
+if ( r_drinkMsg2 == 1 )
+	MessageBox "You can't drink potions right now."
+	set r_drinkMsg2 to 0;
+endif
+
+if ( r_apparatusMsg == 1 )
+	MessageBox "You can't create potions right now."
+	set r_apparatusMsg to 0;
+endif
+
+if ( r_repairMsg == 1 )
+	MessageBox "You can't repair right now."
+	set r_repairMsg to 0;
+endif
+
+if ( r_miscellaneousMsg == 1 )
+	MessageBox "You can't use this right now."
+	set r_miscellaneousMsg to 0;
+endif
+
+if ( r_active == 0 )
 	set playerLevel to ( player->GetLevel )
 
 	set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
@@ -191,7 +214,7 @@ else
 	set limitAttribute to 0
 endif
 
-if ( active == 0 )
+if ( r_active == 0 )
 	if ( limitAttribute == 1 )
 		MessageBox "You have reached your attribute limit!"
 	endif
@@ -419,7 +442,7 @@ else
 	set limitSkill to 0
 endif
 
-if ( active == 0 )
+if ( r_active == 0 )
 	if ( limitSkill == 1 )
 		MessageBox "You have reached your skill limit!"
 	endif
@@ -433,89 +456,89 @@ if ( player->GetSoundPlaying "drink" == 1 )
 		
 		set drinkHour to GameHour
 		
-		if ( drinkCount < drinkOverdose )
-			if ( maxCount < drinkCount )
-				set drinkCount to drinkOverdose
+		if ( r_drinkCount < r_drinkOverdose )
+			if ( maxCount < r_drinkCount )
+				set r_drinkCount to r_drinkOverdose
 			endif
 		endif
 	
-		if ( drinkCount == drinkDeath )
+		if ( r_drinkCount == r_drinkDeath )
 			MessageBox "You have died from the potion overdose!"
 			player->SetHealth 0
 			set timer to 0
 			MenuTest
 			
-		elseif ( drinkCount == drinkOverdose )
+		elseif ( r_drinkCount == r_drinkOverdose )
 			MessageBox "You have overdosed potions!"
 			set limitPotion to 1
 			set timer to 0
-			set drinkCount to drinkDeath
+			set r_drinkCount to r_drinkDeath
 			
-		elseif ( drinkCount == 7 )
+		elseif ( r_drinkCount == 7 )
 			set timer to 0
 			if ( maxCount == 8 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 8
+				set r_drinkCount to 8
 			endif
 			
-		elseif ( drinkCount == 6 )
+		elseif ( r_drinkCount == 6 )
 			set timer to 0
 			if ( maxCount == 7 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 7
+				set r_drinkCount to 7
 			endif
 			
-		elseif ( drinkCount == 5 )
+		elseif ( r_drinkCount == 5 )
 			set timer to 0
 			if ( maxCount == 6 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 6
+				set r_drinkCount to 6
 			endif
 			
-		elseif ( drinkCount == 4 )
+		elseif ( r_drinkCount == 4 )
 			set timer to 0
 			if ( maxCount == 5 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 5
+				set r_drinkCount to 5
 			endif
 			
-		elseif ( drinkCount == 3 )
+		elseif ( r_drinkCount == 3 )
 			set timer to 0
 			if ( maxCount == 4 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 4
+				set r_drinkCount to 4
 			endif
 			
-		elseif ( drinkCount == 2 )
+		elseif ( r_drinkCount == 2 )
 			set timer to 0
 			if ( maxCount == 3 )
-				set drinkCount to drinkOverdose
+				set r_drinkCount to r_drinkOverdose
 			else
-				set drinkCount to 3
+				set r_drinkCount to 3
 			endif
 			
-		elseif ( drinkCount == 1 )
+		elseif ( r_drinkCount == 1 )
 			set timer to 0
-			set drinkCount to 2
+			set r_drinkCount to 2
 			
 		else
 			set timer to 0
-			set drinkCount to 1
+			set r_drinkCount to 1
 		endif
 		
-		if ( drinkCount == drinkOverdose )
+		if ( r_drinkCount == r_drinkOverdose )
 			MessageBox "You have reached the limit of potions!"
 		endif
 		
 	endif
 endif
 
-if ( drinkCount > 0 )
+if ( r_drinkCount > 0 )
 	if ( MenuMode == 0 )
 		set timer to ( timer + GetSecondsPassed )
 	endif
@@ -534,7 +557,7 @@ if ( drinkCount > 0 )
 		MessageBox "You have recovered from the potion toxic effect!"
 		set limitPotion to 0
 		set timer to 0
-		set drinkCount to 0
+		set r_drinkCount to 0
 	endif
 endif
 
@@ -550,36 +573,36 @@ else
 	set limit to 0
 endif
 
-if ( active == 0 )
+if ( r_active == 0 )
 	if ( limit == 0 )
 		return
 	endif
 endif
 
-if ( active == 1 )
+if ( r_active == 1 )
 	if ( limit == 1 )
 		player->SetFatigue 0
 		return
 	endif
 endif
 
-if ( active == 0 )
+if ( r_active == 0 )
 	if ( limit == 1 )
 		player->SetFatigue 0
-		set active to 1
+		set r_active to 1
 		MenuTest
 		return
 	endif
 endif
 
-if ( active == 1 )
+if ( r_active == 1 )
 	if ( limit == 0 )
 		MessageBox "You have fully recovered!"
 		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
 		player->SetFatigue maxFatigue
 		set maxFatigue to ( maxFatigue * -1 )
 		player->ModCurrentFatigue maxFatigue
-		set active to 0
+		set r_active to 0
 		return
 	endif
 endif

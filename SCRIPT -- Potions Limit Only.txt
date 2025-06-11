@@ -9,7 +9,7 @@ short potionTime
 
 short limitPotion
 short limit
-short active
+;short active
 
 short drinkCount
 short drinkOverdose
@@ -22,6 +22,8 @@ float currentHour
 float drinkHour
 float deltaHour
 
+float countdown
+
 if ( CharGenState != -1 )
 	return
 endif
@@ -31,6 +33,22 @@ if ( init == 0 )
 	set drinkOverdose to 90
 	set drinkDeath to 100
 	set init to 1
+endif
+
+if ( drinkMsg == 1 )
+	set countdown to ( potionTime - timer )
+	MessageBox "You can't drink any more potions for %.0fs.", countdown
+	set drinkMsg to 0;
+endif
+
+if ( drinkMsg2 == 1 )
+	MessageBox "You can't drink potions right now."
+	set drinkMsg2 to 0;
+endif
+
+if ( apparatusMsg == 1 )
+	MessageBox "You can't create potions right now."
+	set apparatusMsg to 0;
 endif
 
 if ( active == 0 )
