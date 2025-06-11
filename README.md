@@ -79,21 +79,21 @@ The potion limit depends on Alchemy level:
 ### Changelog
 ```
 1.0
-- Initial version
+- Initial version.
 1.1
-- Strength, Intelligence and Luck also drop to 0 (to prevent using 800+ fortify spells)
-- Negative effect increased from 1000 to 2000
-- Potion timer bugfix
+- Strength, Intelligence, and Luck also drop to 0 (to prevent using 800+ fortify spells).
+- Negative effect increased from 1000 to 2000.
+- Potion timer bugfix.
 1.2
-- Negative effect increased from 2000 to 100000 (to prevent using strong restore potions)
+- Negative effect increased from 2000 to 100000 (to prevent using strong restore potions).
 1.3
-- Use lua to block alchemy, enchant and repair window, instead of dropping skills to 0
+- Use Lua to block the alchemy, enchant, and repair windows instead of dropping skills to 0.
 1.4
-- Potion limit only added
-- Fix for invisibility potion issue, but cooldown indicator is disabled in this version
+- Potion limit only added.
+- Fix for invisibility potion issue, but cooldown indicator is disabled in this version.
 1.5
-- Cleaing up and rewriting some scripts
-- Now you can't drink potions over limit
+- Cleaning up and rewriting some scripts.
+- Now you can't drink potions over the limit.
 ```
 
 ------------------------------------------------------------
