@@ -1,4 +1,4 @@
-## Attributes, Skills & Potions Limit (OpenMW)
+## Stats & Potions Limit (OpenMW)
 
 This mod introduces attributes, skills, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to use sometimes potions with negative effects or create multieffect potions.
 
@@ -30,25 +30,25 @@ Increasing skills beyond 100 is more or less overpowered at all, but this is why
 #### Potion limit
 
 Potion limit depends on Alchemy level:
-
+```
 0 - 19 -> 3 potions
 20 - 39 -> 4 potions
 40 - 59 -> 5 potions
 60 - 79 -> 6 potions
 80 - 99 -> 7 potions
 100+ -> 8 potions
- 
+```
+
 - After every potion drunk, the cooldown timer is starting to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
 - When you drink one more potion over the limit, you collapse.
 - When you drink another one, you are dead.
 
-<s>There is a small Poison Resist 1% effect after every potion, just to visualize the cooldown timer. I chose Poison Resist because it cannot be resisted or cured and still somehow fits into the entire idea.</s> This feature unfortunately breaks invisibility potions.
-
 #### Compatibility
 Probably incompatible with everything that changes how fatigue is calculated.
 
 #### Changelog
+```
 1.0
 - Initial version
 1.1
@@ -62,9 +62,7 @@ Probably incompatible with everything that changes how fatigue is calculated.
 1.4
 - Potion limit only added
 - Fix for invisibility potion issue, but cooldown indicator is disabled in this version
-
-TODO
-- Create potion counter and timer in lua
+```
 
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
