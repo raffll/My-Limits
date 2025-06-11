@@ -31,12 +31,12 @@ Increasing skills beyond 100 is more or less overpowered at all, but this is why
 
 Potion limit depends on Alchemy level:
 ```
-0 - 19 -> 3 potions
+ 0 - 19 -> 3 potions
 20 - 39 -> 4 potions
 40 - 59 -> 5 potions
 60 - 79 -> 6 potions
 80 - 99 -> 7 potions
-100+ -> 8 potions
+100+    -> 8 potions
 ```
 
 - After every potion drunk, the cooldown timer is starting to count up to 20 seconds.
