@@ -1,0 +1,232 @@
+begin raffll_limits
+
+short init
+
+short maxCount
+short oldCount
+
+short potionTime
+
+short limitPotion
+short limit
+
+short maxFatigue
+float timer
+
+float currentHour
+float drinkHour
+float deltaHour
+
+float countdown
+
+if ( CharGenState != -1 )
+	return
+endif
+
+if ( init == 0 )
+	set potionTime to 20
+	set r_drinkOverdose to 90
+	set r_drinkDeath to 100
+	set init to 1
+endif
+
+if ( r_drinkMsg == 1 )
+	set countdown to ( potionTime - timer )
+	MessageBox "You can't drink any more potions for %.0fs.", countdown
+	set r_drinkMsg to 0;
+endif
+
+if ( r_drinkMsg2 == 1 )
+	MessageBox "You can't drink potions right now."
+	set r_drinkMsg2 to 0;
+endif
+
+if ( r_apparatusMsg == 1 )
+	MessageBox "You can't create potions right now."
+	set r_apparatusMsg to 0;
+endif
+
+if ( r_repairMsg == 1 )
+	MessageBox "You can't repair right now."
+	set r_repairMsg to 0;
+endif
+
+if ( r_miscellaneousMsg == 1 )
+	MessageBox "You can't use this right now."
+	set r_miscellaneousMsg to 0;
+endif
+
+if ( r_active == 0 )
+	set maxCount to ( player->GetAlchemy )
+	set maxCount to ( ( maxCount / 20 ) + 3 )
+
+	if ( maxCount < 3 )
+		set maxCount to 3
+	endif
+
+	if ( maxCount > 8 )
+		set maxCount to 8
+	endif
+
+	if ( maxCount != oldCount )
+		MessageBox "You can drink up to %G potions.", maxCount
+		set oldCount to maxCount
+	endif
+endif
+
+;;;
+
+if ( player->GetSoundPlaying "drink" == 1 )
+	player->StopSound "drink"
+	if ( timer < potionTime )
+		
+		set drinkHour to GameHour
+		
+		if ( r_drinkCount < r_drinkOverdose )
+			if ( maxCount < r_drinkCount )
+				set r_drinkCount to r_drinkOverdose
+			endif
+		endif
+	
+		if ( r_drinkCount == r_drinkDeath )
+			MessageBox "You have died from the potion overdose!"
+			player->SetHealth 0
+			set timer to 0
+			MenuTest
+			
+		elseif ( r_drinkCount == r_drinkOverdose )
+			MessageBox "You have overdosed potions!"
+			set limitPotion to 1
+			set timer to 0
+			set r_drinkCount to r_drinkDeath
+			
+		elseif ( r_drinkCount == 7 )
+			set timer to 0
+			if ( maxCount == 8 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 8
+			endif
+			
+		elseif ( r_drinkCount == 6 )
+			set timer to 0
+			if ( maxCount == 7 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 7
+			endif
+			
+		elseif ( r_drinkCount == 5 )
+			set timer to 0
+			if ( maxCount == 6 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 6
+			endif
+			
+		elseif ( r_drinkCount == 4 )
+			set timer to 0
+			if ( maxCount == 5 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 5
+			endif
+			
+		elseif ( r_drinkCount == 3 )
+			set timer to 0
+			if ( maxCount == 4 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 4
+			endif
+			
+		elseif ( r_drinkCount == 2 )
+			set timer to 0
+			if ( maxCount == 3 )
+				set r_drinkCount to r_drinkOverdose
+			else
+				set r_drinkCount to 3
+			endif
+			
+		elseif ( r_drinkCount == 1 )
+			set timer to 0
+			set r_drinkCount to 2
+			
+		else
+			set timer to 0
+			set r_drinkCount to 1
+		endif
+		
+		if ( r_drinkCount == r_drinkOverdose )
+			MessageBox "You have reached the limit of potions!"
+		endif
+		
+	endif
+endif
+
+if ( r_drinkCount > 0 )
+	if ( MenuMode == 0 )
+		set timer to ( timer + GetSecondsPassed )
+	endif
+	
+	set currentHour to GameHour
+	;MessageBox "%.2f, %.2f, %.2f, %.2f", timer, drinkHour, currentHour, deltaHour
+	set deltaHour to ( currentHour - drinkHour )
+	if ( deltaHour < 0 )
+		set deltaHour to ( deltaHour * -1 )
+	endif
+	if ( deltaHour > 1 )
+		set timer to ( potionTime + 1 )
+	endif
+	
+	if ( timer >= potionTime )		
+		MessageBox "You have recovered from the potion toxic effect!"
+		set limitPotion to 0
+		set timer to 0
+		set r_drinkCount to 0
+	endif
+endif
+
+;;;
+
+if ( limitPotion == 1 )
+	set limit to 1
+else
+	set limit to 0
+endif
+
+if ( r_active == 0 )
+	if ( limit == 0 )
+		return
+	endif
+endif
+
+if ( r_active == 1 )
+	if ( limit == 1 )
+		player->SetFatigue 0
+		return
+	endif
+endif
+
+if ( r_active == 0 )
+	if ( limit == 1 )
+		player->SetFatigue 0
+		set r_active to 1
+		MenuTest
+		return
+	endif
+endif
+
+if ( r_active == 1 )
+	if ( limit == 0 )
+		MessageBox "You have fully recovered!"
+		set maxFatigue to ( player->GetStrength + player->GetWillpower + player->GetAgility + player->GetEndurance )
+		player->SetFatigue maxFatigue
+		set maxFatigue to ( maxFatigue * -1 )
+		player->ModCurrentFatigue maxFatigue
+		set r_active to 0
+		return
+	endif
+endif
+
+end

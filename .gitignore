@@ -1,7 +1,5 @@
-/*
-!/Attributes, Skills & Potions Limit 1.2/
-!/scripts/
-!.gitignore
-!*.esp
-!*.txt
-!*.zip
+optional/
+meta.ini
+*.zip
+*.bak
+*.omwscripts.esp
