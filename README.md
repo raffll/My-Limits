@@ -1,10 +1,12 @@
-## Stats & Potions Limit (OpenMW)
+# Stats & Potions Limit (OpenMW)
 
 This mod introduces attributes, skills, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to use sometimes potions with negative effects or create multieffect potions.
 
 OpenMW only, lua edition.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
+
+------------------------------------------------------------
 
 #### Negative effect
 
@@ -17,15 +19,21 @@ Once the player exceeds the limit, fatigue will be set to 0, leaving the player 
 - Keep in mind that when you levitate, you cannot wait.
 - After recovery your fatigue will be set to 0.
 
+------------------------------------------------------------
+
 #### Attribute cap
 
 Attribute cap is set to 100 + (Level * 5). With a maximum set to 300, except for Speed, where the cap is set to 300 + (level * 5) (max 500).
 That's reasonable for me; that character on level 1 can drink 1 sujamma, but on level 40 can drink up to 4.
 
+------------------------------------------------------------
+
 #### Skill cap
 
 Skill cap is set to 100 + Level. With a maximum set to 150, except Acrobatics, where the cap is set to 1100 + Level (max 1150).
 Increasing skills beyond 100 is more or less overpowered at all, but this is why we love this game. I think 150 cap here will still satisfy some power gamers.
+
+------------------------------------------------------------
 
 #### Potion limit
 
@@ -44,8 +52,12 @@ Potion limit depends on Alchemy level:
 - When you drink one more potion over the limit, you collapse.
 - When you drink another one, you are dead.
 
+------------------------------------------------------------
+
 #### Compatibility
 Probably incompatible with everything that changes how fatigue is calculated.
+
+------------------------------------------------------------
 
 #### Changelog
 ```
@@ -64,8 +76,12 @@ Probably incompatible with everything that changes how fatigue is calculated.
 - Fix for invisibility potion issue, but cooldown indicator is disabled in this version
 ```
 
+------------------------------------------------------------
+
 #### Credits
 Rosynant for creating Alchemical Hustle from where I took the idea of how to limit potions.
+
+------------------------------------------------------------
 
 #### Permissions
 Do whatever you want.
