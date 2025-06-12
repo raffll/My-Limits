@@ -6,12 +6,7 @@ OpenMW only, Lua edition.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
 
-------------------------------------------------------------
-
-### Compatibility
-
-- Use "Stats & Potions Limit.esp" or "Potions Limit Only.esp".
-- This mod is probably incompatible with everything that changes how fatigue is calculated.
+*You can choose in the settings menu if you want the full limit or only potions.*
 
 ------------------------------------------------------------
 
@@ -94,7 +89,17 @@ The potion limit depends on Alchemy level:
 1.5
 - Cleaning up and rewriting some scripts.
 - Now you can't drink potions over the limit.
+1.6
+- "You have reached the limit of potions!" message removed.
+- Both options merged into one esp.
+- Settings menu created.
 ```
+
+------------------------------------------------------------
+
+### Compatibility
+
+This mod is probably incompatible with everything that changes how fatigue is calculated.
 
 ------------------------------------------------------------
 
