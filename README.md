@@ -6,7 +6,7 @@ OpenMW only, Lua edition.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
 
-*You can choose in the settings menu if you want the full limit or only potions.*
+**You can choose in the settings menu if you want the full limit or only potions.**
 
 ------------------------------------------------------------
 
