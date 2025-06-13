@@ -4,9 +4,17 @@ This mod introduces attributes, skills, training, and potion consumption limits 
 
 OpenMW only, Lua edition.
 
-This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module. **Now with a new training module**.
+This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module. **Now with a new training limit**.
 
-**You can choose in the settings menu if you want the full limit or only potions.**
+------------------------------------------------------------
+
+### Options
+
+You can choose in the Lua settings menu:
+
+- If you want the full limit or only potions.
+- If you want a progressive limit based on Level or just a constant 300/150 limit. The constant option is the new default for a more vanilla experience.
+- If you want a limit based on Alchemy or player Level. Player Level is the new default because you can easily fortify Alchemy.
 
 ------------------------------------------------------------
 
@@ -52,19 +60,7 @@ Increasing skills beyond 100 is more or less overpowered at all, but this is why
 
 ------------------------------------------------------------
 
-### Options
-
-**You can choose in the settings menu if you want a progressive limit based on Level or just a constant 300/150 limit.**
-
-The constant option is the new default for a more vanilla experience.
-
-------------------------------------------------------------
-
 ### Potion limit
-
-**You can choose in the settings menu if you want a limit based on Alchemy or player Level.**
-
-Player level is the new default because you can easily fortify Alchemy.
 
 The potion limit depends on Alchemy level:
 ```
@@ -123,6 +119,9 @@ You can train only 5 times per level. That's it.
 - Both options merged into one esp.
 - Settings menu created.
 1.7
+- Potion limit based on level option added.
+- Constant limit for stats option added.
+- Training limit module added.
 ```
 
 ------------------------------------------------------------
