@@ -105,16 +105,21 @@ if ( r_miscellaneousMsg == 1 )
 endif
 
 if ( r_active == 0 )
-	if ( r_onlyPotions == 0 )
-		set playerLevel to ( player->GetLevel )
+	set playerLevel to ( player->GetLevel )
 
-		set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
-		if ( maxValueAttribute > 300 )
+	if ( r_onlyPotions == 0 )
+		if ( r_constStatsLimit == 0 )
+			set maxValueAttribute to ( 100 + ( playerLevel * 5 ) )
+			if ( maxValueAttribute > 300 )
+				set maxValueAttribute to 300
+			endif
+			
+			set maxValueSkill to ( 100 + playerLevel )
+			if ( maxValueSkill > 150 )
+				set maxValueSkill to 150
+			endif
+		else
 			set maxValueAttribute to 300
-		endif
-		
-		set maxValueSkill to ( 100 + playerLevel )
-		if ( maxValueSkill > 150 )
 			set maxValueSkill to 150
 		endif
 
@@ -129,8 +134,13 @@ if ( r_active == 0 )
 		endif
 	endif
 
-	set maxCount to ( player->GetAlchemy )
-	set maxCount to ( ( maxCount / 20 ) + 3 )
+	if ( r_potionsByLevel == 0 )
+		set maxCount to ( player->GetAlchemy )
+		set maxCount to ( ( maxCount / 20 ) + 3 )
+	else
+		set maxCount to ( player->GetLevel )
+		set maxCount to ( ( maxCount / 10 ) + 3 )
+	endif
 
 	if ( maxCount < 3 )
 		set maxCount to 3
