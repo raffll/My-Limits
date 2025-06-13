@@ -25,14 +25,14 @@ interfaces.Settings.registerGroup({
             renderer = 'checkbox',
             name = 'Potions Limit by Level',
             description = 'Potion limit depends on Level instead of Alchemy.',
-            default = false
+            default = true
         },
 		{
             key = 'constStatsLimit',
             renderer = 'checkbox',
             name = 'Constant Stats Limit',
             description = 'Stats limit set to constant 300/150 without Level influence.',
-            default = false
+            default = true
         },
     },
 })
