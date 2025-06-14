@@ -7,85 +7,85 @@ local l10nKey = 'raffll_limits'
 local settingsPageKey = 'SPL'
 
 interfaces.Settings.registerGroup({
-    key = 'Main',
-    page = settingsPageKey,
-    l10n = l10nKey,
-    name = 'Main',
-    permanentStorage = true,
-    settings = {
-        {
-            key = 'potionsOnly',
-            renderer = 'checkbox',
-            name = 'Potions Limit Only',
-            description = 'Disables attribute and skill limits.',
-            default = false
-        },
+	key = 'Main',
+	page = settingsPageKey,
+	l10n = l10nKey,
+	name = 'Main',
+	permanentStorage = true,
+	settings = {
 		{
-            key = 'potionsByLevel',
-            renderer = 'checkbox',
-            name = 'Potions Limit by Level',
-            description = 'Potion limit depends on Level instead of Alchemy.',
-            default = true
-        },
+			key = 'potionsOnly',
+			renderer = 'checkbox',
+			name = 'Potions Limit Only',
+			description = 'Disables attribute and skill limits.',
+			default = false
+		},
 		{
-            key = 'constStatsLimit',
-            renderer = 'checkbox',
-            name = 'Constant Stats Limit',
-            description = 'Stats limit set to constant 300/150 without Level influence.',
-            default = true
-        },
-    },
+			key = 'potionsByAlchemy',
+			renderer = 'checkbox',
+			name = 'Potions Limit by Alchemy',
+			description = 'Potion limit depends on Alchemy instead of Level.',
+			default = false
+		},
+		{
+			key = 'progressiveLimit',
+			renderer = 'checkbox',
+			name = 'Progressive Limits',
+			description = 'Attribute and skill limits depends on Level.',
+			default = false
+		},
+	},
 })
 
 local globalStorage = storage.globalSection('Main')
 
 local potionsOnly = globalStorage:get('potionsOnly')
 if potionsOnly == true then
-	world.mwscript.getGlobalVariables(player).r_onlyPotions = 1
+	world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
 else
-	world.mwscript.getGlobalVariables(player).r_onlyPotions = 0
+	world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
 end
 
-local potionsByLevel = globalStorage:get('potionsByLevel')
-if potionsByLevel == true then
-	world.mwscript.getGlobalVariables(player).r_potionsByLevel = 1
+local potionsByAlchemy = globalStorage:get('potionsByAlchemy')
+if potionsByAlchemy == true then
+	world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
 else
-	world.mwscript.getGlobalVariables(player).r_potionsByLevel = 0
+	world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
 end
 
-local constStatsLimit = globalStorage:get('constStatsLimit')
-if constStatsLimit == true then
-	world.mwscript.getGlobalVariables(player).r_constStatsLimit = 1
+local progressiveLimit = globalStorage:get('progressiveLimit')
+if progressiveLimit == true then
+	world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
 else
-	world.mwscript.getGlobalVariables(player).r_constStatsLimit = 0
+	world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
 end
-		
+
 local function updateOption(_, key)
-    if key == 'potionsOnly' then
+	if key == 'potionsOnly' then
 		potionsOnly = globalStorage:get('potionsOnly')
 		if potionsOnly == true then
-			world.mwscript.getGlobalVariables(player).r_onlyPotions = 1
+			world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
 		else
-			world.mwscript.getGlobalVariables(player).r_onlyPotions = 0
+			world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
 		end
-    end
-	
-	if key == 'potionsByLevel' then
-		potionsByLevel = globalStorage:get('potionsByLevel')
-		if potionsByLevel == true then
-			world.mwscript.getGlobalVariables(player).r_potionsByLevel = 1
+	end
+
+	if key == 'potionsByAlchemy' then
+		potionsByAlchemy = globalStorage:get('potionsByAlchemy')
+		if potionsByAlchemy == true then
+			world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
 		else
-			world.mwscript.getGlobalVariables(player).r_potionsByLevel = 0
+			world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
 		end
-    end
-	
-	if key == 'constStatsLimit' then
-		constStatsLimit = globalStorage:get('constStatsLimit')
-		if constStatsLimit == true then
-			world.mwscript.getGlobalVariables(player).r_constStatsLimit = 1
+	end
+
+	if key == 'progressiveLimit' then
+		progressiveLimit = globalStorage:get('progressiveLimit')
+		if progressiveLimit == true then
+			world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
 		else
-			world.mwscript.getGlobalVariables(player).r_constStatsLimit = 0
+			world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
 		end
-    end
+	end
 end
 globalStorage:subscribe(async:callback(updateOption))
