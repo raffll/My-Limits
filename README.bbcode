@@ -1,10 +1,10 @@
-# Stats & Potions Limit (OpenMW) + Training Limit
+[b][size=5]# Stats & Potions Limit (OpenMW) + Training Limit[/size][/b]
 
 This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to sometimes create multi-effect potions and plan your training carefully.
 
 OpenMW only, Lua edition.
 
-This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module. **Now with a new training limit**.
+This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module. [b]**Now with a new training limit**[/b].
 
 ------------------------------------------------------------
 
@@ -64,28 +64,28 @@ Increasing skills beyond 100 is more or less overpowered at all, but this is why
 
 The potion limit depends on Alchemy level:
 ```
- 0 - 19 -> 3 potions
+0 - 19 -> 3 potions
 20 - 39 -> 4 potions
 40 - 59 -> 5 potions
 60 - 79 -> 6 potions
 80 - 99 -> 7 potions
-100+    -> 8 potions
+100+ -> 8 potions
 ```
 
 Or on player Level:
 ```
- 0 - 9  -> 3 potions
+0 - 9 -> 3 potions
 10 - 19 -> 4 potions
 20 - 29 -> 5 potions
 30 - 39 -> 6 potions
 40 - 49 -> 7 potions
-50+     -> 8 potions
+50+ -> 8 potions
 ```
 
 - After every potion drunk, the cooldown timer starts to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
-- <s>When you drink one more potion over the limit, you collapse.</s>
-- <s>When you drink another one, you are dead.</s>
+- [s]When you drink one more potion over the limit, you collapse.[/s]
+- [s]When you drink another one, you are dead.[/s]
 - Now you just can't drink another one (unless you use a hotkey).
 
 ------------------------------------------------------------
