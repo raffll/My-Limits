@@ -122,6 +122,8 @@ You can train only 5 times per level. That's it.
 - Potion limit based on level option added.
 - Constant limit for stats option added.
 - Training limit module added.
+1.8
+- "You have recovered from the potion toxic effect!" message removed.
 ```
 
 ------------------------------------------------------------
@@ -138,4 +140,4 @@ Rosynant for creating Alchemical Hustle, from which I took the idea of how to li
 ------------------------------------------------------------
 
 ### Permissions
-Do whatever you want.
+Do whatever you want. Just credit me.
