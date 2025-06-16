@@ -566,7 +566,7 @@ if ( r_drinkCount > 0 )
 	endif
 
 	if ( timer >= potionTime )
-		MessageBox "You have recovered from the potion toxic effect!"
+		;MessageBox "You have recovered from the potion toxic effect!"
 		set limitPotion to 0
 		set timer to 0
 		set r_drinkCount to 0
