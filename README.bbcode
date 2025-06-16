@@ -136,9 +136,11 @@ This mod is probably incompatible with everything that changes how fatigue is ca
 ------------------------------------------------------------
 
 ### Credits
+
 Rosynant for creating Alchemical Hustle, from which I took the idea of how to limit potions.
 
 ------------------------------------------------------------
 
 ### Permissions
+
 Do whatever you want. Just credit me.
