@@ -122,6 +122,9 @@ You can train only 5 times per level. That's it.
 - Potion limit based on level option added.
 - Constant limit for stats option added.
 - Training limit module added.
+1.8
+- "You have recovered from the potion toxic effect!" message removed.
+- More natural training limit message.
 ```
 
 ------------------------------------------------------------
@@ -133,9 +136,11 @@ This mod is probably incompatible with everything that changes how fatigue is ca
 ------------------------------------------------------------
 
 ### Credits
+
 Rosynant for creating Alchemical Hustle, from which I took the idea of how to limit potions.
 
 ------------------------------------------------------------
 
 ### Permissions
-Do whatever you want.
+
+Do whatever you want. Just credit me.

@@ -30,7 +30,7 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
 		onInit()
 	end
 	if trainCount == 5 then
-		ui.showMessage('You can\'t learn more theory right now.')
+		ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
 		return false
 	end
 	if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
