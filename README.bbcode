@@ -125,6 +125,8 @@ You can train only 5 times per level. That's it.
 1.8
 - "You have recovered from the potion toxic effect!" message removed.
 - More natural training limit message.
+1.9
+- Training limit bugfix
 ```
 
 ------------------------------------------------------------
