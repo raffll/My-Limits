@@ -26,14 +26,14 @@ local function onLoad(data)
 end
 
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
-	if currentLevel ~= types.Actor.stats.level(self).current then
-		onInit()
-	end
-	if trainCount == 5 then
-		ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
-		return false
-	end
 	if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
+		if currentLevel ~= types.Actor.stats.level(self).current then
+			onInit()
+		end
+		if trainCount == 5 then
+			ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
+			return false
+		end
 		trainCount = trainCount + 1
 		print(string.format("trainCount: %d", trainCount))
 	end
