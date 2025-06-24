@@ -35,8 +35,8 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
 			return false
 		end
 		trainCount = trainCount + 1
-		print(string.format("trainCount: %d", trainCount))
 	end
+	print(string.format("trainCount: %d", trainCount))
 end)
 
 return {
@@ -44,6 +44,19 @@ return {
 		onInit = onInit,
 		onSave = onSave,
 		onLoad = onLoad,
+	},
+	eventHandlers = {
+		UiModeChanged = function(data)
+			--print('UiModeChanged from', data.oldMode , 'to', data.newMode, '('..tostring(data.arg)..')')
+			if currentLevel ~= types.Actor.stats.level(self).current then
+				onInit()
+			end
+			if trainCount == 5 and data.newMode == 'Training' then
+				ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
+				interfaces.UI.removeMode('Training')
+				--interfaces.UI.removeMode('Dialogue')
+				--interfaces.UI.removeMode('Interface')
+			end
+		end
 	}
 }
-
