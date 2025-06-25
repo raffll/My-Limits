@@ -52,10 +52,10 @@ return {
 				onInit()
 			end
 			if trainCount == 5 and data.newMode == 'Training' then
-				ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
 				interfaces.UI.removeMode('Training')
-				--interfaces.UI.removeMode('Dialogue')
-				--interfaces.UI.removeMode('Interface')
+				interfaces.UI.removeMode('Dialogue')
+				interfaces.UI.removeMode('Interface')
+				ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
 			end
 		end
 	}
