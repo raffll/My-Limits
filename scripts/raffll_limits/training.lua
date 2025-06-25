@@ -11,6 +11,7 @@ local currentLevel
 local function onInit()
 	trainCount = 0
 	currentLevel = types.Actor.stats.level(self).current
+	core.sendGlobalEvent("trainCountEvent", { trainCount })
 end
 
 local function onSave()
@@ -23,20 +24,20 @@ end
 local function onLoad(data)
 	trainCount = data.tc
 	currentLevel = data.cl
+	core.sendGlobalEvent("trainCountEvent", { trainCount })
+end
+
+local function onUpdate(dt)
+	if currentLevel ~= types.Actor.stats.level(self).current then
+		onInit()
+	end
 end
 
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
 	if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
-		if currentLevel ~= types.Actor.stats.level(self).current then
-			onInit()
-		end
-		if trainCount == 5 then
-			ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
-			return false
-		end
 		trainCount = trainCount + 1
+		core.sendGlobalEvent("trainCountEvent", { trainCount })
 	end
-	print(string.format("trainCount: %d", trainCount))
 end)
 
 return {
@@ -44,19 +45,6 @@ return {
 		onInit = onInit,
 		onSave = onSave,
 		onLoad = onLoad,
-	},
-	eventHandlers = {
-		UiModeChanged = function(data)
-			--print('UiModeChanged from', data.oldMode , 'to', data.newMode, '('..tostring(data.arg)..')')
-			if currentLevel ~= types.Actor.stats.level(self).current then
-				onInit()
-			end
-			if trainCount == 5 and data.newMode == 'Training' then
-				ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
-				interfaces.UI.removeMode('Training')
-				--interfaces.UI.removeMode('Dialogue')
-				--interfaces.UI.removeMode('Interface')
-			end
-		end
+		onUpdate = onUpdate,
 	}
 }

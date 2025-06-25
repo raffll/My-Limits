@@ -129,6 +129,8 @@ You can train only 5 times per level. That's it.
 - Training limit bugfix
 1.10
 - Training limit money and time loss fix
+1.11
+- Training limit finally done
 ```
 
 ------------------------------------------------------------

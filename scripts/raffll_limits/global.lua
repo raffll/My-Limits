@@ -33,3 +33,15 @@ interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneo
 		return false
 	end
 end)
+
+local function trainCountFunc(arg)
+	local trainCount = arg[1]
+	print(string.format("trainCount: %d", trainCount))
+	world.mwscript.getGlobalVariables(player).r_trainCount = trainCount
+end
+
+return {
+	eventHandlers = {
+		trainCountEvent = trainCountFunc
+	}
+}
