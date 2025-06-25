@@ -95,6 +95,8 @@ return {
 	interfaceName = 'raffll_limits',
 	interface = {
 		version = 1,
-		setPotionOnly = setPotionOnly
+		setPotionOnly = setPotionOnly,
+		setPotionsByAlchemy = setPotionsByAlchemy,
+		setProgressiveLimit = setProgressiveLimit
 	}
 }

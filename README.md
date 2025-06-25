@@ -126,9 +126,12 @@ You can train only 5 times per level. That's it.
 - "You have recovered from the potion toxic effect!" message removed.
 - More natural training limit message.
 1.9
-- Training limit bugfix
+- Training limit bugfix.
 1.10
-- Training limit money and time loss fix
+- Training limit money and time loss fix.
+1.11
+- Training limit drops all windows for better compatibility with real-time menu mods.
+- Lua interfaces added.
 ```
 
 ------------------------------------------------------------
