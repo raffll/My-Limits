@@ -37,13 +37,13 @@ interfaces.Settings.registerGroup({
 	},
 })
 
-local function setPotionOnly(arg)
+local function setPotionsOnly(arg)
 	if arg == true then
 		world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
 	else
 		world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
 	end
-	print("setPotionOnly: " .. tostring(arg))
+	print("setPotionsOnly: " .. tostring(arg))
 end
 
 local function setPotionsByAlchemy(arg)
@@ -69,14 +69,14 @@ local potionsOnly = globalStorage:get('potionsOnly')
 local potionsByAlchemy = globalStorage:get('potionsByAlchemy')
 local progressiveLimit = globalStorage:get('progressiveLimit')
 
-setPotionOnly(potionsOnly)
+setPotionsOnly(potionsOnly)
 setPotionsByAlchemy(potionsByAlchemy)
 setProgressiveLimit(progressiveLimit)
 
 local function updateOption(_, key)
 	if key == 'potionsOnly' then
 		potionsOnly = globalStorage:get('potionsOnly')
-		setPotionOnly(potionsOnly)
+		setPotionsOnly(potionsOnly)
 	end
 
 	if key == 'potionsByAlchemy' then
@@ -95,7 +95,7 @@ return {
 	interfaceName = 'raffll_limits',
 	interface = {
 		version = 1,
-		setPotionOnly = setPotionOnly,
+		setPotionsOnly = setPotionsOnly,
 		setPotionsByAlchemy = setPotionsByAlchemy,
 		setProgressiveLimit = setProgressiveLimit
 	}
