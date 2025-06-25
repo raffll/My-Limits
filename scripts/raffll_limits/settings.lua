@@ -37,55 +37,64 @@ interfaces.Settings.registerGroup({
 	},
 })
 
+local function setPotionOnly(arg)
+	if arg == true then
+		world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
+	else
+		world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
+	end
+	print("setPotionOnly: " .. tostring(arg))
+end
+
+local function setPotionsByAlchemy(arg)
+	if arg == true then
+		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
+	else
+		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
+	end
+	print("setPotionsByAlchemy: " .. tostring(arg))
+end
+
+local function setProgressiveLimit(arg)
+	if arg == true then
+		world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
+	else
+		world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
+	end
+	print("setProgressiveLimit: " .. tostring(arg))
+end
+
 local globalStorage = storage.globalSection('Main')
-
 local potionsOnly = globalStorage:get('potionsOnly')
-if potionsOnly == true then
-	world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
-else
-	world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
-end
-
 local potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-if potionsByAlchemy == true then
-	world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
-else
-	world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
-end
-
 local progressiveLimit = globalStorage:get('progressiveLimit')
-if progressiveLimit == true then
-	world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
-else
-	world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
-end
+
+setPotionOnly(potionsOnly)
+setPotionsByAlchemy(potionsByAlchemy)
+setProgressiveLimit(progressiveLimit)
 
 local function updateOption(_, key)
 	if key == 'potionsOnly' then
 		potionsOnly = globalStorage:get('potionsOnly')
-		if potionsOnly == true then
-			world.mwscript.getGlobalVariables(player).r_potionsOnly = 1
-		else
-			world.mwscript.getGlobalVariables(player).r_potionsOnly = 0
-		end
+		setPotionOnly(potionsOnly)
 	end
 
 	if key == 'potionsByAlchemy' then
 		potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-		if potionsByAlchemy == true then
-			world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
-		else
-			world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
-		end
+		setPotionsByAlchemy(potionsByAlchemy)
 	end
 
 	if key == 'progressiveLimit' then
 		progressiveLimit = globalStorage:get('progressiveLimit')
-		if progressiveLimit == true then
-			world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
-		else
-			world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
-		end
+		setProgressiveLimit(progressiveLimit)
 	end
 end
 globalStorage:subscribe(async:callback(updateOption))
+
+return {
+	interfaceName = 'raffll_limits',
+	interface = {
+		version = 1,
+		setPotionOnly = setPotionOnly
+	}
+}
