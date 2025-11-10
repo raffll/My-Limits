@@ -35,8 +35,8 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
 			return false
 		end
 		trainCount = trainCount + 1
+		print(string.format("trainCount: %d", trainCount))
 	end
-	print(string.format("trainCount: %d", trainCount))
 end)
 
 return {

@@ -4,6 +4,9 @@ local types = require('openmw.types')
 local world = require('openmw.world')
 
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
+	if not types.Player.objectIsInstance(player) then
+		return false
+	end
 	if world.mwscript.getGlobalVariables(player).r_active == 1 then
 		world.mwscript.getGlobalVariables(player).r_drinkMsg2 = 1
 		return false
