@@ -132,6 +132,8 @@ You can train only 5 times per level. That's it.
 1.11
 - Training limit drops all windows for better compatibility with real-time menu mods.
 - Lua interfaces added.
+1.12
+- Fixed error message when NPCs are drinking potions
 ```
 
 ------------------------------------------------------------
