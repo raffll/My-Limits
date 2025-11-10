@@ -5,6 +5,7 @@ local world = require('openmw.world')
 
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
 	if not types.Player.objectIsInstance(player) then
+		--print(string.format("npcDrink: %s", types.NPC.record(player).name))
 		return false
 	end
 	if world.mwscript.getGlobalVariables(player).r_active == 1 then
