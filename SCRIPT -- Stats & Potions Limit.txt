@@ -8,8 +8,8 @@ short maxValueSkill
 short oldValueSkill
 short oldCount
 
-short speedOffset
-short acrobaticsOffset
+;short speedOffset
+;short acrobaticsOffset
 short potionTime
 
 short limitStrength
@@ -69,8 +69,8 @@ endif
 set r_countdown to ( potionTime - timer )
 
 if ( init == 0 )
-	set speedOffset to 200
-	set acrobaticsOffset to 1000
+	;set speedOffset to 200
+	;set acrobaticsOffset to 1000
 	set potionTime to 20
 	set r_drinkOverdose to 90
 	set r_drinkDeath to 100
@@ -187,7 +187,7 @@ if ( r_potionsOnly == 0 )
 		set limitAgility to 0
 	endif
 
-	if ( ( player->GetSpeed ) > ( maxValueAttribute + speedOffset ) )
+	if ( ( player->GetSpeed ) > maxValueAttribute )
 		set limitSpeed to 1
 	else
 		set limitSpeed to 0
@@ -259,8 +259,13 @@ if ( r_potionsOnly == 0 )
 		set limitLongBlade to 0
 	endif
 
-	if ( ( player->GetAcrobatics ) > ( maxValueSkill + acrobaticsOffset ) )
-		set limitAcrobatics to 1
+	if ( ( player->GetAcrobatics ) > maxValueSkill )
+		if ( player->GetSpellEffects "sc_icarianflight_en" == 1 )
+			;MessageBox "AAAAAAAAAGGGHHHHHH!!!"
+			set limitAcrobatics to 0
+		else
+			set limitAcrobatics to 1
+		endif
 	else
 		set limitAcrobatics to 0
 	endif

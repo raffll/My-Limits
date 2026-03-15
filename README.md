@@ -1,20 +1,22 @@
-# Stats & Potions Limit (OpenMW) + Training Limit
+# Stats, Potions and Training Limits (OpenMW)
 
-This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to sometimes create multi-effect potions and plan your training carefully.
+This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to more often create multi-effect potions and plan your training carefully.
 
 OpenMW only, Lua edition.
 
-This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module. **Now with a new training limit**.
+This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
+
+**Now with a new hud counter for potion tracking.**
 
 ------------------------------------------------------------
 
 ### Options
 
-You can choose in the Lua settings menu:
+You can choose settings in the Lua scripts menu:
 
-- If you want the full limit or only potions.
-- If you want a progressive limit based on Level or just a constant 300/150 limit. The constant option is the new default for a more vanilla experience.
-- If you want a limit based on Alchemy or player Level. Player Level is the new default because you can easily fortify Alchemy.
+- Potions Limit Only: If you want full limit (No) or only potions (Yes).
+- Potions Limit by Alchemy: If you want limit based on player Level (No) or Alchemy (Yes).
+- Progressive Limits: If you want a constant 300/150 limit (No) or progressive limit based on your Level (Yes).
 
 ------------------------------------------------------------
 
@@ -32,47 +34,29 @@ In the case of potions, if player exceed the limit, further drinking will be imp
 
 ------------------------------------------------------------
 
-### Progressive attribute cap
+### Attribute cap
 
 The attribute cap is set to:
 ```
 100 + (Level * 5) with a maximum set to 300
 ```
-Except for Speed, where the cap is set to:
-```
-300 + (level * 5) with a maximum set to 500
-```
-That's reasonable for me; that character on level 1 can drink 1 sujamma, but on level 40 can drink up to 4.
+**Special case for Speed is removed in this version. You can still use best boots with max level.**
 
 ------------------------------------------------------------
 
-### Progressive skill cap
+### Skill cap
 
 The skill cap is set to:
 ```
 100 + Level with a maximum set to 150
 ```
-Except for Acrobatics, where the cap is set to:
-```
-1100 + Level with a maximum set to 1150
-```
-Increasing skills beyond 100 is more or less overpowered at all, but this is why we love this game. I think a 150 cap here will still satisfy some power gamers.
+**Except when effect of "Scroll of Icarian Flight" is active, there is no limit for Acrobatics (but only then).**
 
 ------------------------------------------------------------
 
 ### Potion limit
 
-The potion limit depends on Alchemy level:
-```
- 0 - 19 -> 3 potions
-20 - 39 -> 4 potions
-40 - 59 -> 5 potions
-60 - 79 -> 6 potions
-80 - 99 -> 7 potions
-100+    -> 8 potions
-```
-
-Or on player Level:
+The potion limit depends on player Level:
 ```
  0 - 9  -> 3 potions
 10 - 19 -> 4 potions
@@ -82,17 +66,26 @@ Or on player Level:
 50+     -> 8 potions
 ```
 
+or Alchemy level:
+```
+ 0 - 19 -> 3 potions
+20 - 39 -> 4 potions
+40 - 59 -> 5 potions
+60 - 79 -> 6 potions
+80 - 99 -> 7 potions
+100+    -> 8 potions
+```
+
 - After every potion drunk, the cooldown timer starts to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
-- <s>When you drink one more potion over the limit, you collapse.</s>
-- <s>When you drink another one, you are dead.</s>
-- Now you just can't drink another one (unless you use a hotkey).
+- If you reach the limit you just can't drink another one.
+- Unless you use a hotkey. Then when you drink one more potion over the limit, you collapse.
 
 ------------------------------------------------------------
 
 ### Training limit
 
-You can train only 5 times per level. That's it.
+You can train only 5 times per level. That's it. This plugin is independent from Stats & Potions.
 
 ------------------------------------------------------------
 
@@ -133,14 +126,18 @@ You can train only 5 times per level. That's it.
 - Training limit drops all windows for better compatibility with real-time menu mods.
 - Lua interfaces added.
 1.12
-- Fixed error message when NPCs are drinking potions
+- Fixed error message when NPCs are drinking potions.
+1.13
+- Counter added to HUD.
+- Speed exception removed.
+- Acrobatics exception changed to work only with Scroll of Icarian Flight.
 ```
 
 ------------------------------------------------------------
 
 ### Compatibility
 
-This mod is probably incompatible with everything that changes how fatigue is calculated.
+This mod is probably incompatible with everything that changes how fatigue is calculated. It uses standard formula.
 
 ------------------------------------------------------------
 
