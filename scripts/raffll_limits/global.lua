@@ -2,6 +2,7 @@ local core = require('openmw.core')
 local interfaces = require('openmw.interfaces')
 local types = require('openmw.types')
 local world = require('openmw.world')
+local storage = require('openmw.storage')
 
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
 	if not types.Player.objectIsInstance(player) then
@@ -37,3 +38,17 @@ interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneo
 		return false
 	end
 end)
+
+return {
+	engineHandlers = {
+		onUpdate = function(dt)
+			local player = world.players[1]
+			local vals = world.mwscript.getGlobalVariables(player)
+			local drinkCount = vals.r_drinkCount == 90 and vals.r_maxCount or vals.r_drinkCount
+			drinkCount = vals.r_drinkCount == 100 and vals.r_maxCount + 1 or drinkCount
+			storage.globalSection('raffll_limits'):set('countdown', vals.r_countdown)
+			storage.globalSection('raffll_limits'):set('maxCount', vals.r_maxCount)
+			storage.globalSection('raffll_limits'):set('drinkCount', drinkCount)
+		end
+	}
+}

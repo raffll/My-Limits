@@ -6,7 +6,6 @@ short maxValueAttribute
 short oldValueAttribute
 short maxValueSkill
 short oldValueSkill
-short maxCount
 short oldCount
 
 short speedOffset
@@ -63,11 +62,11 @@ float currentHour
 float drinkHour
 float deltaHour
 
-float countdown
-
 if ( CharGenState != -1 )
 	return
 endif
+
+set r_countdown to ( potionTime - timer )
 
 if ( init == 0 )
 	set speedOffset to 200
@@ -79,8 +78,7 @@ if ( init == 0 )
 endif
 
 if ( r_drinkMsg == 1 )
-	set countdown to ( potionTime - timer )
-	MessageBox "You can't drink any more potions for %.0fs.", countdown
+	MessageBox "You can't drink any more potions."
 	set r_drinkMsg to 0;
 endif
 
@@ -135,24 +133,24 @@ if ( r_active == 0 )
 	endif
 
 	if ( r_potionsByAlchemy == 0 )
-		set maxCount to ( player->GetLevel )
-		set maxCount to ( ( maxCount / 10 ) + 3 )
+		set r_maxCount to ( player->GetLevel )
+		set r_maxCount to ( ( r_maxCount / 10 ) + 3 )
 	else
-		set maxCount to ( player->GetAlchemy )
-		set maxCount to ( ( maxCount / 20 ) + 3 )
+		set r_maxCount to ( player->GetAlchemy )
+		set r_maxCount to ( ( r_maxCount / 20 ) + 3 )
 	endif
 
-	if ( maxCount < 3 )
-		set maxCount to 3
+	if ( r_maxCount < 3 )
+		set r_maxCount to 3
 	endif
 
-	if ( maxCount > 8 )
-		set maxCount to 8
+	if ( r_maxCount > 8 )
+		set r_maxCount to 8
 	endif
 
-	if ( maxCount != oldCount )
-		MessageBox "You can drink up to %G potions.", maxCount
-		set oldCount to maxCount
+	if ( r_maxCount != oldCount )
+		MessageBox "You can drink up to %G potions.", r_maxCount
+		set oldCount to r_maxCount
 	endif
 endif
 
@@ -473,7 +471,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 		set drinkHour to GameHour
 
 		if ( r_drinkCount < r_drinkOverdose )
-			if ( maxCount < r_drinkCount )
+			if ( r_maxCount < r_drinkCount )
 				set r_drinkCount to r_drinkOverdose
 			endif
 		endif
@@ -492,7 +490,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 7 )
 			set timer to 0
-			if ( maxCount == 8 )
+			if ( r_maxCount == 8 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 8
@@ -500,7 +498,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 6 )
 			set timer to 0
-			if ( maxCount == 7 )
+			if ( r_maxCount == 7 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 7
@@ -508,7 +506,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 5 )
 			set timer to 0
-			if ( maxCount == 6 )
+			if ( r_maxCount == 6 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 6
@@ -516,7 +514,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 4 )
 			set timer to 0
-			if ( maxCount == 5 )
+			if ( r_maxCount == 5 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 5
@@ -524,7 +522,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 3 )
 			set timer to 0
-			if ( maxCount == 4 )
+			if ( r_maxCount == 4 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 4
@@ -532,7 +530,7 @@ if ( player->GetSoundPlaying "drink" == 1 )
 
 		elseif ( r_drinkCount == 2 )
 			set timer to 0
-			if ( maxCount == 3 )
+			if ( r_maxCount == 3 )
 				set r_drinkCount to r_drinkOverdose
 			else
 				set r_drinkCount to 3
