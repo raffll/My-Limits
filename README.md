@@ -1,5 +1,7 @@
 # Stats, Potions, and Training Limits (OpenMW)
 
+------------------------------------------------------------
+
 This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to more often create multi-effect potions and plan your training carefully.
 
 OpenMW only, Lua edition.
