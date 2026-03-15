@@ -1,4 +1,4 @@
-# Stats, Potions and Training Limits (OpenMW)
+# Stats, Potions, and Training Limits (OpenMW)
 
 This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to more often create multi-effect potions and plan your training carefully.
 
@@ -6,7 +6,7 @@ OpenMW only, Lua edition.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
 
-**Now with a new hud counter for potion tracking.**
+**Now with a new HUD counter for potion tracking.**
 
 ------------------------------------------------------------
 
@@ -15,8 +15,8 @@ This is my second approach to creating a cap on attributes, but this time it is 
 You can choose settings in the Lua scripts menu:
 
 - Potions Limit Only: If you want full limit (No) or only potions (Yes).
-- Potions Limit by Alchemy: If you want limit based on player Level (No) or Alchemy (Yes).
-- Progressive Limits: If you want a constant 300/150 limit (No) or progressive limit based on your Level (Yes).
+- Potions Limit by Alchemy: If you want a limit based on player Level (No) or Alchemy (Yes).
+- Progressive Limits: If you want a constant 300/150 limit (No) or a progressive limit based on your Level (Yes).
 
 ------------------------------------------------------------
 
@@ -26,37 +26,37 @@ Once the player exceeds the limit, fatigue will be set to 0, leaving the player 
 
 - While active, you can't drink or create potions, enchant, or repair.
 - To recover, you just have to get rid of the fortify effect.
-- You can wait until fortify effects run out; for most vanilla items, 1 hour should be enough.
+- You can wait until fortified effects run out; for most vanilla items, 1 hour should be enough.
 - Keep in mind that when you levitate, you cannot wait.
 - After recovery, your fatigue will be set to 0.
 
-In the case of potions, if player exceed the limit, further drinking will be impossible until the 20-second cooldown ends. There is one exception to this. If you're using hotkeys with potions, then after exceeding the limit, your character collapses the same way as in the stats limit. This is because OpenMW Lua can't right now have the ability to prevent the use of hotkeys. Thankfully, hotkeys stop working when fatigue drops to 0.
+In the case of potions, if a player exceeds the limit, further drinking will be impossible until the 20-second cooldown ends. There is one exception to this. If you're using hotkeys with potions, then after exceeding the limit, your character collapses the same way as in the stats limit. This is because OpenMW Lua can't right now have the ability to prevent the use of hotkeys. Thankfully, hotkeys stop working when fatigue drops to 0.
 
 ------------------------------------------------------------
 
 ### Attribute cap
 
-The attribute cap is set to:
+The progressive attribute cap is set to:
 ```
 100 + (Level * 5) with a maximum set to 300
 ```
-**Special case for Speed is removed in this version. You can still use best boots with max level.**
+**The special case for Speed is removed in this version. You can still use "The Best Boots" with max level.**
 
 ------------------------------------------------------------
 
 ### Skill cap
 
-The skill cap is set to:
+The progressive skill cap is set to:
 ```
 100 + Level with a maximum set to 150
 ```
-**Except when effect of "Scroll of Icarian Flight" is active, there is no limit for Acrobatics (but only then).**
+**Except when the effect of "Scroll of Icarian Flight" is active, there is no limit for Acrobatics (but only then).**
 
 ------------------------------------------------------------
 
 ### Potion limit
 
-The potion limit depends on player Level:
+The potion limit depends on the player Level:
 ```
  0 - 9  -> 3 potions
 10 - 19 -> 4 potions
@@ -78,7 +78,7 @@ or Alchemy level:
 
 - After every potion drunk, the cooldown timer starts to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
-- If you reach the limit you just can't drink another one.
+- If you reach the limit, you just can't drink another one.
 - Unless you use a hotkey. Then when you drink one more potion over the limit, you collapse.
 
 ------------------------------------------------------------
@@ -90,6 +90,7 @@ You can train only 5 times per level. That's it. This plugin is independent from
 ------------------------------------------------------------
 
 ### Changelog
+
 ```
 1.0
 - Initial version.
@@ -137,13 +138,13 @@ You can train only 5 times per level. That's it. This plugin is independent from
 
 ### Compatibility
 
-This mod is probably incompatible with everything that changes how fatigue is calculated. It uses standard formula.
+This mod is probably incompatible with everything that changes how fatigue is calculated. It uses a standard formula.
 
 ------------------------------------------------------------
 
 ### Credits
 
-Rosynant for creating Alchemical Hustle, from which I took the idea of how to limit potions.
+Thanks to Rosynant for creating Alchemical Hustle, from which I took the idea of how to limit potions.
 
 ------------------------------------------------------------
 
