@@ -1,4 +1,4 @@
-MENU: scripts/raffll_limits/menu.lua
+PLAYER: scripts/raffll_limits/menu.lua
 MENU: scripts/raffll_limits/counter.lua
 GLOBAL: scripts/raffll_limits/settings.lua
 GLOBAL: scripts/raffll_limits/global.lua

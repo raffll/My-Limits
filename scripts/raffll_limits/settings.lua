@@ -1,41 +1,13 @@
 local async = require("openmw.async")
-local interfaces = require('openmw.interfaces')
 local storage = require("openmw.storage")
 local world = require('openmw.world')
 
-local l10nKey = 'raffll_limits'
-local settingsPageKey = 'SPL'
-
-interfaces.Settings.registerGroup({
-	key = 'Main',
-	page = settingsPageKey,
-	l10n = l10nKey,
-	name = 'Main',
-	permanentStorage = true,
-	settings = {
-		{
-			key = 'potionsOnly',
-			renderer = 'checkbox',
-			name = 'Potions Limit Only',
-			description = 'Disables attribute and skill limits.',
-			default = false
-		},
-		{
-			key = 'potionsByAlchemy',
-			renderer = 'checkbox',
-			name = 'Potions Limit by Alchemy',
-			description = 'Potion limit depends on Alchemy instead of Level.',
-			default = false
-		},
-		{
-			key = 'progressiveLimit',
-			renderer = 'checkbox',
-			name = 'Progressive Limits',
-			description = 'Attribute and skill limits depends on Level.',
-			default = false
-		},
-	},
-})
+local potionsByAlchemyValues = {
+	['By Level']	 = 0,
+	['By Alchemy']	 = 1,
+	['By Endurance'] = 2,
+	['Constant 3']	 = 3,
+}
 
 local function setPotionsOnly(arg)
 	if arg == true then
@@ -47,11 +19,7 @@ local function setPotionsOnly(arg)
 end
 
 local function setPotionsByAlchemy(arg)
-	if arg == true then
-		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
-	else
-		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
-	end
+	world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = potionsByAlchemyValues[arg] or 0
 	print("setPotionsByAlchemy: " .. tostring(arg))
 end
 
@@ -65,31 +33,9 @@ local function setProgressiveLimit(arg)
 end
 
 local globalStorage = storage.globalSection('Main')
-local potionsOnly = globalStorage:get('potionsOnly')
-local potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-local progressiveLimit = globalStorage:get('progressiveLimit')
-
-setPotionsOnly(potionsOnly)
-setPotionsByAlchemy(potionsByAlchemy)
-setProgressiveLimit(progressiveLimit)
-
-local function updateOption(_, key)
-	if key == 'potionsOnly' then
-		potionsOnly = globalStorage:get('potionsOnly')
-		setPotionsOnly(potionsOnly)
-	end
-
-	if key == 'potionsByAlchemy' then
-		potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-		setPotionsByAlchemy(potionsByAlchemy)
-	end
-
-	if key == 'progressiveLimit' then
-		progressiveLimit = globalStorage:get('progressiveLimit')
-		setProgressiveLimit(progressiveLimit)
-	end
-end
-globalStorage:subscribe(async:callback(updateOption))
+setPotionsOnly(globalStorage:get('potionsOnly'))
+setPotionsByAlchemy(globalStorage:get('potionsByAlchemy'))
+setProgressiveLimit(globalStorage:get('progressiveLimit'))
 
 return {
 	interfaceName = 'raffll_limits',
@@ -98,5 +44,16 @@ return {
 		setPotionsOnly = setPotionsOnly,
 		setPotionsByAlchemy = setPotionsByAlchemy,
 		setProgressiveLimit = setProgressiveLimit
+	},
+	eventHandlers = {
+		raffll_settingChanged = function(data)
+			if data.key == 'potionsOnly' then
+				setPotionsOnly(data.value)
+			elseif data.key == 'potionsByAlchemy' then
+				setPotionsByAlchemy(data.value)
+			elseif data.key == 'progressiveLimit' then
+				setProgressiveLimit(data.value)
+			end
+		end
 	}
 }
