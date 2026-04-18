@@ -1,4 +1,4 @@
-# Stats, Potions, and Training Limits (OpenMW)
+[b][center][size=6]Stats, Potions, and Training Limits (OpenMW)[/size][/center][/b]
 
 ------------------------------------------------------------
 
@@ -8,11 +8,11 @@ OpenMW only, Lua edition.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
 
-**Now with a new HUD counter for potion tracking.**
+[b]**Now with a new HUD counter for potion tracking.**[/b]
 
 ------------------------------------------------------------
 
-### Options
+[size=4][b]### Options[/b][/size]
 
 You can choose settings in the Lua scripts menu:
 
@@ -22,7 +22,7 @@ You can choose settings in the Lua scripts menu:
 
 ------------------------------------------------------------
 
-### Negative effect
+[size=4][b]### Negative effect[/b][/size]
 
 Once the player exceeds the limit, fatigue will be set to 0, leaving the player lying on the ground without the ability to do anything. The only way to recover is to wait until your attributes or skills go back to normal.
 
@@ -36,37 +36,37 @@ In the case of potions, if a player exceeds the limit, further drinking will be 
 
 ------------------------------------------------------------
 
-### Attribute cap
+[size=4][b]### Attribute cap[/b][/size]
 
 The progressive attribute cap is set to:
-```
-100 + (Level * 5) with a maximum set to 300
-```
-**The special case for Speed is removed in this version. You can still use "The Best Boots" with max level.**
+
+[code]100 + (Level * 5) with a maximum set to 300[/code]
+
+[b]**The special case for Speed is removed in this version. You can still use "The Best Boots" with max level.**[/b]
 
 ------------------------------------------------------------
 
-### Skill cap
+[size=4][b]### Skill cap[/b][/size]
 
 The progressive skill cap is set to:
-```
-100 + Level with a maximum set to 150
-```
-**Except when the effect of "Scroll of Icarian Flight" is active, there is no limit for Acrobatics (but only then).**
+
+[code]100 + Level with a maximum set to 150[/code]
+
+[b]**Except when the effect of "Scroll of Icarian Flight" is active, there is no limit for Acrobatics (but only then).**[/b]
 
 ------------------------------------------------------------
 
-### Potion limit
+[size=4][b]### Potion limit[/b][/size]
 
 The progressive potion limit depends on the player level:
-```
- 0 - 9  -> 3 potions
+
+[code]0 - 9   -> 3 potions
 10 - 19 -> 4 potions
 20 - 29 -> 5 potions
 30 - 39 -> 6 potions
 40 - 49 -> 7 potions
-50+     -> 8 potions
-```
+50+     -> 8 potions[/code]
+
 
 - After every potion drunk, the cooldown timer starts to count up to 20 seconds.
 - Every time you drink a potion when the previous cooldown timer is still running, your drink counter increases, and the timer starts from the beginning.
@@ -75,15 +75,14 @@ The progressive potion limit depends on the player level:
 
 ------------------------------------------------------------
 
-### Training limit
+[size=4][b]### Training limit[/b][/size]
 
 You can train only 5 times per level. That's it. This plugin is independent from Stats & Potions.
 
 ------------------------------------------------------------
 
-### Changelog
+[size=4][b]### Changelog[/b][/size]
 
-```
 1.0
 - Initial version.
 1.1
@@ -127,23 +126,22 @@ You can train only 5 times per level. That's it. This plugin is independent from
 1.14
 - Added constant potion limit.
 - Removed potion limit by Alchemy.
-```
 
 ------------------------------------------------------------
 
-### Compatibility
+[size=4][b]### Compatibility[/b][/size]
 
 - Probably incompatible with everything that changes how fatigue is calculated. It uses a standard formula.
 - Currently incompatible with "Potion Thrower".
 
 ------------------------------------------------------------
 
-### Credits
+[size=4][b]### Credits[/b][/size]
 
 Thanks to Rosynant for creating "Alchemical Hustle", from which I took the idea of how to limit potions.
 
 ------------------------------------------------------------
 
-### Permissions
+[size=4][b]### Permissions[/b][/size]
 
 Do whatever you want. Just credit me.

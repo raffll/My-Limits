@@ -16,22 +16,22 @@ interfaces.Settings.registerGroup({
 		{
 			key = 'potionsOnly',
 			renderer = 'checkbox',
-			name = 'Potions Limit Only',
-			description = 'Disables attribute and skill limits.',
+			name = 'Potions-Only Limit',
+			description = 'Disables attribute and skill limits; only potion limit apply.',
 			default = false
 		},
 		{
 			key = 'potionsByAlchemy',
 			renderer = 'checkbox',
-			name = 'Potions Limit by Alchemy',
-			description = 'Potion limit depends on Alchemy instead of Level.',
+			name = 'Progressive Potion Limit',
+			description = 'Potion limit increase with level.',
 			default = false
 		},
 		{
 			key = 'progressiveLimit',
 			renderer = 'checkbox',
-			name = 'Progressive Limits',
-			description = 'Attribute and skill limits depends on Level.',
+			name = 'Progressive Stats Limit',
+			description = 'Attribute and skill limits depend on level.',
 			default = false
 		},
 	},
