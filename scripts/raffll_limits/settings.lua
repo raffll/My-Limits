@@ -21,17 +21,17 @@ interfaces.Settings.registerGroup({
 			default = false
 		},
 		{
-			key = 'potionsByAlchemy',
+			key = 'progressivePotions',
 			renderer = 'checkbox',
 			name = 'Progressive Potion Limit',
-			description = 'Potion limit increase with level.',
+			description = 'Potion limit increases every 10 levels, from 3 to 8 by level 50.',
 			default = false
 		},
 		{
-			key = 'progressiveLimit',
+			key = 'progressiveStats',
 			renderer = 'checkbox',
 			name = 'Progressive Stats Limit',
-			description = 'Attribute and skill limits depend on level.',
+			description = 'Attribute and skill limits scale with level.\nAttributes: 100 + (level * 5), max 300.\nSkills: 100 + level, max 150.',
 			default = false
 		},
 	},
@@ -46,32 +46,32 @@ local function setPotionsOnly(arg)
 	print("setPotionsOnly: " .. tostring(arg))
 end
 
-local function setPotionsByAlchemy(arg)
+local function setProgressivePotions(arg)
 	if arg == true then
-		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 1
+		world.mwscript.getGlobalVariables(player).r_progressivePotions = 1
 	else
-		world.mwscript.getGlobalVariables(player).r_potionsByAlchemy = 0
+		world.mwscript.getGlobalVariables(player).r_progressivePotions = 0
 	end
-	print("setPotionsByAlchemy: " .. tostring(arg))
+	print("setProgressivePotions: " .. tostring(arg))
 end
 
-local function setProgressiveLimit(arg)
+local function setProgressiveStats(arg)
 	if arg == true then
-		world.mwscript.getGlobalVariables(player).r_progressiveLimit = 1
+		world.mwscript.getGlobalVariables(player).r_progressiveStats = 1
 	else
-		world.mwscript.getGlobalVariables(player).r_progressiveLimit = 0
+		world.mwscript.getGlobalVariables(player).r_progressiveStats = 0
 	end
-	print("setProgressiveLimit: " .. tostring(arg))
+	print("setProgressiveStats: " .. tostring(arg))
 end
 
 local globalStorage = storage.globalSection('Main')
 local potionsOnly = globalStorage:get('potionsOnly')
-local potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-local progressiveLimit = globalStorage:get('progressiveLimit')
+local progressivePotions = globalStorage:get('progressivePotions')
+local progressiveStats = globalStorage:get('progressiveStats')
 
 setPotionsOnly(potionsOnly)
-setPotionsByAlchemy(potionsByAlchemy)
-setProgressiveLimit(progressiveLimit)
+setProgressivePotions(progressivePotions)
+setProgressiveStats(progressiveStats)
 
 local function updateOption(_, key)
 	if key == 'potionsOnly' then
@@ -79,14 +79,14 @@ local function updateOption(_, key)
 		setPotionsOnly(potionsOnly)
 	end
 
-	if key == 'potionsByAlchemy' then
-		potionsByAlchemy = globalStorage:get('potionsByAlchemy')
-		setPotionsByAlchemy(potionsByAlchemy)
+	if key == 'progressivePotions' then
+		progressivePotions = globalStorage:get('progressivePotions')
+		setProgressivePotions(progressivePotions)
 	end
 
-	if key == 'progressiveLimit' then
-		progressiveLimit = globalStorage:get('progressiveLimit')
-		setProgressiveLimit(progressiveLimit)
+	if key == 'progressiveStats' then
+		progressiveStats = globalStorage:get('progressiveStats')
+		setProgressiveStats(progressiveStats)
 	end
 end
 globalStorage:subscribe(async:callback(updateOption))
@@ -94,9 +94,9 @@ globalStorage:subscribe(async:callback(updateOption))
 return {
 	interfaceName = 'raffll_limits',
 	interface = {
-		version = 1,
+		version = 2,
 		setPotionsOnly = setPotionsOnly,
-		setPotionsByAlchemy = setPotionsByAlchemy,
-		setProgressiveLimit = setProgressiveLimit
+		setProgressivePotions = setProgressivePotions,
+		setProgressiveStats = setProgressiveStats
 	}
 }
