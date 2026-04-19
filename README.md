@@ -127,6 +127,7 @@ You can train only 5 times per level. That's it. This plugin is independent from
 1.14
 - Added constant potion limit.
 - Removed potion limit by Alchemy.
+- Counter bug fixes.
 ```
 
 ------------------------------------------------------------

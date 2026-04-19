@@ -31,7 +31,7 @@ interfaces.Settings.registerGroup({
 			key = 'progressiveStats',
 			renderer = 'checkbox',
 			name = 'Progressive Stats Limit',
-			description = 'Attribute and skill limits scale with level.\nAttributes: 100 + (level * 5), max 300.\nSkills: 100 + level, max 150.',
+			description = 'Attributes: 100 + (level * 5), max 300.\nSkills: 100 + level, max 150.',
 			default = false
 		},
 	},
