@@ -27,7 +27,7 @@ local function tick(dt)
 			drinkCount = storage.globalSection('raffll_limits'):get('drinkCount'),
 		}
 	end)
-	if ok and vals ~= nil then
+	if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil and vals.maxCount ~= nil then
 		local hide = vals.drinkCount == 0
 		element.layout.props.visible = not hide
 		element.layout.props.text = string.format('%.1fs %d/%d', vals.countdown, vals.drinkCount, vals.maxCount)
