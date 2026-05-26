@@ -1,54 +1,82 @@
-local core = require('openmw.core')
 local interfaces = require('openmw.interfaces')
 local types = require('openmw.types')
 local world = require('openmw.world')
-local storage = require('openmw.storage')
 
+-- Local cache of player state, updated via events from the player script
+local playerState = {
+    active = false,
+    drinkOverdose = false,
+}
+
+-- Potion handler: skip non-players, block if knockout or overdose, otherwise allow and notify player
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
-	if not types.Player.objectIsInstance(player) then
-		--print(string.format("npcDrink: %s", types.NPC.record(player).name))
-		return false
-	end
-	if world.mwscript.getGlobalVariables(player).r_active == 1 then
-		world.mwscript.getGlobalVariables(player).r_drinkMsg2 = 1
-		return false
-	elseif world.mwscript.getGlobalVariables(player).r_drinkCount >= world.mwscript.getGlobalVariables(player).r_drinkOverdose then
-		world.mwscript.getGlobalVariables(player).r_drinkMsg = 1;
-		return false
-	end
+    if not types.Player.objectIsInstance(player) then
+        return nil -- allow NPCs to drink freely
+    end
+
+    if playerState.active then
+        player:sendEvent('raffll_limits_showMessage', { text = "You can't drink potions right now." })
+        return false
+    end
+
+    if playerState.drinkOverdose then
+        player:sendEvent('raffll_limits_showMessage', { text = "You can't drink any more potions." })
+        return false
+    end
+
+    -- Potion allowed: drink sound will play, player script detects via ambient.isSoundPlaying
+    return nil
 end)
 
+-- Apparatus handler: block if knockout active
 interfaces.ItemUsage.addHandlerForType(types.Apparatus, function(apparatus, player)
-	if world.mwscript.getGlobalVariables(player).r_active == 1 then
-		world.mwscript.getGlobalVariables(player).r_apparatusMsg = 1
-		return false
-	end
+    if not types.Player.objectIsInstance(player) then
+        return nil
+    end
+
+    if playerState.active then
+        player:sendEvent('raffll_limits_showMessage', { text = "You can't create potions right now." })
+        return false
+    end
+
+    return nil
 end)
 
+-- Repair handler: block if knockout active
 interfaces.ItemUsage.addHandlerForType(types.Repair, function(repair, player)
-	if world.mwscript.getGlobalVariables(player).r_active == 1 then
-		world.mwscript.getGlobalVariables(player).r_repairMsg = 1
-		return false
-	end
+    if not types.Player.objectIsInstance(player) then
+        return nil
+    end
+
+    if playerState.active then
+        player:sendEvent('raffll_limits_showMessage', { text = "You can't repair right now." })
+        return false
+    end
+
+    return nil
 end)
 
+-- Miscellaneous handler: block if knockout active
 interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneous, player)
-	if world.mwscript.getGlobalVariables(player).r_active == 1 then
-		world.mwscript.getGlobalVariables(player).r_miscellaneousMsg = 1
-		return false
-	end
+    if not types.Player.objectIsInstance(player) then
+        return nil
+    end
+
+    if playerState.active then
+        player:sendEvent('raffll_limits_showMessage', { text = "You can't use this right now." })
+        return false
+    end
+
+    return nil
 end)
 
 return {
-	engineHandlers = {
-		onUpdate = function(dt)
-			local player = world.players[1]
-			local vals = world.mwscript.getGlobalVariables(player)
-			local drinkCount = vals.r_drinkCount == 90 and vals.r_maxCount or vals.r_drinkCount
-			drinkCount = vals.r_drinkCount == 100 and vals.r_maxCount + 1 or drinkCount
-			storage.globalSection('raffll_limits'):set('countdown', vals.r_countdown)
-			storage.globalSection('raffll_limits'):set('maxCount', vals.r_maxCount)
-			storage.globalSection('raffll_limits'):set('drinkCount', drinkCount)
-		end
-	}
+    eventHandlers = {
+        raffll_limits_stateUpdate = function(data)
+            if data then
+                playerState.active = data.active or false
+                playerState.drinkOverdose = data.drinkOverdose or false
+            end
+        end,
+    },
 }

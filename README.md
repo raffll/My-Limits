@@ -4,7 +4,7 @@
 
 This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to more often create multi-effect potions and plan your training carefully.
 
-OpenMW only, Lua edition.
+OpenMW only, pure Lua edition. No ESP file required.
 
 This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
 
@@ -84,6 +84,10 @@ You can train only 5 times per level. That's it. This plugin is independent from
 ### Changelog
 
 ```
+2.0
+- Complete rewrite to pure OpenMW Lua. ESP file is no longer needed.
+- All MWScript logic replaced with Lua player/global scripts.
+- State persistence via Lua storage (proper save/load support).
 1.0
 - Initial version.
 1.1
