@@ -60,6 +60,9 @@ local skippedAttributes = {}
 -- Set of skill names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedSkills = {}
 
+-- When true, suppress the UI close on the next knockout transition (set by settings toggle)
+local suppressUIClose = false
+
 -- Last values sent to storage/global, used for dirty-flag optimization
 local lastSent = {}
 
@@ -170,8 +173,10 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         state.active = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
-        -- Close any open menu (if UI mode API is available)
-        if interfaces.UI and interfaces.UI.setMode then
+        -- Close any open menu (if UI mode API is available), unless suppressed by settings toggle
+        if suppressUIClose then
+            suppressUIClose = false
+        elseif interfaces.UI and interfaces.UI.setMode then
             interfaces.UI.setMode()
         end
     elseif state.active and anyLimit then
@@ -346,7 +351,7 @@ return {
             if state.statLimit then
                 limitAttribute = checkAttributes(attrCap)
             end
-            if limitAttribute and not state.active then
+            if limitAttribute and not state.active and not suppressUIClose then
                 ui.showMessage(L("attributeLimit"))
             end
 
@@ -355,7 +360,7 @@ return {
             if state.statLimit then
                 limitSkill = checkSkills(skillCap)
             end
-            if limitSkill and not state.active then
+            if limitSkill and not state.active and not suppressUIClose then
                 ui.showMessage(L("skillLimit"))
             end
 
@@ -435,6 +440,9 @@ return {
                 lastSent.globalActive = state.active
                 lastSent.globalOverdose = state.drinkOverdose
             end
+
+            -- 12. Clear one-shot suppress flag at end of frame
+            suppressUIClose = false
         end,
     },
     eventHandlers = {
@@ -463,6 +471,9 @@ return {
                     types.Actor.stats.dynamic.fatigue(self).base = baseMax
                     types.Actor.stats.dynamic.fatigue(self).current = 0
                     state.active = false
+                elseif data.value then
+                    -- Enabling: suppress UI close so settings window stays open
+                    suppressUIClose = true
                 end
             elseif data.key == 'trainingLimit' then
                 state.trainingLimit = data.value
