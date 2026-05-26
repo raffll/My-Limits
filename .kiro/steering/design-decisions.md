@@ -37,3 +37,9 @@ local baseMax = attrs.strength(self).modified
 This is intentional. The restored fatigue pool should reflect the player's current effective stats, including active Fortify effects. If a buff expires later, the engine naturally recalculates fatigue base on its own.
 
 Do NOT "fix" this by switching to `.base`.
+
+## UiModeChanged Closes All Modes Intentionally
+
+When the training limit is reached and the player opens Training mode, the `UiModeChanged` handler removes `'Training'`, `'Dialogue'`, and `'Interface'` modes. This is intentional — the goal is to fully close the NPC interaction, not just the training window. If another mod's Dialogue/Interface mode gets closed as a side effect, that's acceptable.
+
+Do NOT "fix" this by only removing `'Training'`.

@@ -57,6 +57,9 @@ end
 -- Set of attribute names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedAttributes = {}
 
+-- Last values sent to storage/global, used for dirty-flag optimization
+local lastSent = {}
+
 -- Initialize all state variables to their defaults
 local function initState()
     state.active = false              -- knockout state flag
@@ -68,12 +71,18 @@ local function initState()
     state.trainingLimit = true        -- setting: enforce training limit (5 per level)
     state.maxCount = 3                -- current max allowed potions
     state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
-    state.limitPotion = false         -- potion limit exceeded flag (overdose triggered)
-    state.lastPotionEffectCount = nil -- active potion effect count tracking for drink detection
+    state.overdoseCollapse = false    -- potion overdose triggered collapse flag
+    state.potionEffectsInitialized = false -- whether peak tracking has been seeded
     state.peakPotionEffectCount = 0  -- high-water mark for potion effect detection
     state.trainCount = 0              -- training sessions used this level
     state.trainLevel = 0              -- level at which trainCount was last reset
 
+    -- Reset dirty-flag cache so first frame always writes
+    lastSent.active = nil
+    lastSent.drinkCount = nil
+    lastSent.maxCount = nil
+    lastSent.countdown = nil
+    lastSent.drinkOverdose = nil
 end
 
 -- Check if any spell in the given set is currently active on the player.
@@ -150,7 +159,7 @@ end
 -- limitAttribute: boolean, true if any attribute exceeds its cap
 -- limitSkill: boolean, true if any skill exceeds its cap
 local function handleKnockoutRecovery(limitAttribute, limitSkill)
-    local anyLimit = limitAttribute or limitSkill or state.limitPotion
+    local anyLimit = limitAttribute or limitSkill or state.overdoseCollapse
 
     if not state.active and anyLimit then
         -- Transition to knockout: set active, drop max fatigue to 0
@@ -179,7 +188,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         types.Actor.stats.dynamic.fatigue(self).current = 0
         state.active = false
         -- Reset potion effect count to ignore any buffered hotkey drinks
-        state.lastPotionEffectCount = nil
+        state.potionEffectsInitialized = false
         state.peakPotionEffectCount = 0
     end
     -- If not active and no limit, do nothing
@@ -198,7 +207,7 @@ local function updatePotionTimer(dt)
     if (currentHour - state.drinkHour) > 1 then
         state.drinkCount = 0
         state.timer = 0
-        state.limitPotion = false
+        state.overdoseCollapse = false
         state.drinkOverdose = false
         return
     end
@@ -210,7 +219,7 @@ local function updatePotionTimer(dt)
     if state.timer >= exclusions.potionCooldown then
         state.drinkCount = 0
         state.timer = 0
-        state.limitPotion = false
+        state.overdoseCollapse = false
         state.drinkOverdose = false
     end
 end
@@ -232,7 +241,7 @@ local function handleDrinkDetected()
     elseif state.drinkCount >= state.maxCount + 1 then
         -- Overdose: first drink past the limit → collapse immediately
         ui.showMessage(L("overdose"))
-        state.limitPotion = true
+        state.overdoseCollapse = true
         state.active = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
@@ -276,7 +285,7 @@ return {
                 state.drinkCount = data.drinkCount or 0
                 state.timer = data.timer or 0
                 state.drinkHour = data.drinkHour or 0
-                state.limitPotion = data.limitPotion or false
+                state.overdoseCollapse = data.limitPotion or false
                 state.maxCount = data.maxCount or 3
                 state.potionLimit = data.potionLimit ~= false
                 state.statLimit = data.statLimit ~= false
@@ -303,7 +312,7 @@ return {
                 drinkCount = state.drinkCount,
                 timer = state.timer,
                 drinkHour = state.drinkHour,
-                limitPotion = state.limitPotion,
+                limitPotion = state.overdoseCollapse,
                 maxCount = state.maxCount,
                 potionLimit = state.potionLimit,
                 statLimit = state.statLimit,
@@ -340,9 +349,6 @@ return {
             end
 
             -- 6. Detect potion drink by counting active potion effects
-            -- Use a high-water-mark approach: track the max effect count seen.
-            -- Any increase above the peak means new potions were consumed,
-            -- even if an old effect expired on the same frame.
             if state.potionLimit then
             local potionEffectCount = 0
             local activeSpells = types.Actor.activeSpells(self)
@@ -354,9 +360,9 @@ return {
                     end
                 end
             end
-            if state.lastPotionEffectCount == nil then
-                state.lastPotionEffectCount = potionEffectCount
+            if not state.potionEffectsInitialized then
                 state.peakPotionEffectCount = potionEffectCount
+                state.potionEffectsInitialized = true
             else
                 if potionEffectCount > state.peakPotionEffectCount then
                     local newDrinks = potionEffectCount - state.peakPotionEffectCount
@@ -370,7 +376,6 @@ return {
                     state.peakPotionEffectCount = 0
                 end
             end
-            state.lastPotionEffectCount = potionEffectCount
 
             -- 7. Update potion timer
             updatePotionTimer(dt)
@@ -382,19 +387,41 @@ return {
             -- 9. Handle knockout/recovery
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
-            -- 10. Write state to player storage for menu scripts to read
+            -- 10. Write state to player storage for menu scripts to read (only when changed)
+            local countdown = state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0
             local section = storage.playerSection('raffll_limits_state')
-            section:set('active', state.active)
-            section:set('drinkCount', state.drinkCount)
-            section:set('maxCount', state.maxCount)
-            section:set('countdown', state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0)
-            section:set('drinkOverdose', state.drinkOverdose)
+            if lastSent.active ~= state.active then
+                section:set('active', state.active)
+                lastSent.active = state.active
+            end
+            if lastSent.drinkCount ~= state.drinkCount then
+                section:set('drinkCount', state.drinkCount)
+                lastSent.drinkCount = state.drinkCount
+            end
+            if lastSent.maxCount ~= state.maxCount then
+                section:set('maxCount', state.maxCount)
+                lastSent.maxCount = state.maxCount
+            end
+            -- Countdown changes every frame while active, but only write when visually different (0.1s precision)
+            local countdownRounded = math.floor(countdown * 10) / 10
+            if lastSent.countdown ~= countdownRounded then
+                section:set('countdown', countdown)
+                lastSent.countdown = countdownRounded
+            end
+            if lastSent.drinkOverdose ~= state.drinkOverdose then
+                section:set('drinkOverdose', state.drinkOverdose)
+                lastSent.drinkOverdose = state.drinkOverdose
+            end
 
-            -- 11. Send state to global script for item blocking
-            core.sendGlobalEvent('raffll_limits_stateUpdate', {
-                active = state.active,
-                drinkOverdose = state.drinkOverdose,
-            })
+            -- 11. Send state to global script for item blocking (only when changed)
+            if lastSent.globalActive ~= state.active or lastSent.globalOverdose ~= state.drinkOverdose then
+                core.sendGlobalEvent('raffll_limits_stateUpdate', {
+                    active = state.active,
+                    drinkOverdose = state.drinkOverdose,
+                })
+                lastSent.globalActive = state.active
+                lastSent.globalOverdose = state.drinkOverdose
+            end
         end,
     },
     eventHandlers = {
@@ -405,9 +432,9 @@ return {
                     -- Clear all potion state so stale counts don't trigger overdose/death on re-enable
                     state.drinkCount = 0
                     state.timer = 0
-                    state.limitPotion = false
+                    state.overdoseCollapse = false
                     state.drinkOverdose = false
-                    state.lastPotionEffectCount = nil
+                    state.potionEffectsInitialized = false
                     state.peakPotionEffectCount = 0
                 end
             elseif data.key == 'statLimit' then
@@ -436,9 +463,9 @@ return {
     },
     interfaceName = "StatsAndPotionsLimit",
     interface = {
-        version = 2,
+        version = 1,
         --- Returns true if the player is currently knocked out (overdose/stat limit).
-        isActive = function() return state.active end,
+        isKnockedOut = function() return state.active end,
         --- Returns the number of potions consumed in the current cooldown window.
         getDrinkCount = function() return state.drinkCount end,
         --- Returns the maximum allowed potions before overdose.
