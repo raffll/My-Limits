@@ -1,9 +1,9 @@
-local core = require('openmw.core')
-local interfaces = require('openmw.interfaces')
-local types = require('openmw.types')
-local world = require('openmw.world')
+local core = require("openmw.core")
+local interfaces = require("openmw.interfaces")
+local types = require("openmw.types")
+local world = require("openmw.world")
 
-local L = core.l10n('spt_limits')
+local L = core.l10n("spt_limits")
 
 -- Local cache of player state, updated via events from the player script
 local playerState = {
@@ -19,7 +19,7 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
 
     if playerState.active then
         if playerState.drinkOverdose then
-            player:sendEvent('spt_limits_show_message', { text = L("cantDrinkNow") })
+            player:sendEvent("spt_limits_show_message", { text = L("cantDrinkNow") })
             return false
         end
         -- Collapsed from stat limit, but potions still allowed
@@ -27,7 +27,7 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
     end
 
     if playerState.drinkOverdose then
-        player:sendEvent('spt_limits_show_message', { text = L("cantDrinkMore") })
+        player:sendEvent("spt_limits_show_message", { text = L("cantDrinkMore") })
         return false
     end
 
@@ -42,7 +42,7 @@ interfaces.ItemUsage.addHandlerForType(types.Apparatus, function(apparatus, play
     end
 
     if playerState.active then
-        player:sendEvent('spt_limits_show_message', { text = L("cantUseNow") })
+        player:sendEvent("spt_limits_show_message", { text = L("cantUseNow") })
         return false
     end
 
@@ -56,7 +56,7 @@ interfaces.ItemUsage.addHandlerForType(types.Repair, function(repair, player)
     end
 
     if playerState.active then
-        player:sendEvent('spt_limits_show_message', { text = L("cantUseNow") })
+        player:sendEvent("spt_limits_show_message", { text = L("cantUseNow") })
         return false
     end
 
@@ -70,7 +70,7 @@ interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneo
     end
 
     if playerState.active then
-        player:sendEvent('spt_limits_show_message', { text = L("cantUseNow") })
+        player:sendEvent("spt_limits_show_message", { text = L("cantUseNow") })
         return false
     end
 
