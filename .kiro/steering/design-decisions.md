@@ -43,3 +43,46 @@ Do NOT "fix" this by switching to `.base`.
 When the training limit is reached and the player opens Training mode, the `UiModeChanged` handler removes `'Training'`, `'Dialogue'`, and `'Interface'` modes. This is intentional — the goal is to fully close the NPC interaction, not just the training window. If another mod's Dialogue/Interface mode gets closed as a side effect, that's acceptable.
 
 Do NOT "fix" this by only removing `'Training'`.
+
+## Potion Detection: Known Frame-Perfect Edge Case
+
+The potion drink detection uses frame-over-frame delta of active potion effect count. If a potion effect expires on the exact same frame the player drinks a new potion, the count stays flat and the drink goes undetected.
+
+This only affects hotkey drinks (normal UI drinks are already blocked by the `ItemUsage` handler). Frame-perfect bugs that can only happen via quick keys are not worth fixing.
+
+Do NOT "fix" this.
+
+## Stat Limit Message Fires Every Frame — Not a Bug
+
+The `ui.showMessage` for attribute/skill limit fires every frame while the cap is exceeded and `state.active` is false. This is not a bug because:
+- `handleKnockoutRecovery` sets `state.active = true` on the same frame, so the message only fires once.
+- OpenMW deduplicates identical messages in the queue anyway.
+
+Do NOT "fix" this by adding a flag or throttle.
+
+## Maintain-Knockout Uses `fatigue.current = 0`, Not `-1`
+
+In `handleKnockoutRecovery`, the "maintain knockout" branch sets `fatigue.current = 0` (not `-1`):
+
+```lua
+elseif state.active and anyLimit then
+    types.Actor.stats.dynamic.fatigue(self).base = 0
+    types.Actor.stats.dynamic.fatigue(self).current = 0
+end
+```
+
+This is intentional. The initial collapse uses `-1` to trigger the knockdown animation. On subsequent frames, `current = 0` with `base = 0` keeps the fatigue bar empty and the player stays down — the engine does not allow recovery when max fatigue is 0. Setting `-1` every frame is unnecessary and would re-trigger the collapse animation repeatedly.
+
+Do NOT "fix" this by changing `0` to `-1` in the maintain branch.
+
+## Overdose Collapse: `handleDrinkDetected` Sets State Before `handleKnockoutRecovery`
+
+When overdose triggers in `handleDrinkDetected`, it sets `state.active = true` and `fatigue.current = -1`. Later in the same frame, `handleKnockoutRecovery` sees `active == true` and `anyLimit == true`, entering the maintain branch which sets `current = 0`.
+
+This is NOT a bug. OpenMW processes the `-1` assignment within the same frame before rendering, which is enough to trigger the knockdown animation. The subsequent `0` on the same frame does not cancel it — the engine latches the collapse state once triggered by a negative fatigue value.
+
+Do NOT "fix" this by reordering the calls or adding early-return guards.
+
+## Interface Version is Always 1
+
+The `interface` block in player.lua uses `version = 1` unless explicitly told otherwise. Do NOT bump the interface version number.

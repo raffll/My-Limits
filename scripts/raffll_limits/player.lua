@@ -57,6 +57,9 @@ end
 -- Set of attribute names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedAttributes = {}
 
+-- Set of skill names temporarily excluded from limit checks (registered by other mods via interface)
+local skippedSkills = {}
+
 -- Last values sent to storage/global, used for dirty-flag optimization
 local lastSent = {}
 
@@ -72,8 +75,9 @@ local function initState()
     state.maxCount = 3                -- current max allowed potions
     state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
     state.overdoseCollapse = false    -- potion overdose triggered collapse flag
-    state.potionEffectsInitialized = false -- whether peak tracking has been seeded
-    state.peakPotionEffectCount = 0  -- high-water mark for potion effect detection
+    state.potionEffectsInitialized = false -- whether baseline has been captured
+    state.baselinePotionEffects = 0   -- active potion effect count at last reset/init
+    state.detectedDrinks = 0          -- cumulative drinks detected since last reset (via delta from baseline)
     state.trainCount = 0              -- training sessions used this level
     state.trainLevel = 0              -- level at which trainCount was last reset
 
@@ -118,12 +122,12 @@ local function checkAttributes(cap)
 end
 
 -- Check if any of the 27 player skills exceeds the given cap.
--- Skips skills that have an excluded spell active.
+-- Skips skills that are in the skippedSkills set (interface) or have an excluded spell active.
 -- Returns true if ANY skill's .modified value > cap, false otherwise.
 local function checkSkills(cap)
     local skills = types.NPC.stats.skills
     local function shouldSkip(name)
-        return hasExcludedSpellActive(excludedSkillSpells[name])
+        return skippedSkills[name] or hasExcludedSpellActive(excludedSkillSpells[name])
     end
     if not shouldSkip('alchemy') and skills.alchemy(self).modified > cap then return true end
     if not shouldSkip('longblade') and skills.longblade(self).modified > cap then return true end
@@ -187,9 +191,10 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         -- Set current to 0 so player wakes up with empty fatigue bar
         types.Actor.stats.dynamic.fatigue(self).current = 0
         state.active = false
-        -- Reset potion effect count to ignore any buffered hotkey drinks
+        -- Reset potion detection to ignore any buffered hotkey drinks
         state.potionEffectsInitialized = false
-        state.peakPotionEffectCount = 0
+        state.baselinePotionEffects = 0
+        state.detectedDrinks = 0
     end
     -- If not active and no limit, do nothing
 end
@@ -209,6 +214,9 @@ local function updatePotionTimer(dt)
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
+        -- Re-baseline potion detection for the new window
+        state.potionEffectsInitialized = false
+        state.detectedDrinks = 0
         return
     end
 
@@ -221,6 +229,9 @@ local function updatePotionTimer(dt)
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
+        -- Re-baseline potion detection for the new window
+        state.potionEffectsInitialized = false
+        state.detectedDrinks = 0
     end
 end
 
@@ -361,19 +372,21 @@ return {
                 end
             end
             if not state.potionEffectsInitialized then
-                state.peakPotionEffectCount = potionEffectCount
+                -- Seed baseline: current active effects are "already accounted for"
+                state.baselinePotionEffects = potionEffectCount
+                state.detectedDrinks = 0
                 state.potionEffectsInitialized = true
             else
-                if potionEffectCount > state.peakPotionEffectCount then
-                    local newDrinks = potionEffectCount - state.peakPotionEffectCount
+                -- Cumulative detection: any active effects above baseline are new drinks.
+                -- This count only goes up — expired effects lower potionEffectCount but
+                -- detectedDrinks remembers all drinks that were ever detected this window.
+                local currentDelta = potionEffectCount - state.baselinePotionEffects
+                if currentDelta > state.detectedDrinks then
+                    local newDrinks = currentDelta - state.detectedDrinks
                     for i = 1, newDrinks do
                         handleDrinkDetected()
                     end
-                    state.peakPotionEffectCount = potionEffectCount
-                end
-                -- When all effects have expired, reset the peak so future drinks are detected fresh
-                if potionEffectCount == 0 then
-                    state.peakPotionEffectCount = 0
+                    state.detectedDrinks = currentDelta
                 end
             end
 
@@ -435,10 +448,22 @@ return {
                     state.overdoseCollapse = false
                     state.drinkOverdose = false
                     state.potionEffectsInitialized = false
-                    state.peakPotionEffectCount = 0
+                    state.baselinePotionEffects = 0
+                    state.detectedDrinks = 0
                 end
             elseif data.key == 'statLimit' then
                 state.statLimit = data.value
+                if not data.value and state.active and not state.overdoseCollapse then
+                    -- Disabling while knocked out from stat limit: silently recover
+                    local attrs = types.Actor.stats.attributes
+                    local baseMax = attrs.strength(self).modified
+                                  + attrs.willpower(self).modified
+                                  + attrs.agility(self).modified
+                                  + attrs.endurance(self).modified
+                    types.Actor.stats.dynamic.fatigue(self).base = baseMax
+                    types.Actor.stats.dynamic.fatigue(self).current = 0
+                    state.active = false
+                end
             elseif data.key == 'trainingLimit' then
                 state.trainingLimit = data.value
             end
@@ -517,6 +542,27 @@ return {
         --- @return boolean
         isAttributeSkipped = function(attributeName)
             return skippedAttributes[attributeName] == true
+        end,
+        --- Temporarily skip a skill from limit checks.
+        --- Other mods can call this to prevent knockout when they modify a skill.
+        --- @param skillName string one of: alchemy, longblade, acrobatics, bluntweapon, enchant, security, axe, conjuration, sneak, armorer, alteration, lightarmor, mediumarmor, destruction, marksman, heavyarmor, mysticism, shortblade, spear, restoration, handtohand, block, illusion, mercantile, athletics, unarmored, speechcraft
+        skipSkill = function(skillName)
+            if skillName then
+                skippedSkills[skillName] = true
+            end
+        end,
+        --- Re-enable a skill for limit checks.
+        --- @param skillName string
+        unskipSkill = function(skillName)
+            if skillName then
+                skippedSkills[skillName] = nil
+            end
+        end,
+        --- Check if a skill is currently skipped.
+        --- @param skillName string
+        --- @return boolean
+        isSkillSkipped = function(skillName)
+            return skippedSkills[skillName] == true
         end,
     },
 }
