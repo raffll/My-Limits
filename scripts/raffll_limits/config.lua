@@ -12,6 +12,11 @@ return {
     trainingLimit = 5,
     potionCooldown = 20, -- seconds
 
+    -- Toggles (set to false to disable a limit entirely)
+    potionLimitEnabled = true,
+    statLimitEnabled = true,
+    trainingLimitEnabled = true,
+
     -- Potion record IDs that will not count towards the drink limit.
     -- Supports wildcards: "sd_*" matches any ID starting with "sd_".
     potions = {

@@ -60,9 +60,6 @@ local skippedAttributes = {}
 -- Set of skill names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedSkills = {}
 
--- When true, suppress the UI close on the next knockout transition (set by settings toggle)
-local suppressUIClose = false
-
 -- Last values sent to storage/global, used for dirty-flag optimization
 local lastSent = {}
 
@@ -72,9 +69,6 @@ local function initState()
     state.drinkCount = 0              -- potions consumed in current window
     state.timer = 0                   -- seconds elapsed since last drink
     state.drinkHour = 0               -- GameHour when last potion was consumed
-    state.potionLimit = true          -- setting: enforce potion limit
-    state.statLimit = true            -- setting: enforce stat limits
-    state.trainingLimit = true        -- setting: enforce training limit (5 per level)
     state.maxCount = 3                -- current max allowed potions
     state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
     state.overdoseCollapse = false    -- potion overdose triggered collapse flag
@@ -173,10 +167,8 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         state.active = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
-        -- Close any open menu (if UI mode API is available), unless suppressed by settings toggle
-        if suppressUIClose then
-            suppressUIClose = false
-        elseif interfaces.UI and interfaces.UI.setMode then
+        -- Close any open menu (if UI mode API is available)
+        if interfaces.UI and interfaces.UI.setMode then
             interfaces.UI.setMode()
         end
     elseif state.active and anyLimit then
@@ -275,7 +267,7 @@ end
 
 -- Register training limit handler
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
-    if not state.trainingLimit then return end
+    if not exclusions.trainingLimitEnabled then return end
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
         if state.trainCount >= exclusions.trainingLimit then
@@ -303,21 +295,9 @@ return {
                 state.drinkHour = data.drinkHour or 0
                 state.overdoseCollapse = data.limitPotion or false
                 state.maxCount = data.maxCount or 3
-                state.potionLimit = data.potionLimit ~= false
-                state.statLimit = data.statLimit ~= false
-                state.trainingLimit = data.trainingLimit ~= false
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
-
-            -- Read current settings from global storage (overrides saved values)
-            local mainSection = storage.globalSection('raffll_limits_main')
-            local v = mainSection:get('potionLimit')
-            if v ~= nil then state.potionLimit = v else state.potionLimit = true end
-            v = mainSection:get('statLimit')
-            if v ~= nil then state.statLimit = v else state.statLimit = true end
-            v = mainSection:get('trainingLimit')
-            if v ~= nil then state.trainingLimit = v else state.trainingLimit = true end
 
             -- Recompute derived state
             state.drinkOverdose = (state.drinkCount >= state.maxCount)
@@ -330,9 +310,6 @@ return {
                 drinkHour = state.drinkHour,
                 limitPotion = state.overdoseCollapse,
                 maxCount = state.maxCount,
-                potionLimit = state.potionLimit,
-                statLimit = state.statLimit,
-                trainingLimit = state.trainingLimit,
                 trainCount = state.trainCount,
                 trainLevel = state.trainLevel,
             }
@@ -348,24 +325,24 @@ return {
 
             -- 4. Check attributes (if statLimit enabled and not active)
             local limitAttribute = false
-            if state.statLimit then
+            if exclusions.statLimitEnabled then
                 limitAttribute = checkAttributes(attrCap)
             end
-            if limitAttribute and not state.active and not suppressUIClose then
+            if limitAttribute and not state.active then
                 ui.showMessage(L("attributeLimit"))
             end
 
             -- 5. Check skills (if statLimit enabled and not active)
             local limitSkill = false
-            if state.statLimit then
+            if exclusions.statLimitEnabled then
                 limitSkill = checkSkills(skillCap)
             end
-            if limitSkill and not state.active and not suppressUIClose then
+            if limitSkill and not state.active then
                 ui.showMessage(L("skillLimit"))
             end
 
             -- 6. Detect potion drink by counting active potion effects
-            if state.potionLimit then
+            if exclusions.potionLimitEnabled then
             local potionEffectCount = 0
             local activeSpells = types.Actor.activeSpells(self)
             for _, spell in pairs(activeSpells) do
@@ -440,52 +417,16 @@ return {
                 lastSent.globalActive = state.active
                 lastSent.globalOverdose = state.drinkOverdose
             end
-
-            -- 12. Clear one-shot suppress flag at end of frame
-            suppressUIClose = false
         end,
     },
     eventHandlers = {
-        raffll_limits_settingChanged = function(data)
-            if data.key == 'potionLimit' then
-                state.potionLimit = data.value
-                if not data.value then
-                    -- Clear all potion state so stale counts don't trigger overdose/death on re-enable
-                    state.drinkCount = 0
-                    state.timer = 0
-                    state.overdoseCollapse = false
-                    state.drinkOverdose = false
-                    state.potionEffectsInitialized = false
-                    state.baselinePotionEffects = 0
-                    state.detectedDrinks = 0
-                end
-            elseif data.key == 'statLimit' then
-                state.statLimit = data.value
-                if not data.value and state.active and not state.overdoseCollapse then
-                    -- Disabling while knocked out from stat limit: silently recover
-                    local attrs = types.Actor.stats.attributes
-                    local baseMax = attrs.strength(self).modified
-                                  + attrs.willpower(self).modified
-                                  + attrs.agility(self).modified
-                                  + attrs.endurance(self).modified
-                    types.Actor.stats.dynamic.fatigue(self).base = baseMax
-                    types.Actor.stats.dynamic.fatigue(self).current = 0
-                    state.active = false
-                elseif data.value then
-                    -- Enabling: suppress UI close so settings window stays open
-                    suppressUIClose = true
-                end
-            elseif data.key == 'trainingLimit' then
-                state.trainingLimit = data.value
-            end
-        end,
         raffll_limits_showMessage = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
             end
         end,
         UiModeChanged = function(data)
-            if not state.trainingLimit then return end
+            if not exclusions.trainingLimitEnabled then return end
             checkTrainingLevelReset()
             if state.trainCount >= exclusions.trainingLimit and data.newMode == 'Training' then
                 if interfaces.UI and interfaces.UI.removeMode then
@@ -502,18 +443,7 @@ return {
         version = 1,
         --- Returns true if the player is currently knocked out (overdose/stat limit).
         isKnockedOut = function() return state.active end,
-        --- Returns the number of potions consumed in the current cooldown window.
-        getDrinkCount = function() return state.drinkCount end,
-        --- Returns the maximum allowed potions before overdose.
-        getMaxCount = function() return state.maxCount end,
-        --- Returns true if the player has reached or exceeded the potion limit.
-        isOverdosed = function() return state.drinkOverdose end,
-        --- Returns the current attribute cap.
-        getAttributeCap = function() return exclusions.attributeCap end,
-        --- Returns the current skill cap.
-        getSkillCap = function() return exclusions.skillCap end,
         --- Exclude a potion record ID from being counted toward the limit.
-        --- Other mods can call this to whitelist their custom potions.
         --- @param recordId string the potion record ID to exclude
         excludePotion = function(recordId)
             if recordId then
@@ -527,14 +457,7 @@ return {
                 excludedPotions[recordId] = nil
             end
         end,
-        --- Check if a potion record ID is currently excluded.
-        --- @param recordId string
-        --- @return boolean
-        isPotionExcluded = function(recordId)
-            return isPotionExcludedByFile(recordId)
-        end,
         --- Temporarily skip an attribute from limit checks.
-        --- Other mods can call this to prevent knockout when they modify an attribute.
         --- @param attributeName string one of: strength, intelligence, willpower, agility, speed, endurance, personality, luck
         skipAttribute = function(attributeName)
             if attributeName then
@@ -548,14 +471,7 @@ return {
                 skippedAttributes[attributeName] = nil
             end
         end,
-        --- Check if an attribute is currently skipped.
-        --- @param attributeName string
-        --- @return boolean
-        isAttributeSkipped = function(attributeName)
-            return skippedAttributes[attributeName] == true
-        end,
         --- Temporarily skip a skill from limit checks.
-        --- Other mods can call this to prevent knockout when they modify a skill.
         --- @param skillName string one of: alchemy, longblade, acrobatics, bluntweapon, enchant, security, axe, conjuration, sneak, armorer, alteration, lightarmor, mediumarmor, destruction, marksman, heavyarmor, mysticism, shortblade, spear, restoration, handtohand, block, illusion, mercantile, athletics, unarmored, speechcraft
         skipSkill = function(skillName)
             if skillName then
@@ -568,12 +484,6 @@ return {
             if skillName then
                 skippedSkills[skillName] = nil
             end
-        end,
-        --- Check if a skill is currently skipped.
-        --- @param skillName string
-        --- @return boolean
-        isSkillSkipped = function(skillName)
-            return skippedSkills[skillName] == true
         end,
     },
 }
