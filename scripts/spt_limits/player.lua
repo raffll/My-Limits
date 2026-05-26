@@ -6,7 +6,7 @@ local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
 
 -- Load config
-local exclusions = require('scripts.spt_limits.config')
+local config = require('scripts.spt_limits.config')
 local L = core.l10n('spt_limits')
 
 -- Module-level state table
@@ -17,7 +17,7 @@ local excludedPotions = {}
 -- List of Lua patterns converted from wildcard entries (e.g. "sd_*" -> "^sd_")
 local excludedPotionPatterns = {}
 
-for _, entry in ipairs(exclusions.potions or {}) do
+for _, entry in ipairs(config.potions or {}) do
     if entry:find('%*') then
         -- Convert wildcard to Lua pattern: escape special chars, replace * with .*
         local pattern = '^' .. entry:gsub('([%.%+%-%^%$%(%)%%])', '%%%1'):gsub('%*', '.*') .. '$'
@@ -38,7 +38,7 @@ end
 
 -- Per-attribute spell exclusion sets
 local excludedAttributeSpells = {}
-for attr, spells in pairs(exclusions.attributes or {}) do
+for attr, spells in pairs(config.attributes or {}) do
     excludedAttributeSpells[attr] = {}
     for _, id in ipairs(spells) do
         excludedAttributeSpells[attr][id] = true
@@ -47,7 +47,7 @@ end
 
 -- Per-skill spell exclusion sets
 local excludedSkillSpells = {}
-for skill, spells in pairs(exclusions.skills or {}) do
+for skill, spells in pairs(config.skills or {}) do
     excludedSkillSpells[skill] = {}
     for _, id in ipairs(spells) do
         excludedSkillSpells[skill][id] = true
@@ -219,7 +219,7 @@ local function updatePotionTimer(dt)
     state.timer = state.timer + dt
 
     -- Timer expiry
-    if state.timer >= exclusions.potionCooldown then
+    if state.timer >= config.potionCooldown then
         state.drinkCount = 0
         state.timer = 0
         state.overdoseCollapse = false
@@ -233,18 +233,18 @@ end
 -- Handle a potion drink detection:
 -- Detected via active potion effect count increase.
 -- drinkCount tracks drinks within the cooldown window.
--- When drinkCount reaches maxCount, next drink = overdose (collapse).
+-- When drinkCount reaches potionLimit, next drink = overdose (collapse).
 -- One more drink after overdose = death.
 local function handleDrinkDetected()
     state.timer = 0
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
-    if state.drinkCount >= exclusions.potionLimit + 2 then
+    if state.drinkCount >= config.potionLimit + 2 then
         -- Death: drink while already in overdose
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
-    elseif state.drinkCount >= exclusions.potionLimit + 1 then
+    elseif state.drinkCount >= config.potionLimit + 1 then
         -- Overdose: first drink past the limit → collapse immediately
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
@@ -265,10 +265,10 @@ end
 
 -- Register training limit handler
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
-    if not exclusions.trainingLimitEnabled then return end
+    if not config.trainingLimitEnabled then return end
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
-        if state.trainCount >= exclusions.trainingLimit then
+        if state.trainCount >= config.trainingLimit then
             ui.showMessage(L("trainLimitReached"))
             return false
         end
@@ -291,13 +291,13 @@ return {
                 state.drinkCount = data.drinkCount or 0
                 state.timer = data.timer or 0
                 state.drinkHour = data.drinkHour or 0
-                state.overdoseCollapse = data.limitPotion or false
+                state.overdoseCollapse = data.overdoseCollapse or false
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
 
             -- Recompute derived state
-            state.drinkOverdose = (state.drinkCount >= exclusions.potionLimit)
+            state.drinkOverdose = (state.drinkCount >= config.potionLimit)
 
             -- Re-seed potion detection baseline from current active effects
             local potionEffectCount = 0
@@ -320,7 +320,7 @@ return {
                 drinkCount = state.drinkCount,
                 timer = state.timer,
                 drinkHour = state.drinkHour,
-                limitPotion = state.overdoseCollapse,
+                overdoseCollapse = state.overdoseCollapse,
                 trainCount = state.trainCount,
                 trainLevel = state.trainLevel,
             }
@@ -330,70 +330,70 @@ return {
             if not types.Player.isCharGenFinished(self) then return end
 
             -- 2. Compute caps
-            local attrCap = exclusions.attributeCap
-            local skillCap = exclusions.skillCap
+            local attrCap = config.attributeCap
+            local skillCap = config.skillCap
 
-            -- 4. Check attributes (if statLimit enabled and not active)
+            -- 3. Check attributes (if statLimit enabled)
             local limitAttribute = false
-            if exclusions.statLimitEnabled then
+            if config.statLimitEnabled then
                 limitAttribute = checkAttributes(attrCap)
             end
             if limitAttribute and not state.active then
                 ui.showMessage(L("attributeLimit"))
             end
 
-            -- 5. Check skills (if statLimit enabled and not active)
+            -- 4. Check skills (if statLimit enabled)
             local limitSkill = false
-            if exclusions.statLimitEnabled then
+            if config.statLimitEnabled then
                 limitSkill = checkSkills(skillCap)
             end
             if limitSkill and not state.active then
                 ui.showMessage(L("skillLimit"))
             end
 
-            -- 6. Detect potion drink by counting active potion effects
-            if exclusions.potionLimitEnabled then
-            local potionEffectCount = 0
-            local activeSpells = types.Actor.activeSpells(self)
-            for _, spell in pairs(activeSpells) do
-                local rok, rec = pcall(types.Potion.record, spell.id)
-                if rok and rec then
-                    if not isPotionExcludedByFile(spell.id) then
-                        potionEffectCount = potionEffectCount + 1
+            -- 5. Detect potion drink by counting active potion effects
+            if config.potionLimitEnabled then
+                local potionEffectCount = 0
+                local activeSpells = types.Actor.activeSpells(self)
+                for _, spell in pairs(activeSpells) do
+                    local rok, rec = pcall(types.Potion.record, spell.id)
+                    if rok and rec then
+                        if not isPotionExcludedByFile(spell.id) then
+                            potionEffectCount = potionEffectCount + 1
+                        end
                     end
                 end
-            end
-            if not state.potionEffectsInitialized then
-                -- Seed baseline: current active effects are "already accounted for"
-                state.baselinePotionEffects = potionEffectCount
-                state.detectedDrinks = 0
-                state.potionEffectsInitialized = true
-            else
-                -- Cumulative detection: any active effects above baseline are new drinks.
-                -- This count only goes up — expired effects lower potionEffectCount but
-                -- detectedDrinks remembers all drinks that were ever detected this window.
-                local currentDelta = potionEffectCount - state.baselinePotionEffects
-                if currentDelta > state.detectedDrinks then
-                    local newDrinks = currentDelta - state.detectedDrinks
-                    for i = 1, newDrinks do
-                        handleDrinkDetected()
+                if not state.potionEffectsInitialized then
+                    -- Seed baseline: current active effects are "already accounted for"
+                    state.baselinePotionEffects = potionEffectCount
+                    state.detectedDrinks = 0
+                    state.potionEffectsInitialized = true
+                else
+                    -- Cumulative detection: any active effects above baseline are new drinks.
+                    -- This count only goes up — expired effects lower potionEffectCount but
+                    -- detectedDrinks remembers all drinks that were ever detected this window.
+                    local currentDelta = potionEffectCount - state.baselinePotionEffects
+                    if currentDelta > state.detectedDrinks then
+                        local newDrinks = currentDelta - state.detectedDrinks
+                        for i = 1, newDrinks do
+                            handleDrinkDetected()
+                        end
+                        state.detectedDrinks = currentDelta
                     end
-                    state.detectedDrinks = currentDelta
                 end
+
+                -- 6. Update potion timer
+                updatePotionTimer(dt)
             end
 
-            -- 7. Update potion timer
-            updatePotionTimer(dt)
-            end
+            -- 7. Update drinkOverdose
+            state.drinkOverdose = (state.drinkCount >= config.potionLimit)
 
-            -- 8. Update drinkOverdose
-            state.drinkOverdose = (state.drinkCount >= exclusions.potionLimit)
-
-            -- 9. Handle knockout/recovery
+            -- 8. Handle knockout/recovery
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
-            -- 10. Write state to player storage for menu scripts to read (only when changed)
-            local countdown = state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0
+            -- 9. Write state to player storage for menu scripts to read (only when changed)
+            local countdown = state.drinkCount > 0 and math.max(0, config.potionCooldown - state.timer) or 0
             local section = storage.playerSection('spt_limits_state')
             if lastSent.active ~= state.active then
                 section:set('active', state.active)
@@ -403,9 +403,9 @@ return {
                 section:set('drinkCount', state.drinkCount)
                 lastSent.drinkCount = state.drinkCount
             end
-            if lastSent.maxCount ~= exclusions.potionLimit then
-                section:set('maxCount', exclusions.potionLimit)
-                lastSent.maxCount = exclusions.potionLimit
+            if lastSent.potionLimit ~= config.potionLimit then
+                section:set('potionLimit', config.potionLimit)
+                lastSent.potionLimit = config.potionLimit
             end
             -- Countdown changes every frame while active, but only write when visually different (0.1s precision)
             local countdownRounded = math.floor(countdown * 10) / 10
@@ -418,7 +418,7 @@ return {
                 lastSent.drinkOverdose = state.drinkOverdose
             end
 
-            -- 11. Send state to global script for item blocking (only when changed)
+            -- 10. Send state to global script for item blocking (only when changed)
             if lastSent.globalActive ~= state.active or lastSent.globalOverdose ~= state.drinkOverdose then
                 core.sendGlobalEvent('spt_limits_state_update', {
                     active = state.active,
@@ -437,9 +437,9 @@ return {
         end,
         UiModeChanged = function(data)
             if not data then return end
-            if not exclusions.trainingLimitEnabled then return end
+            if not config.trainingLimitEnabled then return end
             checkTrainingLevelReset()
-            if state.trainCount >= exclusions.trainingLimit and data.newMode == 'Training' then
+            if state.trainCount >= config.trainingLimit and data.newMode == 'Training' then
                 if interfaces.UI and interfaces.UI.removeMode then
                     interfaces.UI.removeMode('Training')
                     interfaces.UI.removeMode('Dialogue')

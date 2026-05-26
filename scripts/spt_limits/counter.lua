@@ -1,6 +1,5 @@
 local ui = require('openmw.ui')
 local util = require('openmw.util')
-local async = require('openmw.async')
 local storage = require('openmw.storage')
 local core = require('openmw.core')
 
@@ -23,14 +22,14 @@ local function tick(dt)
 	local ok, vals = pcall(function()
 		return {
 			countdown = storage.playerSection('spt_limits_state'):get('countdown'),
-			maxCount = storage.playerSection('spt_limits_state'):get('maxCount'),
+			potionLimit = storage.playerSection('spt_limits_state'):get('potionLimit'),
 			drinkCount = storage.playerSection('spt_limits_state'):get('drinkCount'),
 		}
 	end)
-	if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil and vals.maxCount ~= nil then
+	if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil and vals.potionLimit ~= nil then
 		local hide = vals.drinkCount == 0
 		element.layout.props.visible = not hide
-		element.layout.props.text = string.format('%.1fs %d/%d', vals.countdown, vals.drinkCount, vals.maxCount)
+		element.layout.props.text = string.format('%.1fs %d/%d', vals.countdown, vals.drinkCount, vals.potionLimit)
 		element:update()
 	end
 end

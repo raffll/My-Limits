@@ -11,7 +11,7 @@ local playerState = {
     drinkOverdose = false,
 }
 
--- Potion handler: skip non-players, block if knockout or overdose, otherwise allow and notify player
+-- Potion handler: skip non-players, block if knockout or overdose, otherwise allow
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
     if not types.Player.objectIsInstance(player) then
         return nil -- allow NPCs to drink freely
