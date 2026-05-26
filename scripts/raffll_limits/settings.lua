@@ -7,7 +7,7 @@ local l10nKey = 'raffll_limits'
 local settingsPageKey = 'SPL'
 
 interfaces.Settings.registerGroup({
-	key = 'Main',
+	key = 'raffll_limits',
 	page = settingsPageKey,
 	l10n = l10nKey,
 	name = 'Main',
@@ -55,7 +55,7 @@ local function setProgressiveStats(arg)
 	sendSettingToPlayers('progressiveStats', arg)
 end
 
-local globalStorage = storage.globalSection('Main')
+local globalStorage = storage.globalSection('raffll_limits')
 
 -- Send initial setting values on script load
 local potionsOnly = globalStorage:get('potionsOnly')

@@ -21,8 +21,12 @@ local function onSave()
 end
 
 local function onLoad(data)
-	trainCount = data.tc
-	currentLevel = data.cl
+	if data then
+		trainCount = data.tc or 0
+		currentLevel = data.cl or types.Actor.stats.level(self).current
+	else
+		onInit()
+	end
 end
 
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
@@ -52,9 +56,11 @@ return {
 				onInit()
 			end
 			if trainCount == 5 and data.newMode == 'Training' then
-				interfaces.UI.removeMode('Training')
-				interfaces.UI.removeMode('Dialogue')
-				interfaces.UI.removeMode('Interface')
+				if interfaces.UI and interfaces.UI.removeMode then
+					interfaces.UI.removeMode('Training')
+					interfaces.UI.removeMode('Dialogue')
+					interfaces.UI.removeMode('Interface')
+				end
 				ui.showMessage('You\'ve had enough theory. Time to practice on your own.')
 			end
 		end

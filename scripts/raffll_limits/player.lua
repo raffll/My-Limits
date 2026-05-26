@@ -24,6 +24,7 @@ local function initState()
     state.drinkOverdose = false       -- whether at overdose threshold (drinkCount >= maxCount)
     state.limitPotion = false         -- potion limit exceeded flag (overdose triggered)
     state.lastPotionEffectCount = nil -- active potion effect count tracking for drink detection
+    state.peakPotionEffectCount = 0  -- high-water mark for potion effect detection
 end
 
 -- Compute the attribute cap based on player level and progressive mode
@@ -123,9 +124,9 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
             interfaces.UI.setMode()
         end
     elseif state.active and anyLimit then
-        -- Maintain knockout: keep max fatigue at 0 and current at 0
+        -- Maintain knockout: keep max fatigue at 0 and current negative to stay collapsed
         types.Actor.stats.dynamic.fatigue(self).base = 0
-        types.Actor.stats.dynamic.fatigue(self).current = 0
+        types.Actor.stats.dynamic.fatigue(self).current = -1
     elseif state.active and not anyLimit then
         -- Recovery: all limits cleared while in knockout
         ui.showMessage("You have fully recovered!")
@@ -141,6 +142,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         state.active = false
         -- Reset potion effect count to ignore any buffered hotkey drinks
         state.lastPotionEffectCount = nil
+        state.peakPotionEffectCount = 0
     end
     -- If not active and no limit, do nothing
 end
@@ -225,7 +227,7 @@ return {
             end
 
             -- Read current settings from global storage (overrides saved values)
-            local settingsSection = storage.globalSection('Main')
+            local settingsSection = storage.globalSection('raffll_limits')
             local v = settingsSection:get('potionsOnly')
             if v ~= nil then state.potionsOnly = v end
             v = settingsSection:get('progressivePotions')
@@ -298,19 +300,33 @@ return {
             end
 
             -- 7. Detect potion drink by counting active potion effects
+            -- Use a high-water-mark approach: track the max effect count seen.
+            -- Any increase above the peak means new potions were consumed,
+            -- even if an old effect expired on the same frame.
             local potionEffectCount = 0
-            for _, spell in pairs(types.Actor.activeSpells(self)) do
-                local ok, rec = pcall(types.Potion.record, spell.id)
-                if ok and rec then
-                    potionEffectCount = potionEffectCount + 1
+            local ok, activeSpells = pcall(types.Actor.activeSpells, self)
+            if ok and activeSpells then
+                for _, spell in pairs(activeSpells) do
+                    local rok, rec = pcall(types.Potion.record, spell.id)
+                    if rok and rec then
+                        potionEffectCount = potionEffectCount + 1
+                    end
                 end
             end
             if state.lastPotionEffectCount == nil then
                 state.lastPotionEffectCount = potionEffectCount
-            elseif potionEffectCount > state.lastPotionEffectCount then
-                local newDrinks = potionEffectCount - state.lastPotionEffectCount
-                for i = 1, newDrinks do
-                    handleDrinkDetected()
+                state.peakPotionEffectCount = potionEffectCount
+            else
+                if potionEffectCount > state.peakPotionEffectCount then
+                    local newDrinks = potionEffectCount - state.peakPotionEffectCount
+                    for i = 1, newDrinks do
+                        handleDrinkDetected()
+                    end
+                    state.peakPotionEffectCount = potionEffectCount
+                end
+                -- When all effects have expired, reset the peak so future drinks are detected fresh
+                if potionEffectCount == 0 then
+                    state.peakPotionEffectCount = 0
                 end
             end
             state.lastPotionEffectCount = potionEffectCount
