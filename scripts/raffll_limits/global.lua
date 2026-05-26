@@ -1,6 +1,9 @@
+local core = require('openmw.core')
 local interfaces = require('openmw.interfaces')
 local types = require('openmw.types')
 local world = require('openmw.world')
+
+local L = core.l10n('raffll_limits')
 
 -- Local cache of player state, updated via events from the player script
 local playerState = {
@@ -15,16 +18,20 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
     end
 
     if playerState.active then
-        player:sendEvent('raffll_limits_showMessage', { text = "You can't drink potions right now." })
-        return false
+        if playerState.drinkOverdose then
+            player:sendEvent('raffll_limits_showMessage', { text = L("cantDrinkNow") })
+            return false
+        end
+        -- Collapsed from stat limit, but potions still allowed
+        return nil
     end
 
     if playerState.drinkOverdose then
-        player:sendEvent('raffll_limits_showMessage', { text = "You can't drink any more potions." })
+        player:sendEvent('raffll_limits_showMessage', { text = L("cantDrinkMore") })
         return false
     end
 
-    -- Potion allowed: drink sound will play, player script detects via ambient.isSoundPlaying
+    -- Potion allowed: player script detects consumption via active spell count tracking
     return nil
 end)
 
@@ -35,7 +42,7 @@ interfaces.ItemUsage.addHandlerForType(types.Apparatus, function(apparatus, play
     end
 
     if playerState.active then
-        player:sendEvent('raffll_limits_showMessage', { text = "You can't create potions right now." })
+        player:sendEvent('raffll_limits_showMessage', { text = L("cantUseNow") })
         return false
     end
 
@@ -49,7 +56,7 @@ interfaces.ItemUsage.addHandlerForType(types.Repair, function(repair, player)
     end
 
     if playerState.active then
-        player:sendEvent('raffll_limits_showMessage', { text = "You can't repair right now." })
+        player:sendEvent('raffll_limits_showMessage', { text = L("cantUseNow") })
         return false
     end
 
@@ -63,7 +70,7 @@ interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneo
     end
 
     if playerState.active then
-        player:sendEvent('raffll_limits_showMessage', { text = "You can't use this right now." })
+        player:sendEvent('raffll_limits_showMessage', { text = L("cantUseNow") })
         return false
     end
 

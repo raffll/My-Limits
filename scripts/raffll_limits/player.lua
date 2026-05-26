@@ -5,8 +5,9 @@ local ui = require('openmw.ui')
 local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
 
--- Load exclusion lists from data file
-local exclusions = require('scripts.raffll_limits.exclude')
+-- Load config
+local exclusions = require('scripts.raffll_limits.config')
+local L = core.l10n('raffll_limits')
 
 -- Module-level state table
 local state = {}
@@ -62,44 +63,30 @@ local function initState()
     state.drinkCount = 0              -- potions consumed in current window
     state.timer = 0                   -- seconds elapsed since last drink
     state.drinkHour = 0               -- GameHour when last potion was consumed
-    state.potionsOnly = false         -- setting: only enforce potion limits
-    state.progressivePotions = false  -- setting: scale potion cap with level
-    state.progressiveStats = false    -- setting: scale stat caps with level
+    state.potionLimit = true          -- setting: enforce potion limit
+    state.statLimit = true            -- setting: enforce stat limits
     state.trainingLimit = true        -- setting: enforce training limit (5 per level)
-    state.oldValueAttribute = 0       -- last notified attribute cap (change detection)
-    state.oldValueSkill = 0           -- last notified skill cap (change detection)
-    state.oldCount = 0                -- last notified potion count (change detection)
     state.maxCount = 3                -- current max allowed potions
-    state.drinkOverdose = false       -- whether at overdose threshold (drinkCount >= maxCount)
+    state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
     state.limitPotion = false         -- potion limit exceeded flag (overdose triggered)
     state.lastPotionEffectCount = nil -- active potion effect count tracking for drink detection
     state.peakPotionEffectCount = 0  -- high-water mark for potion effect detection
     state.trainCount = 0              -- training sessions used this level
     state.trainLevel = 0              -- level at which trainCount was last reset
+
 end
 
--- Compute the attribute cap based on player level and progressive mode
-local function computeAttributeCap(level, progressive)
-    if not progressive then
-        return 300
+-- Check if any spell in the given set is currently active on the player.
+-- Returns true if any excluded spell is active, false otherwise.
+local function hasExcludedSpellActive(spellSet)
+    if not spellSet or not next(spellSet) then return false end
+    local activeSpells = types.Actor.activeSpells(self)
+    for id, _ in pairs(spellSet) do
+        if activeSpells:isSpellActive(id) == true then
+            return true
+        end
     end
-    return math.min(300, 100 + level * 5)
-end
-
--- Compute the skill cap based on player level and progressive mode
-local function computeSkillCap(level, progressive)
-    if not progressive then
-        return 150
-    end
-    return math.min(150, 100 + level)
-end
-
--- Compute the maximum allowed potions based on player level and progressive mode
-local function computeMaxPotions(level, progressive)
-    if not progressive then
-        return 3
-    end
-    return math.max(3, math.min(math.floor(level / 10) + 3, 8))
+    return false
 end
 
 -- Check if any of the 8 player attributes exceeds the given cap.
@@ -159,19 +146,6 @@ local function checkSkills(cap)
     return false
 end
 
--- Check if any spell in the given set is currently active on the player.
--- Returns true if any excluded spell is active, false otherwise.
-local function hasExcludedSpellActive(spellSet)
-    if not spellSet or not next(spellSet) then return false end
-    local activeSpells = types.Actor.activeSpells(self)
-    for id, _ in pairs(spellSet) do
-        if activeSpells:isSpellActive(id) == true then
-            return true
-        end
-    end
-    return false
-end
-
 -- Handle knockout/recovery state machine transitions
 -- limitAttribute: boolean, true if any attribute exceeds its cap
 -- limitSkill: boolean, true if any skill exceeds its cap
@@ -188,12 +162,12 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
             interfaces.UI.setMode()
         end
     elseif state.active and anyLimit then
-        -- Maintain knockout: keep max fatigue at 0 and current negative to stay collapsed
+        -- Maintain knockout: keep max fatigue at 0 and current at 0 to stay collapsed
         types.Actor.stats.dynamic.fatigue(self).base = 0
-        types.Actor.stats.dynamic.fatigue(self).current = -1
+        types.Actor.stats.dynamic.fatigue(self).current = 0
     elseif state.active and not anyLimit then
         -- Recovery: all limits cleared while in knockout
-        ui.showMessage("You have fully recovered!")
+        ui.showMessage(L("recovered"))
         -- Restore fatigue base to Str + Wil + Agi + End
         local attrs = types.Actor.stats.attributes
         local baseMax = attrs.strength(self).modified
@@ -232,8 +206,8 @@ local function updatePotionTimer(dt)
     -- Accumulate elapsed frame time
     state.timer = state.timer + dt
 
-    -- Timer expiry at 20 seconds
-    if state.timer >= 20 then
+    -- Timer expiry
+    if state.timer >= exclusions.potionCooldown then
         state.drinkCount = 0
         state.timer = 0
         state.limitPotion = false
@@ -253,11 +227,11 @@ local function handleDrinkDetected()
 
     if state.drinkCount >= state.maxCount + 2 then
         -- Death: drink while already in overdose
-        ui.showMessage("You have died from the potion overdose!")
+        ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
     elseif state.drinkCount >= state.maxCount + 1 then
         -- Overdose: first drink past the limit → collapse immediately
-        ui.showMessage("You have overdosed potions!")
+        ui.showMessage(L("overdose"))
         state.limitPotion = true
         state.active = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
@@ -279,12 +253,11 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
     if not state.trainingLimit then return end
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
-        if state.trainCount >= 5 then
-            ui.showMessage("You've had enough theory. Time to practice on your own.")
+        if state.trainCount >= exclusions.trainingLimit then
+            ui.showMessage(L("trainLimitReached"))
             return false
         end
         state.trainCount = state.trainCount + 1
-        ui.showMessage(string.format("Training sessions done: %d/5.", state.trainCount))
     end
 end)
 
@@ -304,28 +277,21 @@ return {
                 state.timer = data.timer or 0
                 state.drinkHour = data.drinkHour or 0
                 state.limitPotion = data.limitPotion or false
-                state.oldValueAttribute = data.oldValueAttribute or 0
-                state.oldValueSkill = data.oldValueSkill or 0
-                state.oldCount = data.oldCount or 0
                 state.maxCount = data.maxCount or 3
-                state.potionsOnly = data.potionsOnly or false
-                state.progressivePotions = data.progressivePotions or false
-                state.progressiveStats = data.progressiveStats or false
+                state.potionLimit = data.potionLimit ~= false
+                state.statLimit = data.statLimit ~= false
                 state.trainingLimit = data.trainingLimit ~= false
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
 
             -- Read current settings from global storage (overrides saved values)
-            local settingsSection = storage.globalSection('raffll_limits')
-            local trainingSection = storage.globalSection('raffll_limits_training')
-            local v = settingsSection:get('potionsOnly')
-            if v ~= nil then state.potionsOnly = v end
-            v = settingsSection:get('progressivePotions')
-            if v ~= nil then state.progressivePotions = v end
-            v = settingsSection:get('progressiveStats')
-            if v ~= nil then state.progressiveStats = v end
-            v = trainingSection:get('trainingLimit')
+            local mainSection = storage.globalSection('raffll_limits_main')
+            local v = mainSection:get('potionLimit')
+            if v ~= nil then state.potionLimit = v else state.potionLimit = true end
+            v = mainSection:get('statLimit')
+            if v ~= nil then state.statLimit = v else state.statLimit = true end
+            v = mainSection:get('trainingLimit')
             if v ~= nil then state.trainingLimit = v else state.trainingLimit = true end
 
             -- Recompute derived state
@@ -338,13 +304,9 @@ return {
                 timer = state.timer,
                 drinkHour = state.drinkHour,
                 limitPotion = state.limitPotion,
-                oldValueAttribute = state.oldValueAttribute,
-                oldValueSkill = state.oldValueSkill,
-                oldCount = state.oldCount,
                 maxCount = state.maxCount,
-                potionsOnly = state.potionsOnly,
-                progressivePotions = state.progressivePotions,
-                progressiveStats = state.progressiveStats,
+                potionLimit = state.potionLimit,
+                statLimit = state.statLimit,
                 trainingLimit = state.trainingLimit,
                 trainCount = state.trainCount,
                 trainLevel = state.trainLevel,
@@ -354,50 +316,41 @@ return {
             -- 1. CharGen check: if character generation is not finished, return early
             if not types.Player.isCharGenFinished(self) then return end
 
-            -- 2. Get player level
-            local level = types.Actor.stats.level(self).current
+            -- 2. Compute caps
+            local attrCap = exclusions.attributeCap
+            local skillCap = exclusions.skillCap
+            state.maxCount = exclusions.potionLimit
 
-            -- 3. Compute caps based on current settings and player level
-            local attrCap = computeAttributeCap(level, state.progressiveStats)
-            local skillCap = computeSkillCap(level, state.progressiveStats)
-            state.maxCount = computeMaxPotions(level, state.progressivePotions)
-
-            -- 4. Track cap values silently (messages are shown only when user changes settings)
-            state.oldValueAttribute = attrCap
-            state.oldValueSkill = skillCap
-            state.oldCount = state.maxCount
-
-            -- 5. Check attributes (if not potionsOnly and not active)
+            -- 4. Check attributes (if statLimit enabled and not active)
             local limitAttribute = false
-            if not state.potionsOnly then
+            if state.statLimit then
                 limitAttribute = checkAttributes(attrCap)
             end
             if limitAttribute and not state.active then
-                ui.showMessage("You have reached your attribute limit!")
+                ui.showMessage(L("attributeLimit"))
             end
 
-            -- 6. Check skills (if not potionsOnly and not active)
+            -- 5. Check skills (if statLimit enabled and not active)
             local limitSkill = false
-            if not state.potionsOnly then
+            if state.statLimit then
                 limitSkill = checkSkills(skillCap)
             end
             if limitSkill and not state.active then
-                ui.showMessage("You have reached your skill limit!")
+                ui.showMessage(L("skillLimit"))
             end
 
-            -- 7. Detect potion drink by counting active potion effects
+            -- 6. Detect potion drink by counting active potion effects
             -- Use a high-water-mark approach: track the max effect count seen.
             -- Any increase above the peak means new potions were consumed,
             -- even if an old effect expired on the same frame.
+            if state.potionLimit then
             local potionEffectCount = 0
-            local ok, activeSpells = pcall(types.Actor.activeSpells, self)
-            if ok and activeSpells then
-                for _, spell in pairs(activeSpells) do
-                    local rok, rec = pcall(types.Potion.record, spell.id)
-                    if rok and rec then
-                        if not isPotionExcludedByFile(spell.id) then
-                            potionEffectCount = potionEffectCount + 1
-                        end
+            local activeSpells = types.Actor.activeSpells(self)
+            for _, spell in pairs(activeSpells) do
+                local rok, rec = pcall(types.Potion.record, spell.id)
+                if rok and rec then
+                    if not isPotionExcludedByFile(spell.id) then
+                        potionEffectCount = potionEffectCount + 1
                     end
                 end
             end
@@ -419,24 +372,25 @@ return {
             end
             state.lastPotionEffectCount = potionEffectCount
 
-            -- 8. Update potion timer
+            -- 7. Update potion timer
             updatePotionTimer(dt)
+            end
 
-            -- 9. Update drinkOverdose
+            -- 8. Update drinkOverdose
             state.drinkOverdose = (state.drinkCount >= state.maxCount)
 
-            -- 10. Handle knockout/recovery
+            -- 9. Handle knockout/recovery
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
-            -- 11. Write state to player storage for menu scripts to read
+            -- 10. Write state to player storage for menu scripts to read
             local section = storage.playerSection('raffll_limits_state')
             section:set('active', state.active)
             section:set('drinkCount', state.drinkCount)
             section:set('maxCount', state.maxCount)
-            section:set('countdown', state.drinkCount > 0 and math.max(0, 20 - state.timer) or 0)
+            section:set('countdown', state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0)
             section:set('drinkOverdose', state.drinkOverdose)
 
-            -- 12. Send state to global script for item blocking
+            -- 11. Send state to global script for item blocking
             core.sendGlobalEvent('raffll_limits_stateUpdate', {
                 active = state.active,
                 drinkOverdose = state.drinkOverdose,
@@ -445,17 +399,22 @@ return {
     },
     eventHandlers = {
         raffll_limits_settingChanged = function(data)
-            if data.key == 'potionsOnly' then
-                state.potionsOnly = data.value
-            elseif data.key == 'progressivePotions' then
-                state.progressivePotions = data.value
-            elseif data.key == 'progressiveStats' then
-                state.progressiveStats = data.value
+            if data.key == 'potionLimit' then
+                state.potionLimit = data.value
+                if not data.value then
+                    -- Clear all potion state so stale counts don't trigger overdose/death on re-enable
+                    state.drinkCount = 0
+                    state.timer = 0
+                    state.limitPotion = false
+                    state.drinkOverdose = false
+                    state.lastPotionEffectCount = nil
+                    state.peakPotionEffectCount = 0
+                end
+            elseif data.key == 'statLimit' then
+                state.statLimit = data.value
             elseif data.key == 'trainingLimit' then
                 state.trainingLimit = data.value
             end
-
-
         end,
         raffll_limits_showMessage = function(data)
             if data and data.text then
@@ -465,13 +424,13 @@ return {
         UiModeChanged = function(data)
             if not state.trainingLimit then return end
             checkTrainingLevelReset()
-            if state.trainCount >= 5 and data.newMode == 'Training' then
+            if state.trainCount >= exclusions.trainingLimit and data.newMode == 'Training' then
                 if interfaces.UI and interfaces.UI.removeMode then
                     interfaces.UI.removeMode('Training')
                     interfaces.UI.removeMode('Dialogue')
                     interfaces.UI.removeMode('Interface')
                 end
-                ui.showMessage("You've had enough theory. Time to practice on your own.")
+                ui.showMessage(L("trainLimitReached"))
             end
         end,
     },
@@ -487,9 +446,9 @@ return {
         --- Returns true if the player has reached or exceeded the potion limit.
         isOverdosed = function() return state.drinkOverdose end,
         --- Returns the current attribute cap.
-        getAttributeCap = function() return state.oldValueAttribute end,
+        getAttributeCap = function() return exclusions.attributeCap end,
         --- Returns the current skill cap.
-        getSkillCap = function() return state.oldValueSkill end,
+        getSkillCap = function() return exclusions.skillCap end,
         --- Exclude a potion record ID from being counted toward the limit.
         --- Other mods can call this to whitelist their custom potions.
         --- @param recordId string the potion record ID to exclude

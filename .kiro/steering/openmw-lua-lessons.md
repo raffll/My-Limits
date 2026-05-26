@@ -26,6 +26,22 @@ Key rules:
 
 ## Inter-Script Communication Patterns
 
+## Interface UI — Mode Management
+
+`interfaces.UI.setMode(mode, options)` — drops all active modes and sets a new one.
+- `mode` is **optional**. Calling `I.UI.setMode()` with no arguments drops all modes (closes all windows).
+- `I.UI.addMode(mode, options)` — adds a mode to the stack without dropping others.
+- `I.UI.removeMode(mode)` — removes a specific mode from the stack.
+
+```lua
+interfaces.UI.setMode()              -- close all windows
+interfaces.UI.setMode('Interface')   -- close all, open interface
+interfaces.UI.addMode('Journal')     -- open journal without closing others
+interfaces.UI.removeMode('Training') -- close training window specifically
+```
+
+### Inter-Script Communication Patterns
+
 ### PLAYER → GLOBAL
 Use `core.sendGlobalEvent('eventName', data)` from the player script.
 
@@ -44,6 +60,25 @@ The global script cannot read player storage. Instead, have the player script se
 - Setting `fatigue.current = -1` (negative) DOES trigger the knockout/collapse animation.
 - To keep the player knocked down, set `fatigue.current = -1` every frame.
 - For recovery, restore `fatigue.base` to the correct value (Str + Wil + Agi + End), then set `fatigue.current = 0`.
+
+## SkillProgression Interface
+
+### Blocking Skill Level Ups
+
+`addSkillLevelUpHandler(function(skillid, source, options))` supports returning `false` to cancel the level up. When a handler returns `false`, all subsequent handlers (including the default one) are skipped.
+
+```lua
+interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
+    if someCondition then
+        return false -- cancels the skill level up entirely
+    end
+    -- return nil (or nothing) to allow it to proceed
+end)
+```
+
+The `options` table can also be mutated to change behavior (e.g. `options.skillIncreaseValue`).
+
+Available `SKILL_INCREASE_SOURCES`: `Usage`, `Trainer`, `Book`, `Jail`.
 
 ## ItemUsage Handler Limitations
 

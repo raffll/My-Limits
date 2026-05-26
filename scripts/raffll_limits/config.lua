@@ -1,14 +1,19 @@
--- Exclusion lists for Stats & Potions Limit.
--- Add record IDs to exclude them from limit checks.
--- Wildcards are supported: "sd_*" matches any ID starting with "sd_".
+-- Exclusion and configuration for Stats & Potions Limit.
+-- Wildcards are supported in potions: "sd_*" matches any ID starting with "sd_".
 --
 -- To find a record ID, open the console in-game and click on the item,
 -- or check the mod's ESP/ESM in OpenMW-CS.
 
 return {
+    -- Limits
+    attributeCap = 300,
+    skillCap = 150,
+    potionLimit = 3,
+    trainingLimit = 5,
+    potionCooldown = 20, -- seconds
+
     -- Potion record IDs that will not count towards the drink limit.
     -- Supports wildcards: "sd_*" matches any ID starting with "sd_".
-    -- Example: Sun's Dusk food/drinks, custom healing items, etc.
     potions = {
         -- "sd_*",
     },
