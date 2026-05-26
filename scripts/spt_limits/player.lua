@@ -103,36 +103,42 @@ local function hasExcludedSpellActive(spellSet)
     return false
 end
 
+-- Module-scope skip helpers (avoids closure allocation per frame)
+local function shouldSkipAttribute(name)
+    return skippedAttributes[name] or hasExcludedSpellActive(excludedAttributeSpells[name])
+end
+
+local function shouldSkipSkill(name)
+    return skippedSkills[name] or hasExcludedSpellActive(excludedSkillSpells[name])
+end
+
 -- Check if any of the 8 player attributes exceeds the given cap.
 -- Skips attributes that are in the skippedAttributes set (interface) or have an excluded spell active.
 -- Returns true if ANY attribute's .modified value > cap, false otherwise.
 local function checkAttributes(cap)
     local attrs = types.Actor.stats.attributes
-    local function shouldSkip(name)
-        return skippedAttributes[name] or hasExcludedSpellActive(excludedAttributeSpells[name])
-    end
-    if not shouldSkip("strength") and attrs.strength(self).modified > cap then
+    if not shouldSkipAttribute("strength") and attrs.strength(self).modified > cap then
         return true
     end
-    if not shouldSkip("intelligence") and attrs.intelligence(self).modified > cap then
+    if not shouldSkipAttribute("intelligence") and attrs.intelligence(self).modified > cap then
         return true
     end
-    if not shouldSkip("willpower") and attrs.willpower(self).modified > cap then
+    if not shouldSkipAttribute("willpower") and attrs.willpower(self).modified > cap then
         return true
     end
-    if not shouldSkip("agility") and attrs.agility(self).modified > cap then
+    if not shouldSkipAttribute("agility") and attrs.agility(self).modified > cap then
         return true
     end
-    if not shouldSkip("speed") and attrs.speed(self).modified > cap then
+    if not shouldSkipAttribute("speed") and attrs.speed(self).modified > cap then
         return true
     end
-    if not shouldSkip("endurance") and attrs.endurance(self).modified > cap then
+    if not shouldSkipAttribute("endurance") and attrs.endurance(self).modified > cap then
         return true
     end
-    if not shouldSkip("personality") and attrs.personality(self).modified > cap then
+    if not shouldSkipAttribute("personality") and attrs.personality(self).modified > cap then
         return true
     end
-    if not shouldSkip("luck") and attrs.luck(self).modified > cap then
+    if not shouldSkipAttribute("luck") and attrs.luck(self).modified > cap then
         return true
     end
     return false
@@ -143,88 +149,85 @@ end
 -- Returns true if ANY skill's .modified value > cap, false otherwise.
 local function checkSkills(cap)
     local skills = types.NPC.stats.skills
-    local function shouldSkip(name)
-        return skippedSkills[name] or hasExcludedSpellActive(excludedSkillSpells[name])
-    end
-    if not shouldSkip("alchemy") and skills.alchemy(self).modified > cap then
+    if not shouldSkipSkill("alchemy") and skills.alchemy(self).modified > cap then
         return true
     end
-    if not shouldSkip("longblade") and skills.longblade(self).modified > cap then
+    if not shouldSkipSkill("longblade") and skills.longblade(self).modified > cap then
         return true
     end
-    if not shouldSkip("acrobatics") and skills.acrobatics(self).modified > cap then
+    if not shouldSkipSkill("acrobatics") and skills.acrobatics(self).modified > cap then
         return true
     end
-    if not shouldSkip("bluntweapon") and skills.bluntweapon(self).modified > cap then
+    if not shouldSkipSkill("bluntweapon") and skills.bluntweapon(self).modified > cap then
         return true
     end
-    if not shouldSkip("enchant") and skills.enchant(self).modified > cap then
+    if not shouldSkipSkill("enchant") and skills.enchant(self).modified > cap then
         return true
     end
-    if not shouldSkip("security") and skills.security(self).modified > cap then
+    if not shouldSkipSkill("security") and skills.security(self).modified > cap then
         return true
     end
-    if not shouldSkip("axe") and skills.axe(self).modified > cap then
+    if not shouldSkipSkill("axe") and skills.axe(self).modified > cap then
         return true
     end
-    if not shouldSkip("conjuration") and skills.conjuration(self).modified > cap then
+    if not shouldSkipSkill("conjuration") and skills.conjuration(self).modified > cap then
         return true
     end
-    if not shouldSkip("sneak") and skills.sneak(self).modified > cap then
+    if not shouldSkipSkill("sneak") and skills.sneak(self).modified > cap then
         return true
     end
-    if not shouldSkip("armorer") and skills.armorer(self).modified > cap then
+    if not shouldSkipSkill("armorer") and skills.armorer(self).modified > cap then
         return true
     end
-    if not shouldSkip("alteration") and skills.alteration(self).modified > cap then
+    if not shouldSkipSkill("alteration") and skills.alteration(self).modified > cap then
         return true
     end
-    if not shouldSkip("lightarmor") and skills.lightarmor(self).modified > cap then
+    if not shouldSkipSkill("lightarmor") and skills.lightarmor(self).modified > cap then
         return true
     end
-    if not shouldSkip("mediumarmor") and skills.mediumarmor(self).modified > cap then
+    if not shouldSkipSkill("mediumarmor") and skills.mediumarmor(self).modified > cap then
         return true
     end
-    if not shouldSkip("destruction") and skills.destruction(self).modified > cap then
+    if not shouldSkipSkill("destruction") and skills.destruction(self).modified > cap then
         return true
     end
-    if not shouldSkip("marksman") and skills.marksman(self).modified > cap then
+    if not shouldSkipSkill("marksman") and skills.marksman(self).modified > cap then
         return true
     end
-    if not shouldSkip("heavyarmor") and skills.heavyarmor(self).modified > cap then
+    if not shouldSkipSkill("heavyarmor") and skills.heavyarmor(self).modified > cap then
         return true
     end
-    if not shouldSkip("mysticism") and skills.mysticism(self).modified > cap then
+    if not shouldSkipSkill("mysticism") and skills.mysticism(self).modified > cap then
         return true
     end
-    if not shouldSkip("shortblade") and skills.shortblade(self).modified > cap then
+    if not shouldSkipSkill("shortblade") and skills.shortblade(self).modified > cap then
         return true
     end
-    if not shouldSkip("spear") and skills.spear(self).modified > cap then
+    if not shouldSkipSkill("spear") and skills.spear(self).modified > cap then
         return true
     end
-    if not shouldSkip("restoration") and skills.restoration(self).modified > cap then
+    if not shouldSkipSkill("restoration") and skills.restoration(self).modified > cap then
         return true
     end
-    if not shouldSkip("handtohand") and skills.handtohand(self).modified > cap then
+    if not shouldSkipSkill("handtohand") and skills.handtohand(self).modified > cap then
         return true
     end
-    if not shouldSkip("block") and skills.block(self).modified > cap then
+    if not shouldSkipSkill("block") and skills.block(self).modified > cap then
         return true
     end
-    if not shouldSkip("illusion") and skills.illusion(self).modified > cap then
+    if not shouldSkipSkill("illusion") and skills.illusion(self).modified > cap then
         return true
     end
-    if not shouldSkip("mercantile") and skills.mercantile(self).modified > cap then
+    if not shouldSkipSkill("mercantile") and skills.mercantile(self).modified > cap then
         return true
     end
-    if not shouldSkip("athletics") and skills.athletics(self).modified > cap then
+    if not shouldSkipSkill("athletics") and skills.athletics(self).modified > cap then
         return true
     end
-    if not shouldSkip("unarmored") and skills.unarmored(self).modified > cap then
+    if not shouldSkipSkill("unarmored") and skills.unarmored(self).modified > cap then
         return true
     end
-    if not shouldSkip("speechcraft") and skills.speechcraft(self).modified > cap then
+    if not shouldSkipSkill("speechcraft") and skills.speechcraft(self).modified > cap then
         return true
     end
     return false
