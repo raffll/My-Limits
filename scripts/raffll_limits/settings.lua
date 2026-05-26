@@ -37,6 +37,30 @@ interfaces.Settings.registerGroup({
 	},
 })
 
+interfaces.Settings.registerGroup({
+	key = 'raffll_limits_compat',
+	page = settingsPageKey,
+	l10n = l10nKey,
+	name = 'Compatibility',
+	permanentStorage = true,
+	settings = {
+		{
+			key = 'ignoreSunsDusk',
+			renderer = 'checkbox',
+			name = "Ignore Sun's Dusk Consumables",
+			description = "When enabled, food and drinks from Sun's Dusk Survival and Needs will not count towards the potion limit. Requires Sun's Dusk to be installed.",
+			default = true
+		},
+		{
+			key = 'ignoreBMSLuck',
+			renderer = 'checkbox',
+			name = "Ignore Better Merchants Skills Luck Boost",
+			description = "When enabled, luck attribute checks are skipped during merchant interactions if Better Merchants Skills is loaded. Prevents fainting from the temporary luck modifier.",
+			default = true
+		},
+	},
+})
+
 local function sendSettingToPlayers(key, value)
 	for _, player in ipairs(world.players) do
 		player:sendEvent('raffll_limits_settingChanged', { key = key, value = value })
@@ -55,19 +79,32 @@ local function setProgressiveStats(arg)
 	sendSettingToPlayers('progressiveStats', arg)
 end
 
+local function setIgnoreSunsDusk(arg)
+	sendSettingToPlayers('ignoreSunsDusk', arg)
+end
+
+local function setIgnoreBMSLuck(arg)
+	sendSettingToPlayers('ignoreBMSLuck', arg)
+end
+
 local globalStorage = storage.globalSection('raffll_limits')
+local compatStorage = storage.globalSection('raffll_limits_compat')
 
 -- Send initial setting values on script load
 local potionsOnly = globalStorage:get('potionsOnly')
 local progressivePotions = globalStorage:get('progressivePotions')
 local progressiveStats = globalStorage:get('progressiveStats')
+local ignoreSunsDusk = compatStorage:get('ignoreSunsDusk')
+local ignoreBMSLuck = compatStorage:get('ignoreBMSLuck')
 
 setPotionsOnly(potionsOnly)
 setProgressivePotions(progressivePotions)
 setProgressiveStats(progressiveStats)
+setIgnoreSunsDusk(ignoreSunsDusk)
+setIgnoreBMSLuck(ignoreBMSLuck)
 
 -- Subscribe to setting changes and send events to players
-local function updateOption(_, key)
+local function updateMainOption(_, key)
 	if key == 'potionsOnly' then
 		potionsOnly = globalStorage:get('potionsOnly')
 		setPotionsOnly(potionsOnly)
@@ -83,7 +120,20 @@ local function updateOption(_, key)
 		setProgressiveStats(progressiveStats)
 	end
 end
-globalStorage:subscribe(async:callback(updateOption))
+globalStorage:subscribe(async:callback(updateMainOption))
+
+local function updateCompatOption(_, key)
+	if key == 'ignoreSunsDusk' then
+		ignoreSunsDusk = compatStorage:get('ignoreSunsDusk')
+		setIgnoreSunsDusk(ignoreSunsDusk)
+	end
+
+	if key == 'ignoreBMSLuck' then
+		ignoreBMSLuck = compatStorage:get('ignoreBMSLuck')
+		setIgnoreBMSLuck(ignoreBMSLuck)
+	end
+end
+compatStorage:subscribe(async:callback(updateCompatOption))
 
 local initialSettingsSent = false
 
@@ -93,7 +143,9 @@ return {
 		version = 2,
 		setPotionsOnly = setPotionsOnly,
 		setProgressivePotions = setProgressivePotions,
-		setProgressiveStats = setProgressiveStats
+		setProgressiveStats = setProgressiveStats,
+		setIgnoreSunsDusk = setIgnoreSunsDusk,
+		setIgnoreBMSLuck = setIgnoreBMSLuck
 	},
 	engineHandlers = {
 		onPlayerAdded = function(player)
@@ -101,6 +153,8 @@ return {
 			player:sendEvent('raffll_limits_settingChanged', { key = 'potionsOnly', value = globalStorage:get('potionsOnly') or false })
 			player:sendEvent('raffll_limits_settingChanged', { key = 'progressivePotions', value = globalStorage:get('progressivePotions') or false })
 			player:sendEvent('raffll_limits_settingChanged', { key = 'progressiveStats', value = globalStorage:get('progressiveStats') or false })
+			player:sendEvent('raffll_limits_settingChanged', { key = 'ignoreSunsDusk', value = compatStorage:get('ignoreSunsDusk') ~= false })
+			player:sendEvent('raffll_limits_settingChanged', { key = 'ignoreBMSLuck', value = compatStorage:get('ignoreBMSLuck') ~= false })
 			initialSettingsSent = true
 		end,
 		onUpdate = function()
@@ -110,6 +164,8 @@ return {
 				player:sendEvent('raffll_limits_settingChanged', { key = 'potionsOnly', value = globalStorage:get('potionsOnly') or false })
 				player:sendEvent('raffll_limits_settingChanged', { key = 'progressivePotions', value = globalStorage:get('progressivePotions') or false })
 				player:sendEvent('raffll_limits_settingChanged', { key = 'progressiveStats', value = globalStorage:get('progressiveStats') or false })
+				player:sendEvent('raffll_limits_settingChanged', { key = 'ignoreSunsDusk', value = compatStorage:get('ignoreSunsDusk') ~= false })
+				player:sendEvent('raffll_limits_settingChanged', { key = 'ignoreBMSLuck', value = compatStorage:get('ignoreBMSLuck') ~= false })
 				initialSettingsSent = true
 			end
 		end,

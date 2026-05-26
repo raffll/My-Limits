@@ -4,9 +4,13 @@ local types = require('openmw.types')
 local ui = require('openmw.ui')
 local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
+local compat = require('scripts.raffll_limits.compat')
 
 -- Module-level state table
 local state = {}
+
+-- Set of potion record IDs excluded from counting (registered by other mods via interface)
+local excludedPotions = {}
 
 -- Initialize all state variables to their defaults
 local function initState()
@@ -17,6 +21,8 @@ local function initState()
     state.potionsOnly = false         -- setting: only enforce potion limits
     state.progressivePotions = false  -- setting: scale potion cap with level
     state.progressiveStats = false    -- setting: scale stat caps with level
+    state.ignoreSunsDusk = true       -- setting: ignore Sun's Dusk food/drinks in potion count
+    state.ignoreBMSLuck = true        -- setting: skip luck check when BMS is modifying it
     state.oldValueAttribute = 0       -- last notified attribute cap (change detection)
     state.oldValueSkill = 0           -- last notified skill cap (change detection)
     state.oldCount = 0                -- last notified potion count (change detection)
@@ -52,8 +58,10 @@ local function computeMaxPotions(level, progressive)
 end
 
 -- Check if any of the 8 player attributes exceeds the given cap
+-- Check if any of the 8 player attributes exceeds the given cap
+-- skipLuck: if true, skip the luck check (BMS compatibility)
 -- Returns true if ANY attribute's .modified value > cap, false otherwise
-local function checkAttributes(cap)
+local function checkAttributes(cap, skipLuck)
     local attrs = types.Actor.stats.attributes
     if attrs.strength(self).modified > cap then return true end
     if attrs.intelligence(self).modified > cap then return true end
@@ -62,7 +70,7 @@ local function checkAttributes(cap)
     if attrs.speed(self).modified > cap then return true end
     if attrs.endurance(self).modified > cap then return true end
     if attrs.personality(self).modified > cap then return true end
-    if attrs.luck(self).modified > cap then return true end
+    if not skipLuck and attrs.luck(self).modified > cap then return true end
     return false
 end
 
@@ -224,16 +232,23 @@ return {
                 state.potionsOnly = data.potionsOnly or false
                 state.progressivePotions = data.progressivePotions or false
                 state.progressiveStats = data.progressiveStats or false
+                state.ignoreSunsDusk = data.ignoreSunsDusk ~= false
+                state.ignoreBMSLuck = data.ignoreBMSLuck ~= false
             end
 
             -- Read current settings from global storage (overrides saved values)
             local settingsSection = storage.globalSection('raffll_limits')
+            local compatSection = storage.globalSection('raffll_limits_compat')
             local v = settingsSection:get('potionsOnly')
             if v ~= nil then state.potionsOnly = v end
             v = settingsSection:get('progressivePotions')
             if v ~= nil then state.progressivePotions = v end
             v = settingsSection:get('progressiveStats')
             if v ~= nil then state.progressiveStats = v end
+            v = compatSection:get('ignoreSunsDusk')
+            if v ~= nil then state.ignoreSunsDusk = v else state.ignoreSunsDusk = true end
+            v = compatSection:get('ignoreBMSLuck')
+            if v ~= nil then state.ignoreBMSLuck = v else state.ignoreBMSLuck = true end
 
             -- Recompute derived state
             state.drinkOverdose = (state.drinkCount >= state.maxCount)
@@ -252,6 +267,8 @@ return {
                 potionsOnly = state.potionsOnly,
                 progressivePotions = state.progressivePotions,
                 progressiveStats = state.progressiveStats,
+                ignoreSunsDusk = state.ignoreSunsDusk,
+                ignoreBMSLuck = state.ignoreBMSLuck,
             }
         end,
         onUpdate = function(dt)
@@ -283,7 +300,8 @@ return {
             -- 5. Check attributes (if not potionsOnly and not active)
             local limitAttribute = false
             if not state.potionsOnly then
-                limitAttribute = checkAttributes(attrCap)
+                local skipLuck = compat.shouldSkipLuck(interfaces, state)
+                limitAttribute = checkAttributes(attrCap, skipLuck)
             end
             if limitAttribute and not state.active then
                 ui.showMessage("You have reached your attribute limit!")
@@ -309,7 +327,9 @@ return {
                 for _, spell in pairs(activeSpells) do
                     local rok, rec = pcall(types.Potion.record, spell.id)
                     if rok and rec then
-                        potionEffectCount = potionEffectCount + 1
+                        if not excludedPotions[spell.id] and not compat.shouldIgnorePotion(spell.id, state) then
+                            potionEffectCount = potionEffectCount + 1
+                        end
                     end
                 end
             end
@@ -363,12 +383,53 @@ return {
                 state.progressivePotions = data.value
             elseif data.key == 'progressiveStats' then
                 state.progressiveStats = data.value
+            elseif data.key == 'ignoreSunsDusk' then
+                state.ignoreSunsDusk = data.value
+            elseif data.key == 'ignoreBMSLuck' then
+                state.ignoreBMSLuck = data.value
             end
         end,
         raffll_limits_showMessage = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
             end
+        end,
+    },
+    interfaceName = "StatsAndPotionsLimit",
+    interface = {
+        version = 1,
+        --- Returns true if the player is currently knocked out (overdose/stat limit).
+        isActive = function() return state.active end,
+        --- Returns the number of potions consumed in the current cooldown window.
+        getDrinkCount = function() return state.drinkCount end,
+        --- Returns the maximum allowed potions before overdose.
+        getMaxCount = function() return state.maxCount end,
+        --- Returns true if the player has reached or exceeded the potion limit.
+        isOverdosed = function() return state.drinkOverdose end,
+        --- Returns the current attribute cap.
+        getAttributeCap = function() return state.oldValueAttribute end,
+        --- Returns the current skill cap.
+        getSkillCap = function() return state.oldValueSkill end,
+        --- Exclude a potion record ID from being counted toward the limit.
+        --- Other mods can call this to whitelist their custom potions.
+        --- @param recordId string the potion record ID to exclude
+        excludePotion = function(recordId)
+            if recordId then
+                excludedPotions[recordId] = true
+            end
+        end,
+        --- Remove a previously excluded potion record ID.
+        --- @param recordId string the potion record ID to stop excluding
+        includePotion = function(recordId)
+            if recordId then
+                excludedPotions[recordId] = nil
+            end
+        end,
+        --- Check if a potion record ID is currently excluded.
+        --- @param recordId string
+        --- @return boolean
+        isPotionExcluded = function(recordId)
+            return excludedPotions[recordId] == true
         end,
     },
 }
