@@ -4,13 +4,57 @@ local types = require('openmw.types')
 local ui = require('openmw.ui')
 local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
-local compat = require('scripts.raffll_limits.compat')
+
+-- Load exclusion lists from data file
+local exclusions = require('scripts.raffll_limits.exclude')
 
 -- Module-level state table
 local state = {}
 
--- Set of potion record IDs excluded from counting (registered by other mods via interface)
+-- Set of potion record IDs excluded from counting (from data file + registered via interface)
 local excludedPotions = {}
+-- List of Lua patterns converted from wildcard entries (e.g. "sd_*" -> "^sd_")
+local excludedPotionPatterns = {}
+
+for _, entry in ipairs(exclusions.potions) do
+    if entry:find('%*') then
+        -- Convert wildcard to Lua pattern: escape special chars, replace * with .*
+        local pattern = '^' .. entry:gsub('([%.%+%-%^%$%(%)%%])', '%%%1'):gsub('%*', '.*') .. '$'
+        table.insert(excludedPotionPatterns, pattern)
+    else
+        excludedPotions[entry] = true
+    end
+end
+
+-- Check if a potion ID is excluded (exact match or wildcard pattern)
+local function isPotionExcludedByFile(id)
+    if excludedPotions[id] then return true end
+    for _, pattern in ipairs(excludedPotionPatterns) do
+        if id:match(pattern) then return true end
+    end
+    return false
+end
+
+-- Per-attribute spell exclusion sets
+local excludedAttributeSpells = {}
+for attr, spells in pairs(exclusions.attributes) do
+    excludedAttributeSpells[attr] = {}
+    for _, id in ipairs(spells) do
+        excludedAttributeSpells[attr][id] = true
+    end
+end
+
+-- Per-skill spell exclusion sets
+local excludedSkillSpells = {}
+for skill, spells in pairs(exclusions.skills) do
+    excludedSkillSpells[skill] = {}
+    for _, id in ipairs(spells) do
+        excludedSkillSpells[skill][id] = true
+    end
+end
+
+-- Set of attribute names temporarily excluded from limit checks (registered by other mods via interface)
+local skippedAttributes = {}
 
 -- Initialize all state variables to their defaults
 local function initState()
@@ -21,8 +65,7 @@ local function initState()
     state.potionsOnly = false         -- setting: only enforce potion limits
     state.progressivePotions = false  -- setting: scale potion cap with level
     state.progressiveStats = false    -- setting: scale stat caps with level
-    state.ignoreSunsDusk = true       -- setting: ignore Sun's Dusk food/drinks in potion count
-    state.ignoreBMSLuck = true        -- setting: skip luck check when BMS is modifying it
+    state.trainingLimit = true        -- setting: enforce training limit (5 per level)
     state.oldValueAttribute = 0       -- last notified attribute cap (change detection)
     state.oldValueSkill = 0           -- last notified skill cap (change detection)
     state.oldCount = 0                -- last notified potion count (change detection)
@@ -31,6 +74,8 @@ local function initState()
     state.limitPotion = false         -- potion limit exceeded flag (overdose triggered)
     state.lastPotionEffectCount = nil -- active potion effect count tracking for drink detection
     state.peakPotionEffectCount = 0  -- high-water mark for potion effect detection
+    state.trainCount = 0              -- training sessions used this level
+    state.trainLevel = 0              -- level at which trainCount was last reset
 end
 
 -- Compute the attribute cap based on player level and progressive mode
@@ -57,63 +102,74 @@ local function computeMaxPotions(level, progressive)
     return math.max(3, math.min(math.floor(level / 10) + 3, 8))
 end
 
--- Check if any of the 8 player attributes exceeds the given cap
--- Check if any of the 8 player attributes exceeds the given cap
--- skipLuck: if true, skip the luck check (BMS compatibility)
--- Returns true if ANY attribute's .modified value > cap, false otherwise
-local function checkAttributes(cap, skipLuck)
+-- Check if any of the 8 player attributes exceeds the given cap.
+-- Skips attributes that are in the skippedAttributes set (interface) or have an excluded spell active.
+-- Returns true if ANY attribute's .modified value > cap, false otherwise.
+local function checkAttributes(cap)
     local attrs = types.Actor.stats.attributes
-    if attrs.strength(self).modified > cap then return true end
-    if attrs.intelligence(self).modified > cap then return true end
-    if attrs.willpower(self).modified > cap then return true end
-    if attrs.agility(self).modified > cap then return true end
-    if attrs.speed(self).modified > cap then return true end
-    if attrs.endurance(self).modified > cap then return true end
-    if attrs.personality(self).modified > cap then return true end
-    if not skipLuck and attrs.luck(self).modified > cap then return true end
+    local function shouldSkip(name)
+        return skippedAttributes[name] or hasExcludedSpellActive(excludedAttributeSpells[name])
+    end
+    if not shouldSkip('strength') and attrs.strength(self).modified > cap then return true end
+    if not shouldSkip('intelligence') and attrs.intelligence(self).modified > cap then return true end
+    if not shouldSkip('willpower') and attrs.willpower(self).modified > cap then return true end
+    if not shouldSkip('agility') and attrs.agility(self).modified > cap then return true end
+    if not shouldSkip('speed') and attrs.speed(self).modified > cap then return true end
+    if not shouldSkip('endurance') and attrs.endurance(self).modified > cap then return true end
+    if not shouldSkip('personality') and attrs.personality(self).modified > cap then return true end
+    if not shouldSkip('luck') and attrs.luck(self).modified > cap then return true end
     return false
 end
 
--- Check if any of the 27 player skills exceeds the given cap
--- skipAcrobatics: if true, skip the acrobatics check (Icarian Flight exception)
--- Returns true if ANY skill's .modified value > cap, false otherwise
-local function checkSkills(cap, skipAcrobatics)
+-- Check if any of the 27 player skills exceeds the given cap.
+-- Skips skills that have an excluded spell active.
+-- Returns true if ANY skill's .modified value > cap, false otherwise.
+local function checkSkills(cap)
     local skills = types.NPC.stats.skills
-    if skills.alchemy(self).modified > cap then return true end
-    if skills.longblade(self).modified > cap then return true end
-    if not skipAcrobatics and skills.acrobatics(self).modified > cap then return true end
-    if skills.bluntweapon(self).modified > cap then return true end
-    if skills.enchant(self).modified > cap then return true end
-    if skills.security(self).modified > cap then return true end
-    if skills.axe(self).modified > cap then return true end
-    if skills.conjuration(self).modified > cap then return true end
-    if skills.sneak(self).modified > cap then return true end
-    if skills.armorer(self).modified > cap then return true end
-    if skills.alteration(self).modified > cap then return true end
-    if skills.lightarmor(self).modified > cap then return true end
-    if skills.mediumarmor(self).modified > cap then return true end
-    if skills.destruction(self).modified > cap then return true end
-    if skills.marksman(self).modified > cap then return true end
-    if skills.heavyarmor(self).modified > cap then return true end
-    if skills.mysticism(self).modified > cap then return true end
-    if skills.shortblade(self).modified > cap then return true end
-    if skills.spear(self).modified > cap then return true end
-    if skills.restoration(self).modified > cap then return true end
-    if skills.handtohand(self).modified > cap then return true end
-    if skills.block(self).modified > cap then return true end
-    if skills.illusion(self).modified > cap then return true end
-    if skills.mercantile(self).modified > cap then return true end
-    if skills.athletics(self).modified > cap then return true end
-    if skills.unarmored(self).modified > cap then return true end
-    if skills.speechcraft(self).modified > cap then return true end
+    local function shouldSkip(name)
+        return hasExcludedSpellActive(excludedSkillSpells[name])
+    end
+    if not shouldSkip('alchemy') and skills.alchemy(self).modified > cap then return true end
+    if not shouldSkip('longblade') and skills.longblade(self).modified > cap then return true end
+    if not shouldSkip('acrobatics') and skills.acrobatics(self).modified > cap then return true end
+    if not shouldSkip('bluntweapon') and skills.bluntweapon(self).modified > cap then return true end
+    if not shouldSkip('enchant') and skills.enchant(self).modified > cap then return true end
+    if not shouldSkip('security') and skills.security(self).modified > cap then return true end
+    if not shouldSkip('axe') and skills.axe(self).modified > cap then return true end
+    if not shouldSkip('conjuration') and skills.conjuration(self).modified > cap then return true end
+    if not shouldSkip('sneak') and skills.sneak(self).modified > cap then return true end
+    if not shouldSkip('armorer') and skills.armorer(self).modified > cap then return true end
+    if not shouldSkip('alteration') and skills.alteration(self).modified > cap then return true end
+    if not shouldSkip('lightarmor') and skills.lightarmor(self).modified > cap then return true end
+    if not shouldSkip('mediumarmor') and skills.mediumarmor(self).modified > cap then return true end
+    if not shouldSkip('destruction') and skills.destruction(self).modified > cap then return true end
+    if not shouldSkip('marksman') and skills.marksman(self).modified > cap then return true end
+    if not shouldSkip('heavyarmor') and skills.heavyarmor(self).modified > cap then return true end
+    if not shouldSkip('mysticism') and skills.mysticism(self).modified > cap then return true end
+    if not shouldSkip('shortblade') and skills.shortblade(self).modified > cap then return true end
+    if not shouldSkip('spear') and skills.spear(self).modified > cap then return true end
+    if not shouldSkip('restoration') and skills.restoration(self).modified > cap then return true end
+    if not shouldSkip('handtohand') and skills.handtohand(self).modified > cap then return true end
+    if not shouldSkip('block') and skills.block(self).modified > cap then return true end
+    if not shouldSkip('illusion') and skills.illusion(self).modified > cap then return true end
+    if not shouldSkip('mercantile') and skills.mercantile(self).modified > cap then return true end
+    if not shouldSkip('athletics') and skills.athletics(self).modified > cap then return true end
+    if not shouldSkip('unarmored') and skills.unarmored(self).modified > cap then return true end
+    if not shouldSkip('speechcraft') and skills.speechcraft(self).modified > cap then return true end
     return false
 end
 
--- Check if the Icarian Flight spell is currently active on the player
--- Returns true if active, false otherwise
-local function isIcarianFlightActive()
+-- Check if any spell in the given set is currently active on the player.
+-- Returns true if any excluded spell is active, false otherwise.
+local function hasExcludedSpellActive(spellSet)
+    if not spellSet or not next(spellSet) then return false end
     local activeSpells = types.Actor.activeSpells(self)
-    return activeSpells:isSpellActive('sc_icarianflight_en') == true
+    for id, _ in pairs(spellSet) do
+        if activeSpells:isSpellActive(id) == true then
+            return true
+        end
+    end
+    return false
 end
 
 -- Handle knockout/recovery state machine transitions
@@ -209,6 +265,29 @@ local function handleDrinkDetected()
     end
 end
 
+-- Training limit: reset counter when player levels up
+local function checkTrainingLevelReset()
+    local level = types.Actor.stats.level(self).current
+    if state.trainLevel ~= level then
+        state.trainCount = 0
+        state.trainLevel = level
+    end
+end
+
+-- Register training limit handler
+interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
+    if not state.trainingLimit then return end
+    if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
+        checkTrainingLevelReset()
+        if state.trainCount >= 5 then
+            ui.showMessage("You've had enough theory. Time to practice on your own.")
+            return false
+        end
+        state.trainCount = state.trainCount + 1
+        ui.showMessage(string.format("Training sessions done: %d/5.", state.trainCount))
+    end
+end)
+
 return {
     engineHandlers = {
         onInit = function()
@@ -232,23 +311,22 @@ return {
                 state.potionsOnly = data.potionsOnly or false
                 state.progressivePotions = data.progressivePotions or false
                 state.progressiveStats = data.progressiveStats or false
-                state.ignoreSunsDusk = data.ignoreSunsDusk ~= false
-                state.ignoreBMSLuck = data.ignoreBMSLuck ~= false
+                state.trainingLimit = data.trainingLimit ~= false
+                state.trainCount = data.trainCount or 0
+                state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
 
             -- Read current settings from global storage (overrides saved values)
             local settingsSection = storage.globalSection('raffll_limits')
-            local compatSection = storage.globalSection('raffll_limits_compat')
+            local trainingSection = storage.globalSection('raffll_limits_training')
             local v = settingsSection:get('potionsOnly')
             if v ~= nil then state.potionsOnly = v end
             v = settingsSection:get('progressivePotions')
             if v ~= nil then state.progressivePotions = v end
             v = settingsSection:get('progressiveStats')
             if v ~= nil then state.progressiveStats = v end
-            v = compatSection:get('ignoreSunsDusk')
-            if v ~= nil then state.ignoreSunsDusk = v else state.ignoreSunsDusk = true end
-            v = compatSection:get('ignoreBMSLuck')
-            if v ~= nil then state.ignoreBMSLuck = v else state.ignoreBMSLuck = true end
+            v = trainingSection:get('trainingLimit')
+            if v ~= nil then state.trainingLimit = v else state.trainingLimit = true end
 
             -- Recompute derived state
             state.drinkOverdose = (state.drinkCount >= state.maxCount)
@@ -267,8 +345,9 @@ return {
                 potionsOnly = state.potionsOnly,
                 progressivePotions = state.progressivePotions,
                 progressiveStats = state.progressiveStats,
-                ignoreSunsDusk = state.ignoreSunsDusk,
-                ignoreBMSLuck = state.ignoreBMSLuck,
+                trainingLimit = state.trainingLimit,
+                trainCount = state.trainCount,
+                trainLevel = state.trainLevel,
             }
         end,
         onUpdate = function(dt)
@@ -283,25 +362,15 @@ return {
             local skillCap = computeSkillCap(level, state.progressiveStats)
             state.maxCount = computeMaxPotions(level, state.progressivePotions)
 
-            -- 4. Notify cap changes (only when NOT in knockout state AND cap differs from last notified value)
-            if attrCap ~= state.oldValueAttribute and not state.active then
-                ui.showMessage(string.format("Your attribute cap is now %G.", attrCap))
-                state.oldValueAttribute = attrCap
-            end
-            if skillCap ~= state.oldValueSkill and not state.active then
-                ui.showMessage(string.format("Your skill cap is now %G.", skillCap))
-                state.oldValueSkill = skillCap
-            end
-            if state.maxCount ~= state.oldCount and not state.active then
-                ui.showMessage(string.format("You can drink up to %G potions.", state.maxCount))
-                state.oldCount = state.maxCount
-            end
+            -- 4. Track cap values silently (messages are shown only when user changes settings)
+            state.oldValueAttribute = attrCap
+            state.oldValueSkill = skillCap
+            state.oldCount = state.maxCount
 
             -- 5. Check attributes (if not potionsOnly and not active)
             local limitAttribute = false
             if not state.potionsOnly then
-                local skipLuck = compat.shouldSkipLuck(interfaces, state)
-                limitAttribute = checkAttributes(attrCap, skipLuck)
+                limitAttribute = checkAttributes(attrCap)
             end
             if limitAttribute and not state.active then
                 ui.showMessage("You have reached your attribute limit!")
@@ -310,8 +379,7 @@ return {
             -- 6. Check skills (if not potionsOnly and not active)
             local limitSkill = false
             if not state.potionsOnly then
-                local skipAcro = isIcarianFlightActive()
-                limitSkill = checkSkills(skillCap, skipAcro)
+                limitSkill = checkSkills(skillCap)
             end
             if limitSkill and not state.active then
                 ui.showMessage("You have reached your skill limit!")
@@ -327,7 +395,7 @@ return {
                 for _, spell in pairs(activeSpells) do
                     local rok, rec = pcall(types.Potion.record, spell.id)
                     if rok and rec then
-                        if not excludedPotions[spell.id] and not compat.shouldIgnorePotion(spell.id, state) then
+                        if not isPotionExcludedByFile(spell.id) then
                             potionEffectCount = potionEffectCount + 1
                         end
                     end
@@ -383,21 +451,33 @@ return {
                 state.progressivePotions = data.value
             elseif data.key == 'progressiveStats' then
                 state.progressiveStats = data.value
-            elseif data.key == 'ignoreSunsDusk' then
-                state.ignoreSunsDusk = data.value
-            elseif data.key == 'ignoreBMSLuck' then
-                state.ignoreBMSLuck = data.value
+            elseif data.key == 'trainingLimit' then
+                state.trainingLimit = data.value
             end
+
+
         end,
         raffll_limits_showMessage = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
             end
         end,
+        UiModeChanged = function(data)
+            if not state.trainingLimit then return end
+            checkTrainingLevelReset()
+            if state.trainCount >= 5 and data.newMode == 'Training' then
+                if interfaces.UI and interfaces.UI.removeMode then
+                    interfaces.UI.removeMode('Training')
+                    interfaces.UI.removeMode('Dialogue')
+                    interfaces.UI.removeMode('Interface')
+                end
+                ui.showMessage("You've had enough theory. Time to practice on your own.")
+            end
+        end,
     },
     interfaceName = "StatsAndPotionsLimit",
     interface = {
-        version = 1,
+        version = 2,
         --- Returns true if the player is currently knocked out (overdose/stat limit).
         isActive = function() return state.active end,
         --- Returns the number of potions consumed in the current cooldown window.
@@ -429,7 +509,28 @@ return {
         --- @param recordId string
         --- @return boolean
         isPotionExcluded = function(recordId)
-            return excludedPotions[recordId] == true
+            return isPotionExcludedByFile(recordId)
+        end,
+        --- Temporarily skip an attribute from limit checks.
+        --- Other mods can call this to prevent knockout when they modify an attribute.
+        --- @param attributeName string one of: strength, intelligence, willpower, agility, speed, endurance, personality, luck
+        skipAttribute = function(attributeName)
+            if attributeName then
+                skippedAttributes[attributeName] = true
+            end
+        end,
+        --- Re-enable an attribute for limit checks.
+        --- @param attributeName string
+        unskipAttribute = function(attributeName)
+            if attributeName then
+                skippedAttributes[attributeName] = nil
+            end
+        end,
+        --- Check if an attribute is currently skipped.
+        --- @param attributeName string
+        --- @return boolean
+        isAttributeSkipped = function(attributeName)
+            return skippedAttributes[attributeName] == true
         end,
     },
 }

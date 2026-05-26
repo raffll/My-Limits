@@ -16,9 +16,17 @@ This is my second approach to creating a cap on attributes, but this time it is 
 
 You can choose settings in the Lua scripts menu:
 
-- Potions-Only Limits: If you want full limit (No) or only potions (Yes).
-- Progressive Potion Limit: If you want a constant limit of 3 (No) or a limit based on player level (Yes).
-- Progressive Stats Limit: If you want a constant 300/150 limit (No) or a progressive limit based on player level (Yes).
+**Main:**
+- Potions-Only Limit: Disables attribute and skill limits. Only the potion limit remains active.
+- Progressive Potion Limit: Potion limit scales with level: starts at 3, gains +1 every 10 levels, up to 8 at level 50.
+- Progressive Stats Limit: Attribute and skill caps scale with level. Attributes: 100 + (level × 5), capped at 300. Skills: 100 + level, capped at 150. When disabled, caps are fixed at 300/150.
+
+**Training:**
+- Training Limit: Training sessions are limited to 5 per level. Trainers will refuse to teach you until you level up.
+
+**Compatibility:**
+- Ignore Sun's Dusk Consumables: Food and drinks from Sun's Dusk Survival and Needs will not count towards the potion limit.
+- Ignore Better Merchants Skills Luck Boost: Luck attribute checks are skipped during merchant interactions if Better Merchants Skills is loaded. Prevents fainting from the temporary luck modifier.
 
 ------------------------------------------------------------
 
@@ -77,7 +85,7 @@ The progressive potion limit depends on the player level:
 
 ### Training limit
 
-You can train only 5 times per level. That's it. This plugin is independent from Stats & Potions.
+You can train only 5 times per level. After each session, a message shows your progress (e.g. "Training sessions done: 3/5."). The counter resets when you level up.
 
 ------------------------------------------------------------
 
