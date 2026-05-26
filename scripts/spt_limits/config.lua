@@ -2,20 +2,20 @@
 -- Wildcards are supported in potions: "sd_*" matches any ID starting with "sd_".
 --
 -- To find a record ID, open the console in-game and click on the item,
--- or check the mod's ESP/ESM in OpenMW-CS.
+-- or check the mod's ESP/ESM in CS.
 
 return {
+    -- Toggles (set to false to disable a limit entirely)
+    potionLimitEnabled = true,
+    statLimitEnabled = true,
+    trainingLimitEnabled = true,
+
     -- Limits
     attributeCap = 300,
     skillCap = 150,
     potionLimit = 3,
     trainingLimit = 5,
     potionCooldown = 20, -- seconds
-
-    -- Toggles (set to false to disable a limit entirely)
-    potionLimitEnabled = true,
-    statLimitEnabled = true,
-    trainingLimitEnabled = true,
 
     -- Potion record IDs that will not count towards the drink limit.
     -- Supports wildcards: "sd_*" matches any ID starting with "sd_".

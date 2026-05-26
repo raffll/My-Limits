@@ -86,3 +86,10 @@ Do NOT "fix" this by reordering the calls or adding early-return guards.
 ## Interface Version is Always 1
 
 The `interface` block in player.lua uses `version = 1` unless explicitly told otherwise. Do NOT bump the interface version number.
+
+
+## Config Cannot Be Changed Mid-Session
+
+The `config.lua` values (toggles, limits, caps, exclusions) are read once at script load and are never hot-reloaded during gameplay. There is no scenario where `potionLimitEnabled`, `statLimitEnabled`, `trainingLimitEnabled`, or any other config value changes while the game is running.
+
+Do NOT add guards, fallback resets, or cleanup logic for "what if a config toggle changes mid-session" — it cannot happen.

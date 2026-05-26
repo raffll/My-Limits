@@ -6,8 +6,8 @@ local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
 
 -- Load config
-local exclusions = require('scripts.raffll_limits.config')
-local L = core.l10n('raffll_limits')
+local exclusions = require('scripts.sptLimits.config')
+local L = core.l10n('sptLimits')
 
 -- Module-level state table
 local state = {}
@@ -17,7 +17,7 @@ local excludedPotions = {}
 -- List of Lua patterns converted from wildcard entries (e.g. "sd_*" -> "^sd_")
 local excludedPotionPatterns = {}
 
-for _, entry in ipairs(exclusions.potions) do
+for _, entry in ipairs(exclusions.potions or {}) do
     if entry:find('%*') then
         -- Convert wildcard to Lua pattern: escape special chars, replace * with .*
         local pattern = '^' .. entry:gsub('([%.%+%-%^%$%(%)%%])', '%%%1'):gsub('%*', '.*') .. '$'
@@ -38,7 +38,7 @@ end
 
 -- Per-attribute spell exclusion sets
 local excludedAttributeSpells = {}
-for attr, spells in pairs(exclusions.attributes) do
+for attr, spells in pairs(exclusions.attributes or {}) do
     excludedAttributeSpells[attr] = {}
     for _, id in ipairs(spells) do
         excludedAttributeSpells[attr][id] = true
@@ -47,7 +47,7 @@ end
 
 -- Per-skill spell exclusion sets
 local excludedSkillSpells = {}
-for skill, spells in pairs(exclusions.skills) do
+for skill, spells in pairs(exclusions.skills or {}) do
     excludedSkillSpells[skill] = {}
     for _, id in ipairs(spells) do
         excludedSkillSpells[skill][id] = true
@@ -69,7 +69,7 @@ local function initState()
     state.drinkCount = 0              -- potions consumed in current window
     state.timer = 0                   -- seconds elapsed since last drink
     state.drinkHour = 0               -- GameHour when last potion was consumed
-    state.maxCount = 3                -- current max allowed potions
+    state.maxCount = exclusions.potionLimit -- current max allowed potions
     state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
     state.overdoseCollapse = false    -- potion overdose triggered collapse flag
     state.potionEffectsInitialized = false -- whether baseline has been captured
@@ -294,13 +294,27 @@ return {
                 state.timer = data.timer or 0
                 state.drinkHour = data.drinkHour or 0
                 state.overdoseCollapse = data.limitPotion or false
-                state.maxCount = data.maxCount or 3
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
 
-            -- Recompute derived state
+            -- Recompute derived state (maxCount always comes from config)
             state.drinkOverdose = (state.drinkCount >= state.maxCount)
+
+            -- Re-seed potion detection baseline from current active effects
+            local potionEffectCount = 0
+            local activeSpells = types.Actor.activeSpells(self)
+            for _, spell in pairs(activeSpells) do
+                local rok, rec = pcall(types.Potion.record, spell.id)
+                if rok and rec then
+                    if not isPotionExcludedByFile(spell.id) then
+                        potionEffectCount = potionEffectCount + 1
+                    end
+                end
+            end
+            state.baselinePotionEffects = potionEffectCount
+            state.detectedDrinks = 0
+            state.potionEffectsInitialized = true
         end,
         onSave = function()
             return {
@@ -309,7 +323,6 @@ return {
                 timer = state.timer,
                 drinkHour = state.drinkHour,
                 limitPotion = state.overdoseCollapse,
-                maxCount = state.maxCount,
                 trainCount = state.trainCount,
                 trainLevel = state.trainLevel,
             }
@@ -384,7 +397,7 @@ return {
 
             -- 10. Write state to player storage for menu scripts to read (only when changed)
             local countdown = state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0
-            local section = storage.playerSection('raffll_limits_state')
+            local section = storage.playerSection('sptLimits_state')
             if lastSent.active ~= state.active then
                 section:set('active', state.active)
                 lastSent.active = state.active
@@ -410,7 +423,7 @@ return {
 
             -- 11. Send state to global script for item blocking (only when changed)
             if lastSent.globalActive ~= state.active or lastSent.globalOverdose ~= state.drinkOverdose then
-                core.sendGlobalEvent('raffll_limits_stateUpdate', {
+                core.sendGlobalEvent('spt_limits_state_update', {
                     active = state.active,
                     drinkOverdose = state.drinkOverdose,
                 })
@@ -420,12 +433,13 @@ return {
         end,
     },
     eventHandlers = {
-        raffll_limits_showMessage = function(data)
+        spt_limits_show_message = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
             end
         end,
         UiModeChanged = function(data)
+            if not data then return end
             if not exclusions.trainingLimitEnabled then return end
             checkTrainingLevelReset()
             if state.trainCount >= exclusions.trainingLimit and data.newMode == 'Training' then

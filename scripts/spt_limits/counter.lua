@@ -22,9 +22,9 @@ local element = ui.create {
 local function tick(dt)
 	local ok, vals = pcall(function()
 		return {
-			countdown = storage.playerSection('raffll_limits_state'):get('countdown'),
-			maxCount = storage.playerSection('raffll_limits_state'):get('maxCount'),
-			drinkCount = storage.playerSection('raffll_limits_state'):get('drinkCount'),
+			countdown = storage.playerSection('spt_limits_state'):get('countdown'),
+			maxCount = storage.playerSection('spt_limits_state'):get('maxCount'),
+			drinkCount = storage.playerSection('spt_limits_state'):get('drinkCount'),
 		}
 	end)
 	if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil and vals.maxCount ~= nil then
