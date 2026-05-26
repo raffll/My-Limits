@@ -6,8 +6,8 @@ local storage = require('openmw.storage')
 local interfaces = require('openmw.interfaces')
 
 -- Load config
-local exclusions = require('scripts.sptLimits.config')
-local L = core.l10n('sptLimits')
+local exclusions = require('scripts.spt_limits.config')
+local L = core.l10n('spt_limits')
 
 -- Module-level state table
 local state = {}
@@ -69,8 +69,7 @@ local function initState()
     state.drinkCount = 0              -- potions consumed in current window
     state.timer = 0                   -- seconds elapsed since last drink
     state.drinkHour = 0               -- GameHour when last potion was consumed
-    state.maxCount = exclusions.potionLimit -- current max allowed potions
-    state.drinkOverdose = false       -- whether at overdose threshold (drinkCount > maxCount)
+    state.drinkOverdose = false       -- whether at overdose threshold (drinkCount >= potionLimit)
     state.overdoseCollapse = false    -- potion overdose triggered collapse flag
     state.potionEffectsInitialized = false -- whether baseline has been captured
     state.baselinePotionEffects = 0   -- active potion effect count at last reset/init
@@ -81,7 +80,6 @@ local function initState()
     -- Reset dirty-flag cache so first frame always writes
     lastSent.active = nil
     lastSent.drinkCount = nil
-    lastSent.maxCount = nil
     lastSent.countdown = nil
     lastSent.drinkOverdose = nil
 end
@@ -242,11 +240,11 @@ local function handleDrinkDetected()
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
-    if state.drinkCount >= state.maxCount + 2 then
+    if state.drinkCount >= exclusions.potionLimit + 2 then
         -- Death: drink while already in overdose
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
-    elseif state.drinkCount >= state.maxCount + 1 then
+    elseif state.drinkCount >= exclusions.potionLimit + 1 then
         -- Overdose: first drink past the limit → collapse immediately
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
@@ -298,8 +296,8 @@ return {
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
 
-            -- Recompute derived state (maxCount always comes from config)
-            state.drinkOverdose = (state.drinkCount >= state.maxCount)
+            -- Recompute derived state
+            state.drinkOverdose = (state.drinkCount >= exclusions.potionLimit)
 
             -- Re-seed potion detection baseline from current active effects
             local potionEffectCount = 0
@@ -334,7 +332,6 @@ return {
             -- 2. Compute caps
             local attrCap = exclusions.attributeCap
             local skillCap = exclusions.skillCap
-            state.maxCount = exclusions.potionLimit
 
             -- 4. Check attributes (if statLimit enabled and not active)
             local limitAttribute = false
@@ -390,14 +387,14 @@ return {
             end
 
             -- 8. Update drinkOverdose
-            state.drinkOverdose = (state.drinkCount >= state.maxCount)
+            state.drinkOverdose = (state.drinkCount >= exclusions.potionLimit)
 
             -- 9. Handle knockout/recovery
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
             -- 10. Write state to player storage for menu scripts to read (only when changed)
             local countdown = state.drinkCount > 0 and math.max(0, exclusions.potionCooldown - state.timer) or 0
-            local section = storage.playerSection('sptLimits_state')
+            local section = storage.playerSection('spt_limits_state')
             if lastSent.active ~= state.active then
                 section:set('active', state.active)
                 lastSent.active = state.active
@@ -406,9 +403,9 @@ return {
                 section:set('drinkCount', state.drinkCount)
                 lastSent.drinkCount = state.drinkCount
             end
-            if lastSent.maxCount ~= state.maxCount then
-                section:set('maxCount', state.maxCount)
-                lastSent.maxCount = state.maxCount
+            if lastSent.maxCount ~= exclusions.potionLimit then
+                section:set('maxCount', exclusions.potionLimit)
+                lastSent.maxCount = exclusions.potionLimit
             end
             -- Countdown changes every frame while active, but only write when visually different (0.1s precision)
             local countdownRounded = math.floor(countdown * 10) / 10
