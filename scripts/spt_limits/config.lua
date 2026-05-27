@@ -1,9 +1,3 @@
--- Exclusion and configuration for Stats & Potions Limit.
--- Wildcards are supported in potions: "sd_*" matches any ID starting with "sd_".
---
--- To find a record ID, open the console in-game and click on the item,
--- or check the mod's ESP/ESM in CS.
-
 return {
     -- Toggles (set to false to disable a limit entirely)
     potionLimitEnabled = true,
@@ -17,11 +11,12 @@ return {
     trainingLimit = 5,
     potionCooldown = 20, -- seconds
 
+    -- Exclude Sun's Dusk survival mod potions from the limit.
+    excludeSunsDusk = true,
+
     -- Potion record IDs that will not count towards the drink limit.
     -- Supports wildcards: "sd_*" matches any ID starting with "sd_".
-    potions = {
-        -- "sd_*",
-    },
+    potions = {},
 
     -- Spell/effect IDs that bypass the attribute limit check.
     -- While any of these are active, the corresponding attribute will not be checked.

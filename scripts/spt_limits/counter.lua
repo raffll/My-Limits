@@ -1,6 +1,7 @@
 local ui = require("openmw.ui")
 local util = require("openmw.util")
 local storage = require("openmw.storage")
+local config = require("scripts.spt_limits.config")
 
 local element = ui.create({
     layer = "HUD",
@@ -21,14 +22,13 @@ local function tick()
     local ok, vals = pcall(function()
         return {
             countdown = storage.playerSection("spt_limits_state"):get("countdown"),
-            potionLimit = storage.playerSection("spt_limits_state"):get("potionLimit"),
-            drinkCount = storage.playerSection("spt_limits_state"):get("drinkCount"),
+            drinkCount = storage.playerSection("spt_limits_state"):get("drink_count"),
         }
     end)
-    if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil and vals.potionLimit ~= nil then
+    if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil then
         local hide = vals.drinkCount == 0
         element.layout.props.visible = not hide
-        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, vals.potionLimit)
+        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, config.potionLimit)
         element:update()
     end
 end

@@ -27,10 +27,15 @@ for _, entry in ipairs(config.potions or {}) do
     end
 end
 
--- Check if a potion ID is excluded (exact match or wildcard pattern)
+-- Check if a potion ID is excluded (exact match, Sun's Dusk consumable, or wildcard pattern)
 local function isPotionExcludedByFile(id)
     if excludedPotions[id] then
         return true
+    end
+    if config.excludeSunsDusk and interfaces.SunsDusk and interfaces.SunsDusk.isConsumable then
+        if interfaces.SunsDusk.isConsumable(id) then
+            return true
+        end
     end
     for _, pattern in ipairs(excludedPotionPatterns) do
         if id:match(pattern) then
@@ -69,7 +74,7 @@ local lastSent = {}
 
 -- Initialize all state variables to their defaults
 local function initState()
-    state.active = false -- knockout state flag
+    state.knockedOut = false -- knockout state flag
     state.drinkCount = 0 -- potions consumed in current window
     state.timer = 0 -- seconds elapsed since last drink
     state.drinkHour = 0 -- GameHour when last potion was consumed
@@ -82,10 +87,12 @@ local function initState()
     state.trainLevel = 0 -- level at which trainCount was last reset
 
     -- Reset dirty-flag cache so first frame always writes
-    lastSent.active = nil
+    lastSent.knockedOut = nil
     lastSent.drinkCount = nil
     lastSent.countdown = nil
     lastSent.drinkOverdose = nil
+    lastSent.globalKnockedOut = nil
+    lastSent.globalOverdose = nil
 end
 
 -- Check if any spell in the given set is currently active on the player.
@@ -239,38 +246,30 @@ end
 local function handleKnockoutRecovery(limitAttribute, limitSkill)
     local anyLimit = limitAttribute or limitSkill or state.overdoseCollapse
 
-    if not state.active and anyLimit then
-        -- Transition to knockout: set active, drop max fatigue to 0
-        state.active = true
+    if not state.knockedOut and anyLimit then
+        state.knockedOut = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
-        -- Close any open menu (if UI mode API is available)
         if interfaces.UI and interfaces.UI.setMode then
             interfaces.UI.setMode()
         end
-    elseif state.active and anyLimit then
-        -- Maintain knockout: keep max fatigue at 0 and current at 0 to stay collapsed
+    elseif state.knockedOut and anyLimit then
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = 0
-    elseif state.active and not anyLimit then
-        -- Recovery: all limits cleared while in knockout
+    elseif state.knockedOut and not anyLimit then
         ui.showMessage(L("recovered"))
-        -- Restore fatigue base to Str + Wil + Agi + End
         local attrs = types.Actor.stats.attributes
         local baseMax = attrs.strength(self).modified
             + attrs.willpower(self).modified
             + attrs.agility(self).modified
             + attrs.endurance(self).modified
         types.Actor.stats.dynamic.fatigue(self).base = baseMax
-        -- Set current to 0 so player wakes up with empty fatigue bar
         types.Actor.stats.dynamic.fatigue(self).current = 0
-        state.active = false
-        -- Reset potion detection to ignore any buffered hotkey drinks
+        state.knockedOut = false
         state.potionEffectsInitialized = false
         state.baselinePotionEffects = 0
         state.detectedDrinks = 0
     end
-    -- If not active and no limit, do nothing
 end
 
 -- Update the potion cooldown timer, handling hour-skip detection and expiry
@@ -321,13 +320,13 @@ local function handleDrinkDetected()
 
     if state.drinkCount >= config.potionLimit + 2 then
         -- Death: drink while already in overdose
-        ui.showMessage(L("overdoseDeath"))
+        ui.showMessage(L("overdose_death"))
         types.Actor.stats.dynamic.health(self).current = 0
     elseif state.drinkCount >= config.potionLimit + 1 then
         -- Overdose: first drink past the limit → collapse immediately
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
-        state.active = true
+        state.knockedOut = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
     end
@@ -350,7 +349,7 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
         if state.trainCount >= config.trainingLimit then
-            ui.showMessage(L("trainLimitReached"))
+            ui.showMessage(L("train_limit_reached"))
             return false
         end
         state.trainCount = state.trainCount + 1
@@ -363,12 +362,12 @@ return {
             initState()
         end,
         onLoad = function(data)
-            -- 1. Set all state to defaults first
+            -- Set all state to defaults first
             initState()
 
-            -- 2. Restore saved fields (guard against nil/first load)
+            -- Restore saved fields (guard against nil/first load)
             if data then
-                state.active = data.active or false
+                state.knockedOut = data.knockedOut or false
                 state.drinkCount = data.drinkCount or 0
                 state.timer = data.timer or 0
                 state.drinkHour = data.drinkHour or 0
@@ -397,7 +396,7 @@ return {
         end,
         onSave = function()
             return {
-                active = state.active,
+                knockedOut = state.knockedOut,
                 drinkCount = state.drinkCount,
                 timer = state.timer,
                 drinkHour = state.drinkHour,
@@ -407,34 +406,29 @@ return {
             }
         end,
         onUpdate = function(dt)
-            -- 1. CharGen check: if character generation is not finished, return early
             if not types.Player.isCharGenFinished(self) then
                 return
             end
 
-            -- 2. Compute caps
-            local attrCap = config.attributeCap
-            local skillCap = config.skillCap
+            if not config.statLimitEnabled and not config.potionLimitEnabled then
+                return
+            end
 
-            -- 3. Check attributes (if statLimit enabled)
             local limitAttribute = false
-            if config.statLimitEnabled then
-                limitAttribute = checkAttributes(attrCap)
-            end
-            if limitAttribute and not state.active then
-                ui.showMessage(L("attributeLimit"))
-            end
-
-            -- 4. Check skills (if statLimit enabled)
             local limitSkill = false
+
             if config.statLimitEnabled then
-                limitSkill = checkSkills(skillCap)
-            end
-            if limitSkill and not state.active then
-                ui.showMessage(L("skillLimit"))
+                limitAttribute = checkAttributes(config.attributeCap)
+                if limitAttribute and not state.knockedOut then
+                    ui.showMessage(L("attribute_limit"))
+                end
+
+                limitSkill = checkSkills(config.skillCap)
+                if limitSkill and not state.knockedOut then
+                    ui.showMessage(L("skill_limit"))
+                end
             end
 
-            -- 5. Detect potion drink by counting active potion effects
             if config.potionLimitEnabled then
                 local potionEffectCount = 0
                 local activeSpells = types.Actor.activeSpells(self)
@@ -447,14 +441,10 @@ return {
                     end
                 end
                 if not state.potionEffectsInitialized then
-                    -- Seed baseline: current active effects are "already accounted for"
                     state.baselinePotionEffects = potionEffectCount
                     state.detectedDrinks = 0
                     state.potionEffectsInitialized = true
                 else
-                    -- Cumulative detection: any active effects above baseline are new drinks.
-                    -- This count only goes up — expired effects lower potionEffectCount but
-                    -- detectedDrinks remembers all drinks that were ever detected this window.
                     local currentDelta = potionEffectCount - state.baselinePotionEffects
                     if currentDelta > state.detectedDrinks then
                         local newDrinks = currentDelta - state.detectedDrinks
@@ -465,49 +455,32 @@ return {
                     end
                 end
 
-                -- 6. Update potion timer
                 updatePotionTimer(dt)
+                state.drinkOverdose = (state.drinkCount >= config.potionLimit)
             end
 
-            -- 7. Update drinkOverdose
-            state.drinkOverdose = (state.drinkCount >= config.potionLimit)
-
-            -- 8. Handle knockout/recovery
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
-            -- 9. Write state to player storage for menu scripts to read (only when changed)
-            local countdown = state.drinkCount > 0 and math.max(0, config.potionCooldown - state.timer) or 0
-            local section = storage.playerSection("spt_limits_state")
-            if lastSent.active ~= state.active then
-                section:set("active", state.active)
-                lastSent.active = state.active
-            end
-            if lastSent.drinkCount ~= state.drinkCount then
-                section:set("drinkCount", state.drinkCount)
-                lastSent.drinkCount = state.drinkCount
-            end
-            if lastSent.potionLimit ~= config.potionLimit then
-                section:set("potionLimit", config.potionLimit)
-                lastSent.potionLimit = config.potionLimit
-            end
-            -- Countdown changes every frame while active, but only write when visually different (0.1s precision)
-            local countdownRounded = math.floor(countdown * 10) / 10
-            if lastSent.countdown ~= countdownRounded then
-                section:set("countdown", countdown)
-                lastSent.countdown = countdownRounded
-            end
-            if lastSent.drinkOverdose ~= state.drinkOverdose then
-                section:set("drinkOverdose", state.drinkOverdose)
-                lastSent.drinkOverdose = state.drinkOverdose
+            if config.potionLimitEnabled then
+                local countdown = state.drinkCount > 0 and math.max(0, config.potionCooldown - state.timer) or 0
+                local section = storage.playerSection("spt_limits_state")
+                if lastSent.drinkCount ~= state.drinkCount then
+                    section:set("drink_count", state.drinkCount)
+                    lastSent.drinkCount = state.drinkCount
+                end
+                local countdownRounded = math.floor(countdown * 10) / 10
+                if lastSent.countdown ~= countdownRounded then
+                    section:set("countdown", countdown)
+                    lastSent.countdown = countdownRounded
+                end
             end
 
-            -- 10. Send state to global script for item blocking (only when changed)
-            if lastSent.globalActive ~= state.active or lastSent.globalOverdose ~= state.drinkOverdose then
+            if lastSent.globalKnockedOut ~= state.knockedOut or lastSent.globalOverdose ~= state.drinkOverdose then
                 core.sendGlobalEvent("spt_limits_state_update", {
-                    active = state.active,
-                    drinkOverdose = state.drinkOverdose,
+                    knocked_out = state.knockedOut,
+                    drink_overdose = state.drinkOverdose,
                 })
-                lastSent.globalActive = state.active
+                lastSent.globalKnockedOut = state.knockedOut
                 lastSent.globalOverdose = state.drinkOverdose
             end
         end,
@@ -532,16 +505,16 @@ return {
                     interfaces.UI.removeMode("Dialogue")
                     interfaces.UI.removeMode("Interface")
                 end
-                ui.showMessage(L("trainLimitReached"))
+                ui.showMessage(L("train_limit_reached"))
             end
         end,
     },
-    interfaceName = "StatsAndPotionsLimit",
+    interfaceName = "spt_limits",
     interface = {
         version = 1,
         --- Returns true if the player is currently knocked out (overdose/stat limit).
         isKnockedOut = function()
-            return state.active
+            return state.knockedOut
         end,
         --- Exclude a potion record ID from being counted toward the limit.
         --- @param recordId string the potion record ID to exclude
