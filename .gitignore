@@ -3,3 +3,4 @@ meta.ini
 *.zip
 *.bak
 *.omwscripts.esp
+*.code-workspace
