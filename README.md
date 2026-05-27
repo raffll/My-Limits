@@ -46,7 +46,7 @@ If any attribute exceeds `attributeCap` or any skill exceeds `skillCap`, your ch
 - Each potion drunk starts a 20-second cooldown timer.
 - Drinking another potion during cooldown increments the counter and resets the timer.
 - At the limit (default: 3), the inventory UI blocks further drinks.
-- Waiting or sleeping 1+ hour clears the cooldown immediately.
+- Waiting or sleeping at least 1 hour clears the cooldown immediately.
 - HUD counter in the bottom-right shows: `countdown drinks/limit`.
 - **Exception:** Hotkeys bypass the inventory block. Drinking via hotkey past the limit causes overdose collapse.
 

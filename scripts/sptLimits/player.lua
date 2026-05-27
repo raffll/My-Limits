@@ -223,7 +223,7 @@ local function updatePotionTimer(dt)
 
     local currentHour = core.getGameTime() / 3600
 
-    if (currentHour - state.drinkHour) > 1 then
+    if (currentHour - state.drinkHour) >= 1 then
         state.drinkCount = 0
         state.timer = 0
         state.overdoseCollapse = false
@@ -250,6 +250,8 @@ local function handleDrinkDetected()
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
+    -- Death branch: currently unreachable because the engine blocks hotkeys while
+    -- collapsed, but kept as a safeguard in case future OpenMW versions change that.
     if state.drinkCount >= config.potionLimit + 2 then
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0

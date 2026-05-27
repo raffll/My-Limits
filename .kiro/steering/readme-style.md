@@ -10,7 +10,8 @@ When writing or editing the README, follow this style:
 - Gameplay behavior sections describe mechanics in plain bullet points. No step-by-step tutorials.
 - Lua interface section lists function signatures as inline code with a brief description after an em dash.
 - Changelog is a fenced code block with version heading and bullet points.
-- No installation instructions, no requirements section, no badges, no screenshots.
+- Installation section is allowed (brief, no badges, no screenshots).
+- No requirements section beyond what's in Installation. No badges, no screenshots.
 - No "Table of Contents" section.
 - End with short Compatibility and Permissions sections.
 - Tone: direct, concise, informative. No marketing language.
