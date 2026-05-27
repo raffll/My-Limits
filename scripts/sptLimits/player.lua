@@ -312,6 +312,11 @@ return {
     engineHandlers = {
         onInit = function()
             initState()
+            if config.potionLimitEnabled then
+                local section = storage.playerSection("sptLimitsState")
+                section:set("drinkCount", 0)
+                section:set("countdown", 0)
+            end
         end,
         onLoad = function(data)
             initState()

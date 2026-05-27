@@ -77,6 +77,9 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.0beta
+- Fixed HUD counter showing stale values from a previous save when starting a new game.
+
 2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.
 
