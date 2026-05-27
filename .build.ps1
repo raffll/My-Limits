@@ -1,4 +1,4 @@
-$Name = "Stats and Potions Limit"
+$Name = "Stats Potions Training Limits"
 
 if (Test-Path "$Name.zip") {
     Remove-Item "$Name.zip"
