@@ -134,3 +134,10 @@ Do NOT add destroy/cleanup logic for the HUD element.
 OpenMW resolves all script interfaces before gameplay begins. The `interfaces.SunsDusk` reference in `isPotionExcluded` is always available by the time any `ItemUsage` handler or `onUpdate` fires. There is no race condition between mod load order and interface availability.
 
 Do NOT add deferred checks, retries, or "interface not yet available" guards for `interfaces.SunsDusk`.
+
+
+## Config-Only Toggles Are Never Persisted
+
+Values that are purely controlled by `config.lua` toggles (e.g. `hudCounterEnabled`, `potionLimitEnabled`) must NOT be saved in `onSave` or written to storage for persistence purposes. They are read once at load from `config.lua` and that is the single source of truth.
+
+Do NOT add save/load logic, storage fields, or interface methods whose sole purpose is to persist a config-driven toggle across sessions.

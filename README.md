@@ -4,10 +4,10 @@ Introduces configurable limits on attributes, skills, potion consumption, and tr
 
 ## Installation
 
-Requires OpenMW 0.49+. Copy `Stats & Potions Limit.omwscripts` and the `scripts/` folder into your data path. Add to `openmw.cfg`:
+Requires OpenMW 0.49+. Copy `SPT Limits.omwscripts`, the `scripts/` folder, and the `l10n/` folder into your data path. Add to `openmw.cfg`:
 
 ```
-content=Stats & Potions Limit.omwscripts
+content=SPT Limits.omwscripts
 ```
 
 ## Configuration
@@ -18,6 +18,7 @@ All settings are in `scripts/sptLimits/config.lua`. Edit the file directly.
 - `potionLimitEnabled` — Enable potion consumption limit (default: `true`).
 - `statLimitEnabled` — Enable attribute/skill cap enforcement (default: `true`).
 - `trainingLimitEnabled` — Enable training session limit (default: `true`).
+- `hudCounterEnabled` — Show the potion cooldown HUD counter (default: `true`).
 
 **Limits:**
 - `attributeCap` — Maximum allowed attribute value (default: `300`).
@@ -76,6 +77,9 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.0alpha2
+- HUD counter can be toggled off via hudCounterEnabled.
+
 2.0alpha
 - Complete rewrite to pure OpenMW Lua.
 - Configuration moved to config.lua.

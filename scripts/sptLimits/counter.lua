@@ -3,7 +3,7 @@ local util = require("openmw.util")
 local storage = require("openmw.storage")
 local config = require("scripts.sptLimits.config")
 
-if not config.potionLimitEnabled then
+if not config.potionLimitEnabled or not config.hudCounterEnabled then
     return {}
 end
 
