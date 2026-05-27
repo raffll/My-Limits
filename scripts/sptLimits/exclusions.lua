@@ -5,9 +5,8 @@ local excludedPotions = {}
 local excludedPotionPatterns = {}
 
 for _, entry in ipairs(config.potions or {}) do
-    if entry:find("%*") then
-        local pattern = "^" .. entry:gsub("([%.%+%-%^%$%(%)%%])", "%%%1"):gsub("%*", ".*") .. "$"
-        table.insert(excludedPotionPatterns, pattern)
+    if entry:find("[%%%[%]%.%+%-%*%?%^%$%(%)]") then
+        table.insert(excludedPotionPatterns, entry)
     else
         excludedPotions[entry] = true
     end

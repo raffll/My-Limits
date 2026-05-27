@@ -2,6 +2,17 @@
 
 This document captures hard-won knowledge from developing OpenMW Lua mods, specifically pitfalls when porting from MWScript to pure Lua.
 
+## UiModeChanged Event Payload
+
+The built-in `UiModeChanged` event sends a table with exactly these fields:
+- `data.oldMode` — the previous UI mode (or nil)
+- `data.newMode` — the new UI mode (same as `I.UI.getMode()`)
+- `data.arg` — context-specific argument (e.g. the book object in `"Book"` mode)
+
+There is no `data.mode` field. Always use `data.newMode`.
+
+Source: https://openmw.readthedocs.io/en/latest/reference/lua-scripting/events.html
+
 ## Module Availability by Script Context
 
 | Module | GLOBAL | PLAYER | MENU |

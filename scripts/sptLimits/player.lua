@@ -262,8 +262,6 @@ local function handleDrinkDetected()
     end
 end
 
-local trainingBlockElement = nil
-
 local function blockTrainingWindow()
     if interfaces.UI and interfaces.UI.registerWindow then
         interfaces.UI.registerWindow("Training", function()

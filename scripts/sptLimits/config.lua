@@ -15,7 +15,8 @@ return {
     excludeSunsDusk = true,
 
     -- Potion record IDs that will not count towards the drink limit.
-    -- Supports wildcards: "sd_*" matches any ID starting with "sd_".
+    -- Supports Lua patterns: "^sd_.*" matches any ID starting with "sd_".
+    -- Plain IDs (no pattern characters) are matched exactly.
     potions = {},
 
     -- Spell/effect IDs that bypass the attribute limit check.

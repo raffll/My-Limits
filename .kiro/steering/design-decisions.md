@@ -111,3 +111,21 @@ Because GLOBAL and PLAYER scripts run in separate Lua VMs, `require` gives each 
 The global script's `ItemUsage` handler checks `isPotionExcluded` before blocking — excluded potions always pass through regardless of overdose state.
 
 Do NOT inline the exclusion logic back into individual scripts. Do NOT remove the event sync.
+
+## Global Script Has No Persistent State — By Design
+
+The global script (`global.lua`) does not implement `onSave`/`onLoad`. Its `playerState` cache starts fresh on every load. The player script re-sends `sptLimitsStateUpdate` on the first frame after load (because `lastSent` values start as `nil`), so the global catches up immediately. The one-frame window where the global doesn't know the player's state is not reproducible in practice — `ItemUsage` handlers don't fire before the first `onUpdate` completes.
+
+Do NOT add `onSave`/`onLoad` to the global script to persist `playerState`.
+
+## HUD Element Lifecycle Is Fire-and-Forget
+
+The `counter.lua` MENU script creates its HUD element at module load and never destroys it. Mods cannot be disabled mid-session in OpenMW — the engine does not support hot-unloading scripts. There is no scenario where cleanup is needed.
+
+Do NOT add destroy/cleanup logic for the HUD element.
+
+## Sun's Dusk Interface Availability Is Not a Load-Order Race
+
+OpenMW resolves all script interfaces before gameplay begins. The `interfaces.SunsDusk` reference in `isPotionExcluded` is always available by the time any `ItemUsage` handler or `onUpdate` fires. There is no race condition between mod load order and interface availability.
+
+Do NOT add deferred checks, retries, or "interface not yet available" guards for `interfaces.SunsDusk`.
