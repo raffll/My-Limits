@@ -293,16 +293,13 @@ local trainingBlockElement = nil
 
 local function blockTrainingWindow()
     if interfaces.UI and interfaces.UI.registerWindow then
-        interfaces.UI.registerWindow("Training",
-            function()
-                if interfaces.UI.removeMode then
-                    interfaces.UI.removeMode("Training")
-                    interfaces.UI.removeMode("Dialogue")
-                end
-                ui.showMessage(L("trainLimitReached"))
-            end,
-            function() end
-        )
+        interfaces.UI.registerWindow("Training", function()
+            if interfaces.UI.removeMode then
+                interfaces.UI.removeMode("Training")
+                interfaces.UI.removeMode("Dialogue")
+            end
+            ui.showMessage(L("trainLimitReached"))
+        end, function() end)
     end
 end
 
