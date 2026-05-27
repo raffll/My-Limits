@@ -2,6 +2,14 @@
 
 Introduces configurable limits on attributes, skills, potion consumption, and training sessions. OpenMW only, pure Lua, rewritten from scratch.
 
+## Installation
+
+Requires OpenMW 0.49+. Copy `Stats & Potions Limit.omwscripts` and the `scripts/` folder into your data path. Add to `openmw.cfg`:
+
+```
+content=Stats & Potions Limit.omwscripts
+```
+
 ## Configuration
 
 All settings are in `scripts/sptLimits/config.lua`. Edit the file directly.
@@ -55,6 +63,16 @@ Other mods can use `require('openmw.interfaces').sptLimits`:
 - `skipAttribute(name)` / `unskipAttribute(name)` — temporarily bypass an attribute cap
 - `skipSkill(name)` / `unskipSkill(name)` — temporarily bypass a skill cap
 
+## Compatibility
+
+- Incompatible with mods that override fatigue calculation (uses Str + Wil + Agi + End).
+- Should be compatible with Potion Thrower if loaded after this mod.
+- Other mods can use the Lua interface to exclude their potions/food items.
+
+## Permissions
+
+Do whatever you want. Just credit me.
+
 ## Changelog
 
 ```
@@ -65,14 +83,6 @@ Other mods can use `require('openmw.interfaces').sptLimits`:
 - Training limit window flicker fixed.
 - Counter now works while in real time menu.
 - Option to exclude Sun's Dusk potions.
-- Option to exclude any potions.
+- Option to exclude any potion.
 - Option to disable stat limit while spell active.
 ```
-
-## Compatibility
-
-Incompatible with mods that override fatigue calculation (uses Str + Wil + Agi + End). Other mods can use the Lua interface to exclude their potions/food items.
-
-## Permissions
-
-Do whatever you want. Just credit me.
