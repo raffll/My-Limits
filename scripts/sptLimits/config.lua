@@ -3,6 +3,7 @@ return {
     potionLimitEnabled = true,
     statLimitEnabled = true,
     trainingLimitEnabled = true,
+    hudCounterEnabled = true,
 
     -- Limits
     attributeCap = 300,
