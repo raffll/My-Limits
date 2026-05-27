@@ -4,10 +4,10 @@ Introduces configurable limits on attributes, skills, potion consumption, and tr
 
 ## Installation
 
-Requires OpenMW 0.49+. Copy `Stats & Potions Limit.omwscripts` and the `scripts/` folder into your data path. Add to `openmw.cfg`:
+Requires OpenMW 0.49+. Copy `SPT Limits.omwscripts`, the `scripts/` folder, and the `l10n/` folder into your data path. Add to `openmw.cfg`:
 
 ```
-content=Stats & Potions Limit.omwscripts
+content=SPT Limits.omwscripts
 ```
 
 ## Configuration
@@ -77,7 +77,7 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
-2.0beta
+2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.
 
 2.0alpha
