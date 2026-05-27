@@ -297,6 +297,7 @@ local function blockTrainingWindow()
             function()
                 if interfaces.UI.removeMode then
                     interfaces.UI.removeMode("Training")
+                    interfaces.UI.removeMode("Dialogue")
                 end
                 ui.showMessage(L("trainLimitReached"))
             end,
@@ -480,7 +481,6 @@ return {
             checkTrainingLevelReset()
             if state.trainCount >= config.trainingLimit and data.newMode == "Training" then
                 blockTrainingWindow()
-                ui.showMessage(L("trainLimitReached"))
             end
         end,
     },

@@ -93,3 +93,13 @@ The `interface` block in player.lua uses `version = 1` unless explicitly told ot
 The `config.lua` values (toggles, limits, caps, exclusions) are read once at script load and are never hot-reloaded during gameplay. There is no scenario where `potionLimitEnabled`, `statLimitEnabled`, `trainingLimitEnabled`, or any other config value changes while the game is running.
 
 Do NOT add guards, fallback resets, or cleanup logic for "what if a config toggle changes mid-session" — it cannot happen.
+
+## Training Window Uses registerWindow + removeMode
+
+When the training limit is reached, `blockTrainingWindow()` calls `interfaces.UI.registerWindow("Training", showFn, hideFn)` where `showFn` immediately calls `removeMode("Training")` and shows the limit message. This suppresses the built-in Training window content and removes the mode in one step — no borders, no empty window.
+
+The HUD briefly flickers (shows then hides) on each click because `removeMode` triggers a mode stack change. This is an accepted tradeoff — there is no OpenMW API to prevent it without reintroducing the empty bordered window or the original Training window flash.
+
+`unblockTrainingWindow()` calls `registerWindow("Training", nil, nil)` to restore the default Training window on level up.
+
+Do NOT revert this to the old `UiModeChanged`-only approach. Do NOT remove the `removeMode("Training")` from `showFn`. Do NOT replace `registerWindow` with a different mechanism.
