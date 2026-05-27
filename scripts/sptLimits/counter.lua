@@ -1,7 +1,7 @@
 local ui = require("openmw.ui")
 local util = require("openmw.util")
 local storage = require("openmw.storage")
-local config = require("scripts.spt_limits.config")
+local config = require("scripts.sptLimits.config")
 
 local element = ui.create({
     layer = "HUD",
@@ -21,8 +21,8 @@ local element = ui.create({
 local function tick()
     local ok, vals = pcall(function()
         return {
-            countdown = storage.playerSection("spt_limits_state"):get("countdown"),
-            drinkCount = storage.playerSection("spt_limits_state"):get("drink_count"),
+            countdown = storage.playerSection("sptLimitsState"):get("countdown"),
+            drinkCount = storage.playerSection("sptLimitsState"):get("drinkCount"),
         }
     end)
     if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil then

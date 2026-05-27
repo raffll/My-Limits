@@ -54,8 +54,8 @@ Do NOT "fix" this.
 
 ## Stat Limit Message Fires Every Frame — Not a Bug
 
-The `ui.showMessage` for attribute/skill limit fires every frame while the cap is exceeded and `state.active` is false. This is not a bug because:
-- `handleKnockoutRecovery` sets `state.active = true` on the same frame, so the message only fires once.
+The `ui.showMessage` for attribute/skill limit fires every frame while the cap is exceeded and `state.knockedOut` is false. This is not a bug because:
+- `handleKnockoutRecovery` sets `state.knockedOut = true` on the same frame, so the message only fires once.
 - OpenMW deduplicates identical messages in the queue anyway.
 
 Do NOT "fix" this by adding a flag or throttle.
@@ -65,7 +65,7 @@ Do NOT "fix" this by adding a flag or throttle.
 In `handleKnockoutRecovery`, the "maintain knockout" branch sets `fatigue.current = 0` (not `-1`):
 
 ```lua
-elseif state.active and anyLimit then
+elseif state.knockedOut and anyLimit then
     types.Actor.stats.dynamic.fatigue(self).base = 0
     types.Actor.stats.dynamic.fatigue(self).current = 0
 end
@@ -77,7 +77,7 @@ Do NOT "fix" this by changing `0` to `-1` in the maintain branch.
 
 ## Overdose Collapse: `handleDrinkDetected` Sets State Before `handleKnockoutRecovery`
 
-When overdose triggers in `handleDrinkDetected`, it sets `state.active = true` and `fatigue.current = -1`. Later in the same frame, `handleKnockoutRecovery` sees `active == true` and `anyLimit == true`, entering the maintain branch which sets `current = 0`.
+When overdose triggers in `handleDrinkDetected`, it sets `state.knockedOut = true` and `fatigue.current = -1`. Later in the same frame, `handleKnockoutRecovery` sees `knockedOut == true` and `anyLimit == true`, entering the maintain branch which sets `current = 0`.
 
 This is NOT a bug. OpenMW processes the `-1` assignment within the same frame before rendering, which is enough to trigger the knockdown animation. The subsequent `0` on the same frame does not cancel it — the engine latches the collapse state once triggered by a negative fatigue value.
 

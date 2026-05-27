@@ -1,26 +1,22 @@
 # Naming Conventions
 
-## Internal Identifiers — camelCase
+## camelCase Everywhere
 
-All Lua-internal names use camelCase:
+All identifiers use camelCase — internal Lua names, external string keys, folder names, and file references:
 
+- Folder names: `scripts/sptLimits/`, `l10n/sptLimits/`
+- Require paths: `require("scripts.sptLimits.config")`
+- L10n namespace: `core.l10n("sptLimits")`
+- Interface name: `"sptLimits"`
+- Event names: `"sptLimitsStateUpdate"`, `"sptLimitsShowMessage"`
+- Storage section: `"sptLimitsState"`
+- Storage field keys: `"drinkCount"`, `"countdown"`
+- Event data fields: `data.knockedOut`, `data.drinkOverdose`
+- L10n message keys: `"trainLimitReached"`, `"overdoseDeath"`, `"cantDrinkNow"`
 - Local variables: `drinkCount`, `potionEffectCount`, `lastSent`
 - Functions: `initState`, `handleDrinkDetected`, `checkAttributes`
-- Table fields (internal state): `state.drinkOverdose`, `state.overdoseCollapse`
 - Config keys: `potionLimitEnabled`, `attributeCap`, `excludeSunsDusk`
 
-## External Identifiers — snake_case
+## No snake_case
 
-All identifiers visible to other mods, scripts, or the engine use snake_case:
-
-- Interface name: `"spt_limits"`
-- Event names: `"spt_limits_state_update"`, `"spt_limits_show_message"`
-- Storage section names: `"spt_limits_state"`
-- Storage field keys: `"drink_count"`, `"countdown"`
-- Event data field names: `data.knocked_out`, `data.drink_overdose`
-- L10n message keys: `"train_limit_reached"`, `"overdose_death"`, `"cant_drink_now"`
-- L10n namespace: `"spt_limits"`
-
-## Rule of Thumb
-
-If another mod, script, or file could reference the string by name, it is external and must be snake_case. If it only exists within a single Lua file's scope, it is internal and must be camelCase.
+Do NOT use snake_case for any identifier in this project. The only underscores allowed are in OpenMW engine record IDs (e.g. `"sc_icarianflight_en"`) which are dictated by the game data.

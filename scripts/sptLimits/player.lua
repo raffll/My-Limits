@@ -5,21 +5,16 @@ local ui = require("openmw.ui")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
--- Load config
-local config = require("scripts.spt_limits.config")
-local L = core.l10n("spt_limits")
+local config = require("scripts.sptLimits.config")
+local L = core.l10n("sptLimits")
 
--- Module-level state table
 local state = {}
 
--- Set of potion record IDs excluded from counting (from data file + registered via interface)
 local excludedPotions = {}
--- List of Lua patterns converted from wildcard entries (e.g. "sd_*" -> "^sd_")
 local excludedPotionPatterns = {}
 
 for _, entry in ipairs(config.potions or {}) do
     if entry:find("%*") then
-        -- Convert wildcard to Lua pattern: escape special chars, replace * with .*
         local pattern = "^" .. entry:gsub("([%.%+%-%^%$%(%)%%])", "%%%1"):gsub("%*", ".*") .. "$"
         table.insert(excludedPotionPatterns, pattern)
     else
@@ -27,8 +22,7 @@ for _, entry in ipairs(config.potions or {}) do
     end
 end
 
--- Check if a potion ID is excluded (exact match, Sun's Dusk consumable, or wildcard pattern)
-local function isPotionExcludedByFile(id)
+local function isPotionExcluded(id)
     if excludedPotions[id] then
         return true
     end
@@ -45,7 +39,6 @@ local function isPotionExcludedByFile(id)
     return false
 end
 
--- Per-attribute spell exclusion sets
 local excludedAttributeSpells = {}
 for attr, spells in pairs(config.attributes or {}) do
     excludedAttributeSpells[attr] = {}
@@ -54,7 +47,6 @@ for attr, spells in pairs(config.attributes or {}) do
     end
 end
 
--- Per-skill spell exclusion sets
 local excludedSkillSpells = {}
 for skill, spells in pairs(config.skills or {}) do
     excludedSkillSpells[skill] = {}
@@ -63,40 +55,29 @@ for skill, spells in pairs(config.skills or {}) do
     end
 end
 
--- Set of attribute names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedAttributes = {}
-
--- Set of skill names temporarily excluded from limit checks (registered by other mods via interface)
 local skippedSkills = {}
-
--- Last values sent to storage/global, used for dirty-flag optimization
 local lastSent = {}
 
--- Initialize all state variables to their defaults
 local function initState()
-    state.knockedOut = false -- knockout state flag
-    state.drinkCount = 0 -- potions consumed in current window
-    state.timer = 0 -- seconds elapsed since last drink
-    state.drinkHour = 0 -- GameHour when last potion was consumed
-    state.drinkOverdose = false -- whether at overdose threshold (drinkCount >= potionLimit)
-    state.overdoseCollapse = false -- potion overdose triggered collapse flag
-    state.potionEffectsInitialized = false -- whether baseline has been captured
-    state.baselinePotionEffects = 0 -- active potion effect count at last reset/init
-    state.detectedDrinks = 0 -- cumulative drinks detected since last reset (via delta from baseline)
-    state.trainCount = 0 -- training sessions used this level
-    state.trainLevel = 0 -- level at which trainCount was last reset
+    state.knockedOut = false
+    state.drinkCount = 0
+    state.timer = 0
+    state.drinkHour = 0
+    state.drinkOverdose = false
+    state.overdoseCollapse = false
+    state.potionEffectsInitialized = false
+    state.baselinePotionEffects = 0
+    state.detectedDrinks = 0
+    state.trainCount = 0
+    state.trainLevel = 0
 
-    -- Reset dirty-flag cache so first frame always writes
-    lastSent.knockedOut = nil
     lastSent.drinkCount = nil
     lastSent.countdown = nil
-    lastSent.drinkOverdose = nil
     lastSent.globalKnockedOut = nil
     lastSent.globalOverdose = nil
 end
 
--- Check if any spell in the given set is currently active on the player.
--- Returns true if any excluded spell is active, false otherwise.
 local function hasExcludedSpellActive(spellSet)
     if not spellSet or not next(spellSet) then
         return false
@@ -110,7 +91,6 @@ local function hasExcludedSpellActive(spellSet)
     return false
 end
 
--- Module-scope skip helpers (avoids closure allocation per frame)
 local function shouldSkipAttribute(name)
     return skippedAttributes[name] or hasExcludedSpellActive(excludedAttributeSpells[name])
 end
@@ -119,130 +99,51 @@ local function shouldSkipSkill(name)
     return skippedSkills[name] or hasExcludedSpellActive(excludedSkillSpells[name])
 end
 
--- Check if any of the 8 player attributes exceeds the given cap.
--- Skips attributes that are in the skippedAttributes set (interface) or have an excluded spell active.
--- Returns true if ANY attribute's .modified value > cap, false otherwise.
 local function checkAttributes(cap)
     local attrs = types.Actor.stats.attributes
-    if not shouldSkipAttribute("strength") and attrs.strength(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("intelligence") and attrs.intelligence(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("willpower") and attrs.willpower(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("agility") and attrs.agility(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("speed") and attrs.speed(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("endurance") and attrs.endurance(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("personality") and attrs.personality(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("luck") and attrs.luck(self).modified > cap then
-        return true
-    end
+    if not shouldSkipAttribute("strength") and attrs.strength(self).modified > cap then return true end
+    if not shouldSkipAttribute("intelligence") and attrs.intelligence(self).modified > cap then return true end
+    if not shouldSkipAttribute("willpower") and attrs.willpower(self).modified > cap then return true end
+    if not shouldSkipAttribute("agility") and attrs.agility(self).modified > cap then return true end
+    if not shouldSkipAttribute("speed") and attrs.speed(self).modified > cap then return true end
+    if not shouldSkipAttribute("endurance") and attrs.endurance(self).modified > cap then return true end
+    if not shouldSkipAttribute("personality") and attrs.personality(self).modified > cap then return true end
+    if not shouldSkipAttribute("luck") and attrs.luck(self).modified > cap then return true end
     return false
 end
 
--- Check if any of the 27 player skills exceeds the given cap.
--- Skips skills that are in the skippedSkills set (interface) or have an excluded spell active.
--- Returns true if ANY skill's .modified value > cap, false otherwise.
 local function checkSkills(cap)
     local skills = types.NPC.stats.skills
-    if not shouldSkipSkill("alchemy") and skills.alchemy(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("longblade") and skills.longblade(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("acrobatics") and skills.acrobatics(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("bluntweapon") and skills.bluntweapon(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("enchant") and skills.enchant(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("security") and skills.security(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("axe") and skills.axe(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("conjuration") and skills.conjuration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("sneak") and skills.sneak(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("armorer") and skills.armorer(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("alteration") and skills.alteration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("lightarmor") and skills.lightarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mediumarmor") and skills.mediumarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("destruction") and skills.destruction(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("marksman") and skills.marksman(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("heavyarmor") and skills.heavyarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mysticism") and skills.mysticism(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("shortblade") and skills.shortblade(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("spear") and skills.spear(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("restoration") and skills.restoration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("handtohand") and skills.handtohand(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("block") and skills.block(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("illusion") and skills.illusion(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mercantile") and skills.mercantile(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("athletics") and skills.athletics(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("unarmored") and skills.unarmored(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("speechcraft") and skills.speechcraft(self).modified > cap then
-        return true
-    end
+    if not shouldSkipSkill("alchemy") and skills.alchemy(self).modified > cap then return true end
+    if not shouldSkipSkill("longblade") and skills.longblade(self).modified > cap then return true end
+    if not shouldSkipSkill("acrobatics") and skills.acrobatics(self).modified > cap then return true end
+    if not shouldSkipSkill("bluntweapon") and skills.bluntweapon(self).modified > cap then return true end
+    if not shouldSkipSkill("enchant") and skills.enchant(self).modified > cap then return true end
+    if not shouldSkipSkill("security") and skills.security(self).modified > cap then return true end
+    if not shouldSkipSkill("axe") and skills.axe(self).modified > cap then return true end
+    if not shouldSkipSkill("conjuration") and skills.conjuration(self).modified > cap then return true end
+    if not shouldSkipSkill("sneak") and skills.sneak(self).modified > cap then return true end
+    if not shouldSkipSkill("armorer") and skills.armorer(self).modified > cap then return true end
+    if not shouldSkipSkill("alteration") and skills.alteration(self).modified > cap then return true end
+    if not shouldSkipSkill("lightarmor") and skills.lightarmor(self).modified > cap then return true end
+    if not shouldSkipSkill("mediumarmor") and skills.mediumarmor(self).modified > cap then return true end
+    if not shouldSkipSkill("destruction") and skills.destruction(self).modified > cap then return true end
+    if not shouldSkipSkill("marksman") and skills.marksman(self).modified > cap then return true end
+    if not shouldSkipSkill("heavyarmor") and skills.heavyarmor(self).modified > cap then return true end
+    if not shouldSkipSkill("mysticism") and skills.mysticism(self).modified > cap then return true end
+    if not shouldSkipSkill("shortblade") and skills.shortblade(self).modified > cap then return true end
+    if not shouldSkipSkill("spear") and skills.spear(self).modified > cap then return true end
+    if not shouldSkipSkill("restoration") and skills.restoration(self).modified > cap then return true end
+    if not shouldSkipSkill("handtohand") and skills.handtohand(self).modified > cap then return true end
+    if not shouldSkipSkill("block") and skills.block(self).modified > cap then return true end
+    if not shouldSkipSkill("illusion") and skills.illusion(self).modified > cap then return true end
+    if not shouldSkipSkill("mercantile") and skills.mercantile(self).modified > cap then return true end
+    if not shouldSkipSkill("athletics") and skills.athletics(self).modified > cap then return true end
+    if not shouldSkipSkill("unarmored") and skills.unarmored(self).modified > cap then return true end
+    if not shouldSkipSkill("speechcraft") and skills.speechcraft(self).modified > cap then return true end
     return false
 end
 
--- Handle knockout/recovery state machine transitions
--- limitAttribute: boolean, true if any attribute exceeds its cap
--- limitSkill: boolean, true if any skill exceeds its cap
 local function handleKnockoutRecovery(limitAttribute, limitSkill)
     local anyLimit = limitAttribute or limitSkill or state.overdoseCollapse
 
@@ -272,8 +173,6 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
     end
 end
 
--- Update the potion cooldown timer, handling hour-skip detection and expiry
--- dt: elapsed frame time in seconds
 local function updatePotionTimer(dt)
     if state.drinkCount == 0 then
         return
@@ -281,49 +180,37 @@ local function updatePotionTimer(dt)
 
     local currentHour = core.getGameTime() / 3600
 
-    -- Hour-skip detection: if game hour advanced by more than 1 hour since last drink, force expiry
     if (currentHour - state.drinkHour) > 1 then
         state.drinkCount = 0
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
-        -- Re-baseline potion detection for the new window
         state.potionEffectsInitialized = false
         state.detectedDrinks = 0
         return
     end
 
-    -- Accumulate elapsed frame time
     state.timer = state.timer + dt
 
-    -- Timer expiry
     if state.timer >= config.potionCooldown then
         state.drinkCount = 0
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
-        -- Re-baseline potion detection for the new window
         state.potionEffectsInitialized = false
         state.detectedDrinks = 0
     end
 end
 
--- Handle a potion drink detection:
--- Detected via active potion effect count increase.
--- drinkCount tracks drinks within the cooldown window.
--- When drinkCount reaches potionLimit, next drink = overdose (collapse).
--- One more drink after overdose = death.
 local function handleDrinkDetected()
     state.timer = 0
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
     if state.drinkCount >= config.potionLimit + 2 then
-        -- Death: drink while already in overdose
-        ui.showMessage(L("overdose_death"))
+        ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
     elseif state.drinkCount >= config.potionLimit + 1 then
-        -- Overdose: first drink past the limit → collapse immediately
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
         state.knockedOut = true
@@ -332,7 +219,6 @@ local function handleDrinkDetected()
     end
 end
 
--- Training limit: reset counter when player levels up
 local function checkTrainingLevelReset()
     local level = types.Actor.stats.level(self).current
     if state.trainLevel ~= level then
@@ -341,7 +227,6 @@ local function checkTrainingLevelReset()
     end
 end
 
--- Register training limit handler
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
     if not config.trainingLimitEnabled then
         return
@@ -349,7 +234,7 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
         if state.trainCount >= config.trainingLimit then
-            ui.showMessage(L("train_limit_reached"))
+            ui.showMessage(L("trainLimitReached"))
             return false
         end
         state.trainCount = state.trainCount + 1
@@ -362,10 +247,7 @@ return {
             initState()
         end,
         onLoad = function(data)
-            -- Set all state to defaults first
             initState()
-
-            -- Restore saved fields (guard against nil/first load)
             if data then
                 state.knockedOut = data.knockedOut or false
                 state.drinkCount = data.drinkCount or 0
@@ -375,17 +257,14 @@ return {
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
-
-            -- Recompute derived state
             state.drinkOverdose = (state.drinkCount >= config.potionLimit)
 
-            -- Re-seed potion detection baseline from current active effects
             local potionEffectCount = 0
             local activeSpells = types.Actor.activeSpells(self)
             for _, spell in pairs(activeSpells) do
                 local rok, rec = pcall(types.Potion.record, spell.id)
                 if rok and rec then
-                    if not isPotionExcludedByFile(spell.id) then
+                    if not isPotionExcluded(spell.id) then
                         potionEffectCount = potionEffectCount + 1
                     end
                 end
@@ -420,12 +299,12 @@ return {
             if config.statLimitEnabled then
                 limitAttribute = checkAttributes(config.attributeCap)
                 if limitAttribute and not state.knockedOut then
-                    ui.showMessage(L("attribute_limit"))
+                    ui.showMessage(L("attributeLimit"))
                 end
 
                 limitSkill = checkSkills(config.skillCap)
                 if limitSkill and not state.knockedOut then
-                    ui.showMessage(L("skill_limit"))
+                    ui.showMessage(L("skillLimit"))
                 end
             end
 
@@ -435,7 +314,7 @@ return {
                 for _, spell in pairs(activeSpells) do
                     local rok, rec = pcall(types.Potion.record, spell.id)
                     if rok and rec then
-                        if not isPotionExcludedByFile(spell.id) then
+                        if not isPotionExcluded(spell.id) then
                             potionEffectCount = potionEffectCount + 1
                         end
                     end
@@ -463,9 +342,9 @@ return {
 
             if config.potionLimitEnabled then
                 local countdown = state.drinkCount > 0 and math.max(0, config.potionCooldown - state.timer) or 0
-                local section = storage.playerSection("spt_limits_state")
+                local section = storage.playerSection("sptLimitsState")
                 if lastSent.drinkCount ~= state.drinkCount then
-                    section:set("drink_count", state.drinkCount)
+                    section:set("drinkCount", state.drinkCount)
                     lastSent.drinkCount = state.drinkCount
                 end
                 local countdownRounded = math.floor(countdown * 10) / 10
@@ -476,9 +355,9 @@ return {
             end
 
             if lastSent.globalKnockedOut ~= state.knockedOut or lastSent.globalOverdose ~= state.drinkOverdose then
-                core.sendGlobalEvent("spt_limits_state_update", {
-                    knocked_out = state.knockedOut,
-                    drink_overdose = state.drinkOverdose,
+                core.sendGlobalEvent("sptLimitsStateUpdate", {
+                    knockedOut = state.knockedOut,
+                    drinkOverdose = state.drinkOverdose,
                 })
                 lastSent.globalKnockedOut = state.knockedOut
                 lastSent.globalOverdose = state.drinkOverdose
@@ -486,7 +365,7 @@ return {
         end,
     },
     eventHandlers = {
-        spt_limits_show_message = function(data)
+        sptLimitsShowMessage = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
             end
@@ -505,54 +384,41 @@ return {
                     interfaces.UI.removeMode("Dialogue")
                     interfaces.UI.removeMode("Interface")
                 end
-                ui.showMessage(L("train_limit_reached"))
+                ui.showMessage(L("trainLimitReached"))
             end
         end,
     },
-    interfaceName = "spt_limits",
+    interfaceName = "sptLimits",
     interface = {
         version = 1,
-        --- Returns true if the player is currently knocked out (overdose/stat limit).
         isKnockedOut = function()
             return state.knockedOut
         end,
-        --- Exclude a potion record ID from being counted toward the limit.
-        --- @param recordId string the potion record ID to exclude
         excludePotion = function(recordId)
             if recordId then
                 excludedPotions[recordId] = true
             end
         end,
-        --- Remove a previously excluded potion record ID.
-        --- @param recordId string the potion record ID to stop excluding
         includePotion = function(recordId)
             if recordId then
                 excludedPotions[recordId] = nil
             end
         end,
-        --- Temporarily skip an attribute from limit checks.
-        --- @param attributeName string one of: strength, intelligence, willpower, agility, speed, endurance, personality, luck
         skipAttribute = function(attributeName)
             if attributeName then
                 skippedAttributes[attributeName] = true
             end
         end,
-        --- Re-enable an attribute for limit checks.
-        --- @param attributeName string
         unskipAttribute = function(attributeName)
             if attributeName then
                 skippedAttributes[attributeName] = nil
             end
         end,
-        --- Temporarily skip a skill from limit checks.
-        --- @param skillName string one of: alchemy, longblade, acrobatics, bluntweapon, enchant, security, axe, conjuration, sneak, armorer, alteration, lightarmor, mediumarmor, destruction, marksman, heavyarmor, mysticism, shortblade, spear, restoration, handtohand, block, illusion, mercantile, athletics, unarmored, speechcraft
         skipSkill = function(skillName)
             if skillName then
                 skippedSkills[skillName] = true
             end
         end,
-        --- Re-enable a skill for limit checks.
-        --- @param skillName string
         unskipSkill = function(skillName)
             if skillName then
                 skippedSkills[skillName] = nil
