@@ -25,7 +25,7 @@ All settings are in `scripts/sptLimits/config.lua`. Edit the file directly to ch
 - `potionCooldown` — Cooldown window in seconds (default: `20`).
 
 **Exclusions:**
-- `potions` — List of potion record IDs that don't count toward the limit. Supports wildcards (e.g. `"sd_*"`).
+- `potions` — List of potion record IDs that don't count toward the limit. Supports Lua patterns (e.g. `"^sd_.*"`).
 - `attributes` — Per-attribute lists of spell IDs that bypass the attribute cap while active.
 - `skills` — Per-skill lists of spell IDs that bypass the skill cap while active (e.g. Scroll of Icarian Flight for Acrobatics).
 
@@ -109,82 +109,19 @@ I.unskipSkill("alchemy")
 
 ------------------------------------------------------------
 
-### File Structure
-
-```
-Stats & Potions Limit.omwscripts   — Script registration
-scripts/sptLimits/
-├── config.lua    — All configurable values and exclusion lists
-├── player.lua    — Core logic (stat checks, potion detection, knockout, training, interface)
-├── global.lua    — Item usage blocking (potions, apparatus, repair, misc)
-└── counter.lua   — HUD potion counter (MENU script)
-l10n/sptLimits/
-└── en.yaml       — English localization strings
-```
-
-------------------------------------------------------------
-
 ### Changelog
 
 ```
-2.1
-- Training limit now uses registerWindow to suppress the built-in Training window.
-- Dialogue closes when training limit is reached (no more empty window flash).
-- Fixed duplicate "training limit reached" message.
 2.0
 - Complete rewrite to pure OpenMW Lua. ESP file is no longer needed.
-- All MWScript logic replaced with Lua player/global scripts.
-- State persistence via Lua storage (proper save/load support).
-- Configuration moved to config.lua (no more in-game settings menu).
-- Lua interface exposed for other mods (excludePotion, skipAttribute, skipSkill, etc.).
-- HUD counter for potion tracking.
-- Potion detection via active spell counting (works with hotkeys).
-- Overdose/death system for hotkey bypass.
-- Hour-skip detection clears cooldown on wait/sleep.
-1.14
-- Added constant potion limit.
-- Removed potion limit by Alchemy.
-- Counter bug fixes.
-1.13
-- Counter added to HUD.
-- Speed exception removed.
-- Acrobatics exception changed to work only with Scroll of Icarian Flight.
-1.12
-- Fixed error message when NPCs are drinking potions.
-1.11
-- Training limit drops all windows for better compatibility with real-time menu mods.
-- Lua interfaces added.
-1.10
-- Training limit money and time loss fix.
-1.9
-- Training limit bugfix.
-1.8
-- "You have recovered from the potion toxic effect!" message removed.
-- More natural training limit message.
-1.7
-- Potion limit based on level option added.
-- Constant limit for stats option added.
-- Training limit module added.
-1.6
-- "You have reached the limit of potions!" message removed.
-- Both options merged into one esp.
-- Settings menu created.
-1.5
-- Cleaning up and rewriting some scripts.
-- Now you can't drink potions over the limit.
-1.4
-- Potion limit only added.
-- Fix for invisibility potion issue, but cooldown indicator is disabled in this version.
-1.3
-- Use Lua to block the alchemy, enchant, and repair windows instead of dropping skills to 0.
-1.2
-- Negative effect increased from 2000 to 100000 (to prevent using strong restore potions).
-1.1
-- Strength, Intelligence, and Luck also drop to 0 (to prevent using 800+ fortify spells).
-- Negative effect increased from 1000 to 2000.
-- Potion timer bugfix.
-1.0
-- Initial version.
+- Configuration moved to config.lua.
+- Lua interface exposed for other mods.
+- Progressive limits for stats and potions removed.
+- Training limit window flicker fixed.
+- Counter now works while in real time menu.
+- Option to exclude Sun's Dusk potions.
+- Option to exclude any potions.
+- Option to disable stat limit while spell active.
 ```
 
 ------------------------------------------------------------
