@@ -289,11 +289,34 @@ local function handleDrinkDetected()
     end
 end
 
+local trainingBlockElement = nil
+
+local function blockTrainingWindow()
+    if interfaces.UI and interfaces.UI.registerWindow then
+        interfaces.UI.registerWindow("Training",
+            function()
+                if interfaces.UI.removeMode then
+                    interfaces.UI.removeMode("Training")
+                end
+                ui.showMessage(L("trainLimitReached"))
+            end,
+            function() end
+        )
+    end
+end
+
+local function unblockTrainingWindow()
+    if interfaces.UI and interfaces.UI.registerWindow then
+        interfaces.UI.registerWindow("Training", nil, nil)
+    end
+end
+
 local function checkTrainingLevelReset()
     local level = types.Actor.stats.level(self).current
     if state.trainLevel ~= level then
         state.trainCount = 0
         state.trainLevel = level
+        unblockTrainingWindow()
     end
 end
 
@@ -308,6 +331,9 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
             return false
         end
         state.trainCount = state.trainCount + 1
+        if state.trainCount >= config.trainingLimit then
+            blockTrainingWindow()
+        end
     end
 end)
 
@@ -328,6 +354,10 @@ return {
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
             state.drinkOverdose = (state.drinkCount >= config.potionLimit)
+
+            if config.trainingLimitEnabled and state.trainCount >= config.trainingLimit then
+                blockTrainingWindow()
+            end
 
             local potionEffectCount = 0
             local activeSpells = types.Actor.activeSpells(self)
@@ -449,11 +479,7 @@ return {
             end
             checkTrainingLevelReset()
             if state.trainCount >= config.trainingLimit and data.newMode == "Training" then
-                if interfaces.UI and interfaces.UI.removeMode then
-                    interfaces.UI.removeMode("Training")
-                    interfaces.UI.removeMode("Dialogue")
-                    interfaces.UI.removeMode("Interface")
-                end
+                blockTrainingWindow()
                 ui.showMessage(L("trainLimitReached"))
             end
         end,
