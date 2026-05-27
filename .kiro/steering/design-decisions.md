@@ -4,14 +4,19 @@
 
 The `drinkOverdose` flag is set at `drinkCount >= maxCount` (e.g. 3 drinks with limit 3). This intentionally blocks further potions via the `ItemUsage` handler in the global script one drink *before* the actual overdose collapse.
 
-The overdose collapse triggers at `maxCount + 1` (4th drink), which can only happen via hotkey (bypassing `ItemUsage`). Death triggers at `maxCount + 2` (5th drink via hotkey).
+The overdose collapse triggers at `maxCount + 1` (4th drink), which can only happen via hotkey (bypassing `ItemUsage`).
 
 This is by design:
 - Normal UI usage is blocked at the limit (soft cap via ItemUsage).
 - Hotkey bypass is punished with overdose/collapse (hard cap via active spell detection).
-- A second hotkey bypass while collapsed causes death.
 
 Do NOT "fix" this as an off-by-one error.
+
+## Engine Blocks Hotkeys While Collapsed
+
+The engine prevents hotkey usage while the player is in the knocked-out state. This means there is no "double hotkey bypass" scenario — once overdose collapse triggers, the player cannot drink again via hotkey until they recover. There is no death-from-overdose mechanic.
+
+Do NOT add death logic for a second hotkey bypass. It cannot happen.
 
 ## Per-Frame Logic is Intentional
 
