@@ -4,17 +4,13 @@
 
 This mod introduces attributes, skills, training, and potion consumption limits for players that like to constrain themselves. This will make a game more challenging, tactical, creative, and fun. Forces you to more often create multi-effect potions and plan your training carefully.
 
-OpenMW only, pure Lua edition. No ESP file required.
-
-This is my second approach to creating a cap on attributes, but this time it is not that deadly. I also incorporated potion consumption limits, heavily based on the Alchemical Hustle mod. It can be used as a replacement for the "Toxicity" module.
-
-**Now with a new HUD counter for potion tracking.**
+OpenMW only, pure Lua edition, rewritten from scratch.
 
 ------------------------------------------------------------
 
 ### Configuration
 
-All settings are in `scripts/spt_limits/config.lua`. Edit the file directly to change values.
+All settings are in `scripts/sptLimits/config.lua`. Edit the file directly to change values.
 
 **Toggles:**
 - `potionLimitEnabled` — Enable/disable the potion consumption limit (default: `true`).
@@ -39,7 +35,7 @@ All settings are in `scripts/spt_limits/config.lua`. Edit the file directly to c
 
 Once the player exceeds the attribute or skill cap, fatigue is set to 0, leaving the player collapsed on the ground. The only way to recover is to wait until your stats go back below the cap.
 
-- While collapsed, you can't drink or create potions, enchant, or repair.
+- While collapsed, you can't create potions, enchant, or repair.
 - To recover, get rid of the fortify effect (wait it out, dispel, etc.).
 - For most vanilla items, waiting 1 hour is enough.
 - Keep in mind that when you levitate, you cannot wait.
@@ -52,7 +48,7 @@ Once the player exceeds the attribute or skill cap, fatigue is set to 0, leaving
 - After every potion drunk, a 20-second cooldown timer starts.
 - Every time you drink another potion while the timer is running, your drink counter increases and the timer resets.
 - If you reach the limit (default: 3), you can't drink another one via the normal inventory UI.
-- **Hotkey bypass punishment:** If you use a hotkey to drink past the limit, your character collapses (overdose). A second hotkey drink while collapsed causes death.
+- If you use a hotkey to drink past the limit, your character collapses from overdose.
 - The HUD counter in the bottom-right shows: `countdown drinks/limit`.
 - Waiting or sleeping for more than 1 hour clears the cooldown immediately.
 
@@ -62,28 +58,28 @@ Once the player exceeds the attribute or skill cap, fatigue is set to 0, leaving
 
 Fixed at the configured value (default: `300`). Any attribute exceeding this value triggers the collapse.
 
-**Exception:** The Scroll of Icarian Flight (`sc_icarianflight_en`) bypasses the Acrobatics skill cap while active.
-
 ------------------------------------------------------------
 
 ### Skill Cap
 
 Fixed at the configured value (default: `150`). Any skill exceeding this value triggers the collapse.
 
+**Exception:** The Scroll of Icarian Flight (`sc_icarianflight_en`) bypasses the Acrobatics skill cap while active.
+
 ------------------------------------------------------------
 
 ### Training Limit
 
-You can train only 5 times per level (configurable). The counter resets when you level up. If you've used all sessions, the trainer will refuse and the dialogue window closes.
+You can train only 5 times per level (configurable). The counter resets when you level up. If you've used all sessions, the Training window is suppressed and the dialogue closes with a message.
 
 ------------------------------------------------------------
 
 ### Lua Interface for Other Mods
 
-This mod exposes a `StatsAndPotionsLimit` interface (version 1) that other mods can use:
+This mod exposes a `sptLimits` interface (version 1) that other mods can use:
 
 ```lua
-local I = require('openmw.interfaces').StatsAndPotionsLimit
+local I = require('openmw.interfaces').sptLimits
 
 -- Check if the player is currently knocked out
 I.isKnockedOut()  -- returns boolean
@@ -117,12 +113,12 @@ I.unskipSkill("alchemy")
 
 ```
 Stats & Potions Limit.omwscripts   — Script registration
-scripts/spt_limits/
+scripts/sptLimits/
 ├── config.lua    — All configurable values and exclusion lists
-├── player.lua    — Core logic (stat checks, potion detection, knockout, interface)
+├── player.lua    — Core logic (stat checks, potion detection, knockout, training, interface)
 ├── global.lua    — Item usage blocking (potions, apparatus, repair, misc)
 └── counter.lua   — HUD potion counter (MENU script)
-l10n/spt_limits/
+l10n/sptLimits/
 └── en.yaml       — English localization strings
 ```
 
@@ -131,6 +127,10 @@ l10n/spt_limits/
 ### Changelog
 
 ```
+2.1
+- Training limit now uses registerWindow to suppress the built-in Training window.
+- Dialogue closes when training limit is reached (no more empty window flash).
+- Fixed duplicate "training limit reached" message.
 2.0
 - Complete rewrite to pure OpenMW Lua. ESP file is no longer needed.
 - All MWScript logic replaced with Lua player/global scripts.
@@ -192,14 +192,7 @@ l10n/spt_limits/
 ### Compatibility
 
 - Incompatible with mods that override fatigue calculation (this mod uses the standard formula: Str + Wil + Agi + End).
-- Currently incompatible with "Potion Thrower".
 - Other mods can use the Lua interface to exclude their potions/food items from counting.
-
-------------------------------------------------------------
-
-### Credits
-
-Thanks to Rosynant for creating "Alchemical Hustle", from which I took the idea of how to limit potions.
 
 ------------------------------------------------------------
 

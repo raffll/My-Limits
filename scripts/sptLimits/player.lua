@@ -66,9 +66,8 @@ local function initState()
     state.drinkHour = 0
     state.drinkOverdose = false
     state.overdoseCollapse = false
-    state.potionEffectsInitialized = false
-    state.baselinePotionEffects = 0
-    state.detectedDrinks = 0
+    state.knownPotionSpellIds = {}
+    state.potionSpellIdsInitialized = false
     state.trainCount = 0
     state.trainLevel = 0
 
@@ -237,9 +236,8 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         types.Actor.stats.dynamic.fatigue(self).base = baseMax
         types.Actor.stats.dynamic.fatigue(self).current = 0
         state.knockedOut = false
-        state.potionEffectsInitialized = false
-        state.baselinePotionEffects = 0
-        state.detectedDrinks = 0
+        state.potionSpellIdsInitialized = false
+        state.knownPotionSpellIds = {}
     end
 end
 
@@ -255,8 +253,8 @@ local function updatePotionTimer(dt)
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
-        state.potionEffectsInitialized = false
-        state.detectedDrinks = 0
+        state.potionSpellIdsInitialized = false
+        state.knownPotionSpellIds = {}
         return
     end
 
@@ -267,8 +265,8 @@ local function updatePotionTimer(dt)
         state.timer = 0
         state.overdoseCollapse = false
         state.drinkOverdose = false
-        state.potionEffectsInitialized = false
-        state.detectedDrinks = 0
+        state.potionSpellIdsInitialized = false
+        state.knownPotionSpellIds = {}
     end
 end
 
@@ -357,19 +355,17 @@ return {
                 blockTrainingWindow()
             end
 
-            local potionEffectCount = 0
+            state.knownPotionSpellIds = {}
             local activeSpells = types.Actor.activeSpells(self)
             for _, spell in pairs(activeSpells) do
                 local rok, rec = pcall(types.Potion.record, spell.id)
                 if rok and rec then
                     if not isPotionExcluded(spell.id) then
-                        potionEffectCount = potionEffectCount + 1
+                        state.knownPotionSpellIds[spell.activeSpellId] = true
                     end
                 end
             end
-            state.baselinePotionEffects = potionEffectCount
-            state.detectedDrinks = 0
-            state.potionEffectsInitialized = true
+            state.potionSpellIdsInitialized = true
         end,
         onSave = function()
             return {
@@ -407,30 +403,54 @@ return {
             end
 
             if config.potionLimitEnabled then
-                local potionEffectCount = 0
+                local currentIds = {}
                 local activeSpells = types.Actor.activeSpells(self)
                 for _, spell in pairs(activeSpells) do
                     local rok, rec = pcall(types.Potion.record, spell.id)
                     if rok and rec then
                         if not isPotionExcluded(spell.id) then
-                            potionEffectCount = potionEffectCount + 1
+                            currentIds[spell.activeSpellId] = true
                         end
                     end
                 end
-                if not state.potionEffectsInitialized then
-                    state.baselinePotionEffects = potionEffectCount
-                    state.detectedDrinks = 0
-                    state.potionEffectsInitialized = true
+
+                if not state.potionSpellIdsInitialized then
+                    state.knownPotionSpellIds = currentIds
+                    state.potionSpellIdsInitialized = true
                 else
-                    local currentDelta = potionEffectCount - state.baselinePotionEffects
-                    if currentDelta > state.detectedDrinks then
-                        local newDrinks = currentDelta - state.detectedDrinks
-                        for i = 1, newDrinks do
+                    for id, _ in pairs(currentIds) do
+                        if not state.knownPotionSpellIds[id] then
                             handleDrinkDetected()
+                            state.knownPotionSpellIds[id] = true
                         end
-                        state.detectedDrinks = currentDelta
+                    end
+                    for id, _ in pairs(state.knownPotionSpellIds) do
+                        if not currentIds[id] then
+                            state.knownPotionSpellIds[id] = nil
+                        end
                     end
                 end
+
+                local knownCount = 0
+                for _ in pairs(state.knownPotionSpellIds) do
+                    knownCount = knownCount + 1
+                end
+                local currentCount = 0
+                for _ in pairs(currentIds) do
+                    currentCount = currentCount + 1
+                end
+                print(
+                    string.format(
+                        "[sptLimits] knownIds=%d currentIds=%d drinkCount=%d timer=%.1f drinkHour=%.2f currentHour=%.2f overdose=%s",
+                        knownCount,
+                        currentCount,
+                        state.drinkCount,
+                        state.timer,
+                        state.drinkHour,
+                        core.getGameTime() / 3600,
+                        tostring(state.drinkOverdose)
+                    )
+                )
 
                 updatePotionTimer(dt)
                 state.drinkOverdose = (state.drinkCount >= config.potionLimit)
