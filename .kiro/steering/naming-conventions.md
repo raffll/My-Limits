@@ -5,10 +5,10 @@
 All identifiers use camelCase — internal Lua names, external string keys, folder names, and file references:
 
 - Folder names: `scripts/sptLimits/`, `l10n/sptLimits/`
-- Require paths: `require("scripts.sptLimits.config")`
+- Require paths: `require("scripts.sptLimits.config")`, `require("scripts.sptLimits.exclusions")`
 - L10n namespace: `core.l10n("sptLimits")`
 - Interface name: `"sptLimits"`
-- Event names: `"sptLimitsStateUpdate"`, `"sptLimitsShowMessage"`
+- Event names: `"sptLimitsStateUpdate"`, `"sptLimitsShowMessage"`, `"sptLimitsExcludePotion"`, `"sptLimitsIncludePotion"`
 - Storage section: `"sptLimitsState"`
 - Storage field keys: `"drinkCount"`, `"countdown"`
 - Event data fields: `data.knockedOut`, `data.drinkOverdose`

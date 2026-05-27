@@ -38,17 +38,15 @@ This is intentional. The restored fatigue pool should reflect the player's curre
 
 Do NOT "fix" this by switching to `.base`.
 
-## UiModeChanged Closes All Modes Intentionally
+## UiModeChanged Triggers Training Block Check
 
-When the training limit is reached and the player opens Training mode, the `UiModeChanged` handler removes `'Training'`, `'Dialogue'`, and `'Interface'` modes. This is intentional — the goal is to fully close the NPC interaction, not just the training window. If another mod's Dialogue/Interface mode gets closed as a side effect, that's acceptable.
-
-Do NOT "fix" this by only removing `'Training'`.
+The `UiModeChanged` event handler in `player.lua` calls `checkTrainingLevelReset()` and re-applies `blockTrainingWindow()` if the training limit is reached and the new mode is `"Training"`. This is a fallback — the primary blocking happens in the `SkillLevelUpHandler` when the count reaches the limit. The `UiModeChanged` handler catches edge cases where the window opens without going through the skill handler first.
 
 ## Potion Detection: Known Frame-Perfect Edge Case
 
-The potion drink detection uses frame-over-frame delta of active potion effect count. If a potion effect expires on the exact same frame the player drinks a new potion, the count stays flat and the drink goes undetected.
+The potion drink detection tracks `activeSpellId` keys frame-over-frame. A new ID appearing in the current frame's set that wasn't in the previous frame's set counts as a new drink. If a potion effect expires on the exact same frame the player drinks a new potion, the expired ID is pruned and the new ID is detected — this works correctly in almost all cases. The only theoretical miss is if a new potion reuses the exact same `activeSpellId` as one that expired on the same frame (effectively impossible in practice).
 
-This only affects hotkey drinks (normal UI drinks are already blocked by the `ItemUsage` handler). Frame-perfect bugs that can only happen via quick keys are not worth fixing.
+This only affects hotkey drinks (normal UI drinks are already blocked by the `ItemUsage` handler).
 
 Do NOT "fix" this.
 
@@ -103,3 +101,13 @@ The HUD briefly flickers (shows then hides) on each click because `removeMode` t
 `unblockTrainingWindow()` calls `registerWindow("Training", nil, nil)` to restore the default Training window on level up.
 
 Do NOT revert this to the old `UiModeChanged`-only approach. Do NOT remove the `removeMode("Training")` from `showFn`. Do NOT replace `registerWindow` with a different mechanism.
+
+## Potion Exclusion: Shared Module + Event Sync
+
+Potion exclusion logic lives in `scripts/sptLimits/exclusions.lua` — a shared module required by both `player.lua` and `global.lua`. It processes `config.potions` (exact IDs and wildcard patterns) and `config.excludeSunsDusk` (Sun's Dusk interface check) at load time.
+
+Because GLOBAL and PLAYER scripts run in separate Lua VMs, `require` gives each their own instance of the module. Config-based exclusions are identical on both sides (same `config.lua`). Runtime exclusions added via the `sptLimits` interface (`excludePotion`/`includePotion`) are synced from player to global via `core.sendGlobalEvent("sptLimitsExcludePotion", ...)` and `core.sendGlobalEvent("sptLimitsIncludePotion", ...)`.
+
+The global script's `ItemUsage` handler checks `isPotionExcluded` before blocking — excluded potions always pass through regardless of overdose state.
+
+Do NOT inline the exclusion logic back into individual scripts. Do NOT remove the event sync.

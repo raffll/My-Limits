@@ -3,6 +3,10 @@ local util = require("openmw.util")
 local storage = require("openmw.storage")
 local config = require("scripts.sptLimits.config")
 
+if not config.potionLimitEnabled then
+    return {}
+end
+
 local element = ui.create({
     layer = "HUD",
     type = ui.TYPE.Text,

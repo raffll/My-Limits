@@ -92,19 +92,22 @@ To detect hotkey potion drinks, use an alternative detection method (see below).
 
 ## Detecting Potion Consumption (Including Hotkeys)
 
-Since `ItemUsage` handlers don't fire for hotkey drinks, use `types.Actor.activeSpells(self)` to detect new potion effects:
+Since `ItemUsage` handlers don't fire for hotkey drinks, use `types.Actor.activeSpells(self)` to detect new potion effects by tracking `activeSpellId` keys frame-over-frame:
 
 ```lua
--- Count active spells that are potions
-local potionEffectCount = 0
+-- Build a set of current potion activeSpellIds
+local currentIds = {}
 for _, spell in pairs(types.Actor.activeSpells(self)) do
     local ok, rec = pcall(types.Potion.record, spell.id)
     if ok and rec then
-        potionEffectCount = potionEffectCount + 1
+        currentIds[spell.activeSpellId] = true
     end
 end
--- Compare to previous frame count to detect new drinks
+-- Any ID in currentIds that wasn't in the previous frame's set = new drink
+-- Any ID in previous set that isn't in currentIds = expired effect (prune it)
 ```
+
+This is more reliable than counting total active potions, because it detects each individual drink even if another potion expires on the same frame. The only remaining edge case is if a potion expires AND a new one is added with the same `activeSpellId` on the same frame (effectively impossible).
 
 This works for both normal UI and hotkey drinks, and does NOT trigger on dropping/selling potions.
 
@@ -142,6 +145,8 @@ if not types.Player.isCharGenFinished(self) then return end
 local gameTimeSeconds = core.getGameTime()
 local gameHours = core.getGameTime() / 3600
 ```
+
+`core.getGameTime()` returns total elapsed game-seconds since the start of the game — it is a monotonically increasing counter, NOT a 24-hour clock. Dividing by 3600 gives total elapsed game-hours, not time-of-day. It never wraps around at midnight. Differences between two `getGameTime()` values are always non-negative.
 
 ### UI Messages (PLAYER/MENU only)
 ```lua

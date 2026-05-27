@@ -6,38 +6,13 @@ local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
 local config = require("scripts.sptLimits.config")
+local exclusions = require("scripts.sptLimits.exclusions")
 local L = core.l10n("sptLimits")
 
+local excludedPotions = exclusions.excludedPotions
+local isPotionExcluded = exclusions.isPotionExcluded
+
 local state = {}
-
-local excludedPotions = {}
-local excludedPotionPatterns = {}
-
-for _, entry in ipairs(config.potions or {}) do
-    if entry:find("%*") then
-        local pattern = "^" .. entry:gsub("([%.%+%-%^%$%(%)%%])", "%%%1"):gsub("%*", ".*") .. "$"
-        table.insert(excludedPotionPatterns, pattern)
-    else
-        excludedPotions[entry] = true
-    end
-end
-
-local function isPotionExcluded(id)
-    if excludedPotions[id] then
-        return true
-    end
-    if config.excludeSunsDusk and interfaces.SunsDusk and interfaces.SunsDusk.isConsumable then
-        if interfaces.SunsDusk.isConsumable(id) then
-            return true
-        end
-    end
-    for _, pattern in ipairs(excludedPotionPatterns) do
-        if id:match(pattern) then
-            return true
-        end
-    end
-    return false
-end
 
 local excludedAttributeSpells = {}
 for attr, spells in pairs(config.attributes or {}) do
@@ -431,27 +406,6 @@ return {
                     end
                 end
 
-                local knownCount = 0
-                for _ in pairs(state.knownPotionSpellIds) do
-                    knownCount = knownCount + 1
-                end
-                local currentCount = 0
-                for _ in pairs(currentIds) do
-                    currentCount = currentCount + 1
-                end
-                print(
-                    string.format(
-                        "[sptLimits] knownIds=%d currentIds=%d drinkCount=%d timer=%.1f drinkHour=%.2f currentHour=%.2f overdose=%s",
-                        knownCount,
-                        currentCount,
-                        state.drinkCount,
-                        state.timer,
-                        state.drinkHour,
-                        core.getGameTime() / 3600,
-                        tostring(state.drinkOverdose)
-                    )
-                )
-
                 updatePotionTimer(dt)
                 state.drinkOverdose = (state.drinkCount >= config.potionLimit)
             end
@@ -510,11 +464,13 @@ return {
         excludePotion = function(recordId)
             if recordId then
                 excludedPotions[recordId] = true
+                core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = recordId })
             end
         end,
         includePotion = function(recordId)
             if recordId then
                 excludedPotions[recordId] = nil
+                core.sendGlobalEvent("sptLimitsIncludePotion", { recordId = recordId })
             end
         end,
         skipAttribute = function(attributeName)
