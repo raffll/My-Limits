@@ -337,6 +337,9 @@ return {
                 if rok and rec then
                     if not isPotionExcluded(spell.id) then
                         state.knownPotionSpellIds[spell.activeSpellId] = true
+                    elseif not excludedPotions[spell.id] then
+                        excludedPotions[spell.id] = true
+                        core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = spell.id })
                     end
                 end
             end
@@ -385,6 +388,10 @@ return {
                     if rok and rec then
                         if not isPotionExcluded(spell.id) then
                             currentIds[spell.activeSpellId] = true
+                        elseif not excludedPotions[spell.id] then
+                            -- Potion excluded by Sun's Dusk interface check; sync to global
+                            excludedPotions[spell.id] = true
+                            core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = spell.id })
                         end
                     end
                 end

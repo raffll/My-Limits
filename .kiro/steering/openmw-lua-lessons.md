@@ -191,3 +191,18 @@ MENU: scripts/path/to/menu_script.lua
 - PLAYER scripts have access to `openmw.self`, run per-actor
 - GLOBAL scripts have access to `openmw.world`, run once
 - MENU scripts have access to UI creation, run in menu context
+
+## ActiveSpell Structure: One Entry Per Source, Not Per Effect
+
+When iterating `types.Actor.activeSpells(self)`, each entry represents one **source application** (one potion drink, one spell cast, one enchantment proc). A single potion with multiple effects (e.g. a custom-brewed potion with Restore Health + Fortify Speed + Resist Fire) produces ONE entry with ONE `activeSpellId`. The multiple effects are nested inside `spell.effects`.
+
+```lua
+for _, spell in pairs(types.Actor.activeSpells(self)) do
+    -- spell.id = potion record ID (e.g. "p_restore_health_s")
+    -- spell.activeSpellId = unique ID for THIS specific drink instance
+    -- spell.effects = list of all effects from this one drink
+    -- A 3-effect potion still has ONE spell entry, ONE activeSpellId
+end
+```
+
+Do NOT assume each effect gets its own `activeSpellId`. Tracking `activeSpellId` keys frame-over-frame correctly counts one drink per new key, regardless of how many effects the potion has.
