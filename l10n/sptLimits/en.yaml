@@ -28,7 +28,7 @@ settingPotionLimitDesc: "Maximum number of potions allowed before the cooldown r
 settingPotionCooldownName: "Potion Cooldown"
 settingPotionCooldownDesc: "Seconds before the potion counter resets."
 settingHudCounterModeName: "HUD Display"
-settingHudCounterModeDesc: "Full: timer, limit, and icons. Minimal: limit and icons only. Hidden: HUD off entirely."
+settingHudCounterModeDesc: "Full: timer, limit, and icons. Minimal: icons only. Hidden: HUD off entirely."
 settingHudPositionName: "HUD Position"
 settingHudPositionDesc: "Bottom: stacks upward from bottom-right corner. Top: stacks downward from top-right corner."
 full: "Full"

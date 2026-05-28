@@ -138,7 +138,7 @@ local function tickSlots(dt)
     end
 end
 
-local function writeStorage(knockedOut)
+local function writeStorage()
     local slotCount = settings.get("potionSlotCount")
     local section = storage.playerSection("sptLimitsState")
     local occupiedNormal = getOccupiedNormalCount()
@@ -275,18 +275,14 @@ local function onUpdate(dt, knockedOutRef)
 
     tickSlots(dt)
 
-    local activeSpellIdSet = {}
-    for activeSpellId, _ in pairs(currentPotionSpellIds) do
-        activeSpellIdSet[activeSpellId] = true
-    end
-    validateSlots(activeSpellIdSet)
+    validateSlots(currentPotionSpellIds)
 
     if knockedOutRef.value and areAllSlotsFull() then
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = 0
     end
 
-    writeStorage(knockedOutRef.value)
+    writeStorage()
 end
 
 local function reset()

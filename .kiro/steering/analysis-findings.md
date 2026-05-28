@@ -10,6 +10,8 @@ Tracks issues found during code analysis to prevent circular re-discovery.
 
 - **`training.onSave()`** — exported function, never called. `player.lua` saves training state by reading `training.state` directly instead of calling `training.onSave()`. **REMOVED.**
 - **`potionSlots.state.overdoseCollapse`** — never set to `true` anywhere. `assignDrinkToOverflow` does not set it. All reads/writes of this field are no-ops. The overflow knockout is maintained by `isOverflowOccupied()` check in `player.lua`, not by this flag. Save/load of the field is harmless but pointless. **REMOVED** (along with `handleOverflowRecovery`).
+- **`potionSlots.writeStorage` unused `knockedOut` parameter** — function accepted a parameter that was never referenced in the body. **REMOVED.**
+- **`potionSlots.onUpdate` redundant `activeSpellIdSet` rebuild** — `currentPotionSpellIds` already has `activeSpellId` as keys; rebuilding into a separate table was unnecessary. **REMOVED** (passing `currentPotionSpellIds` directly to `validateSlots`).
 
 ## Design Questions (Not Bugs, Flagged for Awareness)
 
@@ -42,3 +44,6 @@ Tracks issues found during code analysis to prevent circular re-discovery.
 - `hudCounterMode` name covers both counter and slot mode display — slightly misleading but functional and consistent with existing naming patterns.
 - `counter.lua` initial element positions overwritten by `applyPosition` on first frame — elements start hidden, no visual artifact.
 - HUD flicker when switching `potionTrackingMode` between counter and slots — two independent MENU scripts read shared storage. Data clearing and mode flag writes all happen in the same synchronous block, so reordering doesn't help. A "switching" intermediate value is redundant because data clearing already causes both HUDs to hide via their empty-state paths. The flicker is a rendering-level pop from element visibility toggling. Unfixable without merging both HUDs into one script. Acceptable per frame-tolerance.
+- Slot-mode overdose flow: overflow slot IS assigned by `assignDrinkToSlot` (it's the `slotCount+1` slot). Overdose only triggers on the drink AFTER overflow is filled (when `assignDrinkToSlot` returns false). `areAllSlotsFull()` correctly returns true because overflow was assigned on the previous drink. NOT a bug.
+- `potionCounter.state.drinkOverdose` in recovery branch — was redundant (recalculated every frame) but made explicit for clarity. Not a bug either way.
+- Duplicated icon-extraction logic between `potionCounter.detectDrinks` and `potionSlots.detectDrinks` — code quality preference, not a bug. Could be shared utility but not required.

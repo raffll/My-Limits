@@ -64,6 +64,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         potionCounter.state.overdoseCollapse = false
         potionCounter.state.potionSpellIdsInitialized = false
         potionCounter.state.knownPotionSpellIds = {}
+        potionCounter.state.drinkOverdose = false
         potionSlots.state.potionSpellIdsInitialized = false
         potionSlots.state.knownPotionSpellIds = {}
     end

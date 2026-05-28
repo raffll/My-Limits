@@ -12,7 +12,7 @@ content=SPT Limits.omwscripts
 
 ## Configuration
 
-All settings are configurable in-game via the OpenMW settings menu under **SPT Limits**. Changes take effect immediately and are saved per-save. Defaults come from `scripts/sptLimits/config.lua`.
+All settings are configurable in-game via the OpenMW settings menu under **SPT Limits**. Changes take effect immediately and are saved per-save. Defaults come from `scripts/sptLimits/shared/config.lua`.
 
 **Potions group:**
 - `Potion Limit` — enable the potion drinking limit (default: on)
@@ -37,7 +37,7 @@ All settings are configurable in-game via the OpenMW settings menu under **SPT L
 - `Training Limit` — enable the per-level training session limit (default: on)
 - `Max Training Sessions` — maximum training sessions allowed per level (default: `5`)
 
-**Config-file only (edit `scripts/sptLimits/config.lua` directly):**
+**Config-file only (edit `scripts/sptLimits/shared/config.lua` directly):**
 - `potions` — potion record IDs that bypass the limit. Supports Lua patterns (e.g. `"^sd_.*"`)
 - `attributes` — per-attribute spell IDs that bypass the cap while active
 - `skills` — per-skill spell IDs that bypass the cap while active (e.g. Scroll of Icarian Flight for Acrobatics)
@@ -101,6 +101,9 @@ Do whatever you want. Just credit me.
 - Added per-drink icons to counter mode HUD.
 
 2.0alpha3
+- Added in-game settings page (Potions, Stats, Training groups).
+- Added Slots tracking mode as an alternative to the Counter mode.
+- Bug fixes.
 
 2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.
