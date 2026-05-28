@@ -9,7 +9,7 @@ local overflowColor = util.color.rgb(0.85, 0.20, 0.20)
 local baseX = -12
 local baseY = -90 - 32 + 4
 local slotSpacing = 22
-local iconSize = 17
+local iconSize = 16
 
 local textureCache = {}
 
@@ -51,8 +51,9 @@ for i = 1, maxSlots do
             {
                 name = "iconBox",
                 type = ui.TYPE.Widget,
+                template = interfaces.MWUI.templates.borders,
                 props = {
-                    size = util.vector2(iconSize, iconSize),
+                    size = util.vector2(iconSize + 4, iconSize + 4),
                     visible = false,
                 },
                 content = ui.content({
