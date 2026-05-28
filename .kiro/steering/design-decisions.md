@@ -1,5 +1,23 @@
 # Stats & Potions Limit — Design Decisions
 
+## Training Window Block Uses `removeMode` (One-Frame Flash Accepted)
+
+OpenMW's `interfaces.UI.registerWindow` API has no deregister/unregister mechanism:
+
+- `registerWindow("Training", nil, nil)` crashes — the engine calls `showFn()` unconditionally without nil-checking.
+- `registerWindow("Training", showFn, hideFn)` permanently disables the built-in Training window via `ui._setWindowDisabled(window, true)`. There is no public API to reverse this.
+- `ui._setWindowDisabled` (undocumented, underscore-prefixed internal) can hide/show the Training window widget, but the Training mode also contains a progress bar (`WaitDialogProgressBar`) that has no Lua ID — it cannot be disabled from Lua at all.
+
+Therefore, the only viable approach is:
+
+1. Track a `blocked` flag (set when training limit is reached, cleared on level-up or setting change).
+2. In the `UiModeChanged` handler, when `blocked` and `newMode == "Training"`, call `removeMode("Training")` and show the limit message.
+3. Accept the one-frame flash of the Training window + progress bar before `removeMode` takes effect.
+
+This is the simplest solution. The one-frame flash is acceptable per frame-tolerance.
+
+Do NOT use `registerWindow` for training blocking. Do NOT use `ui._setWindowDisabled`.
+
 ## Potion Limit: Two-Layer Defense (ItemUsage block + hotkey overdose)
 
 The `drinkOverdose` flag is set at `drinkCount >= maxCount` (e.g. 3 drinks with limit 3). This intentionally blocks further potions via the `ItemUsage` handler in the global script one drink *before* the actual overdose collapse.
@@ -99,15 +117,9 @@ Only the exclusion lists (`potions`, `attributes`, `skills`) in `config.lua` are
 
 Do NOT treat `config.lua` toggles/limits as the runtime source of truth. Always use `settings.get(key)` for current values.
 
-## Training Window Uses registerWindow + removeMode
+## Training Window Block: Superseded by removeMode Approach
 
-When the training limit is reached, `blockTrainingWindow()` calls `interfaces.UI.registerWindow("Training", showFn, hideFn)` where `showFn` immediately calls `removeMode("Training")` and shows the limit message. This suppresses the built-in Training window content and removes the mode in one step — no borders, no empty window.
-
-The HUD briefly flickers (shows then hides) on each click because `removeMode` triggers a mode stack change. This is an accepted tradeoff — there is no OpenMW API to prevent it without reintroducing the empty bordered window or the original Training window flash.
-
-`unblockTrainingWindow()` calls `registerWindow("Training", nil, nil)` to restore the default Training window on level up.
-
-Do NOT revert this to the old `UiModeChanged`-only approach. Do NOT remove the `removeMode("Training")` from `showFn`. Do NOT replace `registerWindow` with a different mechanism.
+The old `registerWindow`-based approach is removed. See the new "Training Window Block Uses `removeMode`" section above for the current design.
 
 ## Potion Exclusion: Shared Module + Event Sync
 

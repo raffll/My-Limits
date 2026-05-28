@@ -12,22 +12,14 @@ local state = {
     trainLevel = 0,
 }
 
+local blocked = false
+
 local function blockTrainingWindow()
-    if interfaces.UI and interfaces.UI.registerWindow then
-        interfaces.UI.registerWindow("Training", function()
-            if interfaces.UI.removeMode then
-                interfaces.UI.removeMode("Training")
-                interfaces.UI.removeMode("Dialogue")
-            end
-            ui.showMessage(L("trainLimitReached"))
-        end, function() end)
-    end
+    blocked = true
 end
 
 local function unblockTrainingWindow()
-    if interfaces.UI and interfaces.UI.registerWindow then
-        interfaces.UI.registerWindow("Training", nil, nil)
-    end
+    blocked = false
 end
 
 local function checkTrainingLevelReset()
@@ -82,8 +74,12 @@ local function onUiModeChanged(data)
         return
     end
     checkTrainingLevelReset()
-    if state.trainCount >= settings.get("trainingLimit") and data.newMode == "Training" then
-        blockTrainingWindow()
+    if blocked and data.newMode == "Training" then
+        if interfaces.UI and interfaces.UI.removeMode then
+            interfaces.UI.removeMode("Training")
+            interfaces.UI.removeMode("Dialogue")
+        end
+        ui.showMessage(L("trainLimitReached"))
     end
 end
 
@@ -102,8 +98,6 @@ end
 
 return {
     state = state,
-    blockTrainingWindow = blockTrainingWindow,
-    unblockTrainingWindow = unblockTrainingWindow,
     onSettingChanged = onSettingChanged,
     onUiModeChanged = onUiModeChanged,
     onLoad = onLoad,
