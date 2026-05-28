@@ -11,6 +11,7 @@ return {
     potionCooldown = 20,
     potionTrackingMode = "counter",
     potionSlotCount = 4,
+    maxSlotDisplay = 11,
 
     excludeSunsDusk = true,
 

@@ -97,8 +97,7 @@ Do whatever you want. Just credit me.
 2.0alpha3
 - Added in-game settings page (Potions, Stats, Training groups).
 - Added Slots tracking mode as an alternative to the Counter mode.
-- Fixed HUD counter showing stale values from a previous save when starting a new game.
-- Fixed excludeSunsDusk setting toggle not being respected by hotkey drink detection.
+- Bug fixes.
 
 2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.

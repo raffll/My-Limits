@@ -35,7 +35,7 @@ local skippedAttributes = {}
 local skippedSkills = {}
 local lastSent = {}
 
-local maxSlotIndex = 11
+local maxSlotIndex = config.maxSlotDisplay
 
 local attributeNames = {
     "strength",
@@ -170,8 +170,7 @@ local function assignDrinkToOverflow(activeSpellId, longestDuration, icon)
 end
 
 local function handleOverflowRecovery()
-    state.knockedOut = false
-    restoreFatigue()
+    state.overdoseCollapse = false
 end
 
 local function tickSlots(dt)
@@ -184,18 +183,6 @@ local function tickSlots(dt)
                 slot.countdown = prevCountdown - dt
                 if slot.countdown < 0 then
                     slot.countdown = 0
-                end
-                if slot.countdown == 0 then
-                    if i <= slotCount then
-                        slot.activeSpellId = nil
-                        slot.countdown = 0
-                        slot.icon = nil
-                    else
-                        slot.activeSpellId = nil
-                        slot.countdown = 0
-                        slot.icon = nil
-                        handleOverflowRecovery()
-                    end
                 end
             end
         end
@@ -210,6 +197,7 @@ local function validateSlots(activeSpells)
             if not activeSpells[slot.activeSpellId] then
                 slot.activeSpellId = nil
                 slot.countdown = 0
+                slot.icon = nil
                 if i == slotCount + 1 then
                     handleOverflowRecovery()
                 end
@@ -482,6 +470,10 @@ settings.subscribe(function(key, newValue)
             end
         end
     elseif key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
+        if key == "potionLimitEnabled" and newValue then
+            state.potionSpellIdsInitialized = false
+            state.knownPotionSpellIds = {}
+        end
         if key == "potionLimitEnabled" and not newValue and state.knockedOut then
             local potionCaused = state.overdoseCollapse
                 or (state.potionTrackingMode == "slots" and isOverflowOccupied())

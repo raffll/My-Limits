@@ -3,7 +3,9 @@ local util = require("openmw.util")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
-local maxSlots = 11
+local config = require("scripts.sptLimits.config")
+
+local maxSlots = config.maxSlotDisplay
 local normalColor = util.color.rgb(0.79, 0.65, 0.38)
 local overflowColor = util.color.rgb(0.85, 0.20, 0.20)
 local baseX = -12

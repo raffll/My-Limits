@@ -157,3 +157,24 @@ On load:
 We only care about two scenarios: new saves with this mod installed, and old saves that never had this mod. There is no need to handle migration from intermediate mod versions or partial settings states.
 
 Do NOT remove `data.settings` from `onSave`. Do NOT rely solely on `storage.playerSection` for per-save settings persistence.
+
+
+## Slot Mode: validateSlots Is the Authority on Slot Lifetime
+
+`tickSlots` only decrements the countdown for display purposes. It does NOT free slots when countdown reaches 0. Only `validateSlots` (which checks whether the `activeSpellId` is still present in the engine's active spells) can free a slot. This prevents slots from opening up before the engine has actually expired the effect.
+
+Do NOT re-add slot-freeing logic to `tickSlots`.
+
+
+## Slot Mode: handleOverflowRecovery Only Clears overdoseCollapse
+
+When the overflow slot's spell expires (detected by `validateSlots`), `handleOverflowRecovery` sets `state.overdoseCollapse = false`. It does NOT set `state.knockedOut = false` or call `restoreFatigue()`. The actual recovery (or continued knockout if a stat limit is active) is handled by `handleKnockoutRecovery` later in the same frame.
+
+Do NOT add `state.knockedOut = false` or `restoreFatigue()` back into `handleOverflowRecovery`.
+
+
+## Re-Enabling potionLimitEnabled Resets Potion Tracking
+
+When `potionLimitEnabled` is toggled from off to on, `state.potionSpellIdsInitialized` is set to `false` and `state.knownPotionSpellIds` is cleared. This forces the next `onUpdate` frame to snapshot all currently active potion spells as "already known" rather than treating them as new drinks. Without this, potions drunk while the limit was disabled would trigger overdose the moment the limit is re-enabled.
+
+Do NOT remove this reset from the settings subscribe handler.
