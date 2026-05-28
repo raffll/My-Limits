@@ -329,6 +329,14 @@ settings.subscribe(function(key, newValue)
         elseif state.trainCount >= settings.get("trainingLimit") then
             blockTrainingWindow()
         end
+    elseif key == "trainingLimit" then
+        if settings.get("trainingLimitEnabled") then
+            if state.trainCount >= newValue then
+                blockTrainingWindow()
+            else
+                unblockTrainingWindow()
+            end
+        end
     elseif key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
         sendSettingsToGlobal()
     end
