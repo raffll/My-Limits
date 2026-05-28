@@ -1,4 +1,4 @@
 PLAYER: scripts/sptLimits/player/player.lua
+GLOBAL: scripts/sptLimits/global/global.lua
 MENU: scripts/sptLimits/menu/counterHud.lua
 MENU: scripts/sptLimits/menu/slotsHud.lua
-GLOBAL: scripts/sptLimits/global/global.lua

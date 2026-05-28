@@ -7,6 +7,7 @@ local config = require("scripts.sptLimits.shared.config")
 
 local maxIcons = config.maxSlotDisplay
 local normalColor = util.color.rgb(0.79, 0.65, 0.38)
+local overdoseColor = util.color.rgb(0.85, 0.20, 0.20)
 local slotSpacing = 22
 local iconSize = 16
 
@@ -169,12 +170,15 @@ local function tick()
         return
     end
 
+    local isOverdose = drinkCount >= potionLimit
+
     if hudCounterMode == "minimal" then
         textElement.layout.props.visible = false
         textElement:update()
     else
         textElement.layout.props.visible = true
         textElement.layout.props.text = string.format("%.1fs %d/%d", countdown, drinkCount, potionLimit)
+        textElement.layout.props.textColor = isOverdose and overdoseColor or normalColor
         textElement:update()
     end
 
