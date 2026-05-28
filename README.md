@@ -95,6 +95,9 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.0alpha5
+- Fixed training limit blocking.
+
 2.0alpha4
 - Added HUD Display setting (full/minimal/hidden) replacing the old toggle.
 - Added HUD Position setting (bottom/top).
@@ -112,7 +115,6 @@ Do whatever you want. Just credit me.
 - Complete rewrite to pure OpenMW Lua.
 - Configuration moved to config.lua.
 - Progressive limits for stats and potions removed.
-- Training limit window flicker fixed.
 - Counter now works while in real time menu.
 - Option to exclude Sun's Dusk potions.
 - Option to exclude any potion.
