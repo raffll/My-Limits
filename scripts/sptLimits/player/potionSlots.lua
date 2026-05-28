@@ -4,9 +4,9 @@ local types = require("openmw.types")
 local ui = require("openmw.ui")
 local storage = require("openmw.storage")
 
-local config = require("scripts.sptLimits.config")
-local settings = require("scripts.sptLimits.settings")
-local exclusions = require("scripts.sptLimits.exclusions")
+local config = require("scripts.sptLimits.shared.config")
+local settings = require("scripts.sptLimits.player.settings")
+local exclusions = require("scripts.sptLimits.shared.exclusions")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions

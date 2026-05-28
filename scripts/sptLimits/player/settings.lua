@@ -1,7 +1,7 @@
 local storage = require("openmw.storage")
 local async = require("openmw.async")
 local interfaces = require("openmw.interfaces")
-local config = require("scripts.sptLimits.config")
+local config = require("scripts.sptLimits.shared.config")
 
 local l10n = "sptLimits"
 

@@ -4,7 +4,7 @@ local ui = require("openmw.ui")
 local interfaces = require("openmw.interfaces")
 local core = require("openmw.core")
 
-local settings = require("scripts.sptLimits.settings")
+local settings = require("scripts.sptLimits.player.settings")
 local L = core.l10n("sptLimits")
 
 local state = {

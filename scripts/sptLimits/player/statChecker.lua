@@ -1,7 +1,7 @@
 local self = require("openmw.self")
 local types = require("openmw.types")
 
-local config = require("scripts.sptLimits.config")
+local config = require("scripts.sptLimits.shared.config")
 
 local excludedAttributeSpells = {}
 for attr, spells in pairs(config.attributes or {}) do

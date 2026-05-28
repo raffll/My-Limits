@@ -3,7 +3,7 @@ local util = require("openmw.util")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
-local config = require("scripts.sptLimits.config")
+local config = require("scripts.sptLimits.shared.config")
 
 local maxIcons = config.maxSlotDisplay
 local normalColor = util.color.rgb(0.79, 0.65, 0.38)

@@ -5,12 +5,12 @@ local ui = require("openmw.ui")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
-local settings = require("scripts.sptLimits.settings")
-local exclusions = require("scripts.sptLimits.exclusions")
-local statChecker = require("scripts.sptLimits.statChecker")
-local training = require("scripts.sptLimits.training")
-local potionCounter = require("scripts.sptLimits.potionCounter")
-local potionSlots = require("scripts.sptLimits.potionSlots")
+local settings = require("scripts.sptLimits.player.settings")
+local exclusions = require("scripts.sptLimits.shared.exclusions")
+local statChecker = require("scripts.sptLimits.player.statChecker")
+local training = require("scripts.sptLimits.player.training")
+local potionCounter = require("scripts.sptLimits.player.potionCounter")
+local potionSlots = require("scripts.sptLimits.player.potionSlots")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
