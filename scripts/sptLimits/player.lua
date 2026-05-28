@@ -6,6 +6,7 @@ local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
 local config = require("scripts.sptLimits.config")
+local settings = require("scripts.sptLimits.settings")
 local exclusions = require("scripts.sptLimits.exclusions")
 local L = core.l10n("sptLimits")
 
@@ -48,6 +49,7 @@ local function initState()
 
     lastSent.drinkCount = nil
     lastSent.countdown = nil
+    lastSent.potionLimit = nil
     lastSent.globalKnockedOut = nil
     lastSent.globalOverdose = nil
 end
@@ -195,7 +197,8 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         state.knockedOut = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
-        if interfaces.UI and interfaces.UI.setMode then
+        local currentMode = interfaces.UI and interfaces.UI.getMode and interfaces.UI.getMode()
+        if not currentMode and interfaces.UI and interfaces.UI.setMode then
             interfaces.UI.setMode()
         end
     elseif state.knockedOut and anyLimit then
@@ -235,7 +238,7 @@ local function updatePotionTimer(dt)
 
     state.timer = state.timer + dt
 
-    if state.timer >= config.potionCooldown then
+    if state.timer >= settings.get("potionCooldown") then
         state.drinkCount = 0
         state.timer = 0
         state.overdoseCollapse = false
@@ -252,16 +255,24 @@ local function handleDrinkDetected()
 
     -- Death branch: currently unreachable because the engine blocks hotkeys while
     -- collapsed, but kept as a safeguard in case future OpenMW versions change that.
-    if state.drinkCount >= config.potionLimit + 2 then
+    if state.drinkCount >= settings.get("potionLimit") + 2 then
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
-    elseif state.drinkCount >= config.potionLimit + 1 then
+    elseif state.drinkCount >= settings.get("potionLimit") + 1 then
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
         state.knockedOut = true
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = -1
     end
+end
+
+local function sendSettingsToGlobal()
+    core.sendGlobalEvent("sptLimitsSettingsUpdate", {
+        potionLimitEnabled = settings.get("potionLimitEnabled"),
+        statLimitEnabled = settings.get("statLimitEnabled"),
+        excludeSunsDusk = settings.get("excludeSunsDusk"),
+    })
 end
 
 local function blockTrainingWindow()
@@ -292,33 +303,49 @@ local function checkTrainingLevelReset()
 end
 
 interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, options)
-    if not config.trainingLimitEnabled then
+    if not settings.get("trainingLimitEnabled") then
         return
     end
     if source == interfaces.SkillProgression.SKILL_INCREASE_SOURCES.Trainer then
         checkTrainingLevelReset()
-        if state.trainCount >= config.trainingLimit then
+        if state.trainCount >= settings.get("trainingLimit") then
             ui.showMessage(L("trainLimitReached"))
             return false
         end
         state.trainCount = state.trainCount + 1
-        if state.trainCount >= config.trainingLimit then
+        if state.trainCount >= settings.get("trainingLimit") then
             blockTrainingWindow()
         end
+    end
+end)
+
+settings.subscribe(function(key, newValue)
+    if key == "trainingLimitEnabled" then
+        if not newValue then
+            unblockTrainingWindow()
+        elseif state.trainCount >= settings.get("trainingLimit") then
+            blockTrainingWindow()
+        end
+    elseif key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
+        sendSettingsToGlobal()
     end
 end)
 
 return {
     engineHandlers = {
         onInit = function()
+            settings.registerPage()
             initState()
-            if config.potionLimitEnabled then
+            sendSettingsToGlobal()
+            if settings.get("potionLimitEnabled") then
                 local section = storage.playerSection("sptLimitsState")
                 section:set("drinkCount", 0)
                 section:set("countdown", 0)
+                section:set("potionLimit", settings.get("potionLimit"))
             end
         end,
         onLoad = function(data)
+            settings.registerPage()
             initState()
             if data then
                 state.knockedOut = data.knockedOut or false
@@ -329,9 +356,9 @@ return {
                 state.trainCount = data.trainCount or 0
                 state.trainLevel = data.trainLevel or types.Actor.stats.level(self).current
             end
-            state.drinkOverdose = (state.drinkCount >= config.potionLimit)
+            state.drinkOverdose = (state.drinkCount >= settings.get("potionLimit"))
 
-            if config.trainingLimitEnabled and state.trainCount >= config.trainingLimit then
+            if settings.get("trainingLimitEnabled") and state.trainCount >= settings.get("trainingLimit") then
                 blockTrainingWindow()
             end
 
@@ -349,6 +376,7 @@ return {
                 end
             end
             state.potionSpellIdsInitialized = true
+            sendSettingsToGlobal()
         end,
         onSave = function()
             return {
@@ -366,26 +394,26 @@ return {
                 return
             end
 
-            if not config.statLimitEnabled and not config.potionLimitEnabled then
+            if not settings.get("statLimitEnabled") and not settings.get("potionLimitEnabled") then
                 return
             end
 
             local limitAttribute = false
             local limitSkill = false
 
-            if config.statLimitEnabled then
-                limitAttribute = checkAttributes(config.attributeCap)
+            if settings.get("statLimitEnabled") then
+                limitAttribute = checkAttributes(settings.get("attributeCap"))
                 if limitAttribute and not state.knockedOut then
                     ui.showMessage(L("attributeLimit"))
                 end
 
-                limitSkill = checkSkills(config.skillCap)
+                limitSkill = checkSkills(settings.get("skillCap"))
                 if limitSkill and not state.knockedOut then
                     ui.showMessage(L("skillLimit"))
                 end
             end
 
-            if config.potionLimitEnabled then
+            if settings.get("potionLimitEnabled") then
                 local currentIds = {}
                 local activeSpells = types.Actor.activeSpells(self)
                 for _, spell in pairs(activeSpells) do
@@ -419,13 +447,14 @@ return {
                 end
 
                 updatePotionTimer(dt)
-                state.drinkOverdose = (state.drinkCount >= config.potionLimit)
+                state.drinkOverdose = (state.drinkCount >= settings.get("potionLimit"))
             end
 
             handleKnockoutRecovery(limitAttribute, limitSkill)
 
-            if config.potionLimitEnabled then
-                local countdown = state.drinkCount > 0 and math.max(0, config.potionCooldown - state.timer) or 0
+            if settings.get("potionLimitEnabled") then
+                local countdown = state.drinkCount > 0 and math.max(0, settings.get("potionCooldown") - state.timer)
+                    or 0
                 local section = storage.playerSection("sptLimitsState")
                 if lastSent.drinkCount ~= state.drinkCount then
                     section:set("drinkCount", state.drinkCount)
@@ -435,6 +464,11 @@ return {
                 if lastSent.countdown ~= countdownRounded then
                     section:set("countdown", countdown)
                     lastSent.countdown = countdownRounded
+                end
+                local currentPotionLimit = settings.get("potionLimit")
+                if lastSent.potionLimit ~= currentPotionLimit then
+                    section:set("potionLimit", currentPotionLimit)
+                    lastSent.potionLimit = currentPotionLimit
                 end
             end
 
@@ -458,11 +492,11 @@ return {
             if not data then
                 return
             end
-            if not config.trainingLimitEnabled then
+            if not settings.get("trainingLimitEnabled") then
                 return
             end
             checkTrainingLevelReset()
-            if state.trainCount >= config.trainingLimit and data.newMode == "Training" then
+            if state.trainCount >= settings.get("trainingLimit") and data.newMode == "Training" then
                 blockTrainingWindow()
             end
         end,

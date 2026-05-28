@@ -1,11 +1,6 @@
 local ui = require("openmw.ui")
 local util = require("openmw.util")
 local storage = require("openmw.storage")
-local config = require("scripts.sptLimits.config")
-
-if not config.potionLimitEnabled or not config.hudCounterEnabled then
-    return {}
-end
 
 local element = ui.create({
     layer = "HUD",
@@ -23,16 +18,38 @@ local element = ui.create({
 })
 
 local function tick()
+    local settingsSection = storage.playerSection("sptLimitsPotions")
+    local hudCounterEnabled = settingsSection:get("hudCounterEnabled")
+    local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
+
+    -- Default to true if nil (first load, no stored settings yet)
+    if hudCounterEnabled == nil then
+        hudCounterEnabled = true
+    end
+    if potionLimitEnabled == nil then
+        potionLimitEnabled = true
+    end
+
+    if not hudCounterEnabled or not potionLimitEnabled then
+        element.layout.props.visible = false
+        element:update()
+        return
+    end
+
     local ok, vals = pcall(function()
+        local stateSection = storage.playerSection("sptLimitsState")
         return {
-            countdown = storage.playerSection("sptLimitsState"):get("countdown"),
-            drinkCount = storage.playerSection("sptLimitsState"):get("drinkCount"),
+            countdown = stateSection:get("countdown"),
+            drinkCount = stateSection:get("drinkCount"),
+            potionLimit = stateSection:get("potionLimit"),
         }
     end)
-    if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil then
+
+    if ok and vals and vals.countdown ~= nil and vals.drinkCount ~= nil then
         local hide = vals.drinkCount == 0
         element.layout.props.visible = not hide
-        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, config.potionLimit)
+        local limit = vals.potionLimit or 3
+        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, limit)
         element:update()
     end
 end

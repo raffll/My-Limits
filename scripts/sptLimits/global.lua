@@ -9,13 +9,19 @@ local L = core.l10n("sptLimits")
 local excludedPotions = exclusions.excludedPotions
 local isPotionExcluded = exclusions.isPotionExcluded
 
+local settingsCache = {
+    potionLimitEnabled = config.potionLimitEnabled,
+    statLimitEnabled = config.statLimitEnabled,
+    excludeSunsDusk = config.excludeSunsDusk,
+}
+
 local playerState = {
     knockedOut = false,
     drinkOverdose = false,
 }
 
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
-    if not config.potionLimitEnabled then
+    if not settingsCache.potionLimitEnabled then
         return nil
     end
     if not types.Player.objectIsInstance(player) then
@@ -23,7 +29,7 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
     end
 
     local potionRecord = types.Potion.record(potion)
-    if potionRecord and isPotionExcluded(potionRecord.id) then
+    if potionRecord and isPotionExcluded(potionRecord.id, settingsCache.excludeSunsDusk) then
         return nil
     end
 
@@ -44,7 +50,7 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
 end)
 
 interfaces.ItemUsage.addHandlerForType(types.Apparatus, function(apparatus, player)
-    if not config.statLimitEnabled and not config.potionLimitEnabled then
+    if not settingsCache.statLimitEnabled and not settingsCache.potionLimitEnabled then
         return nil
     end
     if not types.Player.objectIsInstance(player) then
@@ -60,7 +66,7 @@ interfaces.ItemUsage.addHandlerForType(types.Apparatus, function(apparatus, play
 end)
 
 interfaces.ItemUsage.addHandlerForType(types.Repair, function(repair, player)
-    if not config.statLimitEnabled and not config.potionLimitEnabled then
+    if not settingsCache.statLimitEnabled and not settingsCache.potionLimitEnabled then
         return nil
     end
     if not types.Player.objectIsInstance(player) then
@@ -76,7 +82,7 @@ interfaces.ItemUsage.addHandlerForType(types.Repair, function(repair, player)
 end)
 
 interfaces.ItemUsage.addHandlerForType(types.Miscellaneous, function(miscellaneous, player)
-    if not config.statLimitEnabled and not config.potionLimitEnabled then
+    if not settingsCache.statLimitEnabled and not settingsCache.potionLimitEnabled then
         return nil
     end
     if not types.Player.objectIsInstance(player) then
@@ -97,6 +103,13 @@ return {
             if data then
                 playerState.knockedOut = data.knockedOut or false
                 playerState.drinkOverdose = data.drinkOverdose or false
+            end
+        end,
+        sptLimitsSettingsUpdate = function(data)
+            if data then
+                settingsCache.potionLimitEnabled = data.potionLimitEnabled
+                settingsCache.statLimitEnabled = data.statLimitEnabled
+                settingsCache.excludeSunsDusk = data.excludeSunsDusk
             end
         end,
         sptLimitsExcludePotion = function(data)
