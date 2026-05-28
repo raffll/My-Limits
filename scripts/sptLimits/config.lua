@@ -3,6 +3,7 @@ return {
     statLimitEnabled = true,
     trainingLimitEnabled = true,
     hudCounterMode = "full",
+    hudPosition = "bottom",
 
     attributeCap = 300,
     skillCap = 150,

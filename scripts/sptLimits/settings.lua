@@ -38,6 +38,17 @@ local definitions = {
         l10nDesc = "settingHudCounterModeDesc",
         order = 2,
     },
+    hudPosition = {
+        key = "hudPosition",
+        type = "string",
+        default = config.hudPosition,
+        renderer = "select",
+        options = { "bottom", "top" },
+        group = "sptLimitsPotions",
+        l10nName = "settingHudPositionName",
+        l10nDesc = "settingHudPositionDesc",
+        order = 3,
+    },
     excludeSunsDusk = {
         key = "excludeSunsDusk",
         type = "boolean",
@@ -46,7 +57,7 @@ local definitions = {
         group = "sptLimitsPotions",
         l10nName = "settingExcludeSunsDuskName",
         l10nDesc = "settingExcludeSunsDuskDesc",
-        order = 3,
+        order = 4,
     },
     potionLimit = {
         key = "potionLimit",

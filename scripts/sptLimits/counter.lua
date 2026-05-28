@@ -7,8 +7,6 @@ local config = require("scripts.sptLimits.config")
 
 local maxIcons = config.maxSlotDisplay
 local normalColor = util.color.rgb(0.79, 0.65, 0.38)
-local baseX = -12
-local baseY = -90 - 32 + 4
 local slotSpacing = 22
 local iconSize = 16
 
@@ -30,7 +28,7 @@ local countdownElement = ui.create({
     props = {
         relativePosition = util.vector2(1, 1),
         anchor = util.vector2(1, 1),
-        position = util.vector2(baseX, baseY),
+        position = util.vector2(-12, -90 - 32 + 4),
         text = "",
         textSize = 16,
         textColor = normalColor,
@@ -45,7 +43,7 @@ local limitElement = ui.create({
     props = {
         relativePosition = util.vector2(1, 1),
         anchor = util.vector2(1, 1),
-        position = util.vector2(baseX, baseY - slotSpacing),
+        position = util.vector2(-12, -90 - 32 + 4 - slotSpacing),
         text = "",
         textSize = 16,
         textColor = normalColor,
@@ -63,7 +61,7 @@ for i = 1, maxIcons do
         props = {
             relativePosition = util.vector2(1, 1),
             anchor = util.vector2(1, 1),
-            position = util.vector2(baseX, baseY - (i + 1) * slotSpacing),
+            position = util.vector2(-12, -90 - 32 + 4 - (i + 1) * slotSpacing),
             size = util.vector2(iconSize + 4, iconSize + 4),
             visible = false,
         },
@@ -80,6 +78,7 @@ for i = 1, maxIcons do
 end
 
 local initialized = false
+local lastPosition = nil
 
 local function parseIcons(iconsStr)
     if not iconsStr or iconsStr == "" then
@@ -90,6 +89,41 @@ local function parseIcons(iconsStr)
         icons[#icons + 1] = part
     end
     return icons
+end
+
+local function applyPosition(position)
+    if position == lastPosition then
+        return
+    end
+    lastPosition = position
+
+    if position == "top" then
+        local topBaseY = 12
+        countdownElement.layout.props.relativePosition = util.vector2(1, 0)
+        countdownElement.layout.props.anchor = util.vector2(1, 0)
+        countdownElement.layout.props.position = util.vector2(-12, topBaseY)
+        limitElement.layout.props.relativePosition = util.vector2(1, 0)
+        limitElement.layout.props.anchor = util.vector2(1, 0)
+        limitElement.layout.props.position = util.vector2(-12, topBaseY + slotSpacing)
+        for i = 1, maxIcons do
+            iconElements[i].layout.props.relativePosition = util.vector2(1, 0)
+            iconElements[i].layout.props.anchor = util.vector2(1, 0)
+            iconElements[i].layout.props.position = util.vector2(-12, topBaseY + (i + 1) * slotSpacing)
+        end
+    else
+        local bottomBaseY = -90 - 32 + 4
+        countdownElement.layout.props.relativePosition = util.vector2(1, 1)
+        countdownElement.layout.props.anchor = util.vector2(1, 1)
+        countdownElement.layout.props.position = util.vector2(-12, bottomBaseY)
+        limitElement.layout.props.relativePosition = util.vector2(1, 1)
+        limitElement.layout.props.anchor = util.vector2(1, 1)
+        limitElement.layout.props.position = util.vector2(-12, bottomBaseY - slotSpacing)
+        for i = 1, maxIcons do
+            iconElements[i].layout.props.relativePosition = util.vector2(1, 1)
+            iconElements[i].layout.props.anchor = util.vector2(1, 1)
+            iconElements[i].layout.props.position = util.vector2(-12, bottomBaseY - (i + 1) * slotSpacing)
+        end
+    end
 end
 
 local function hideAll()
@@ -126,6 +160,9 @@ local function tick()
         hideAll()
         return
     end
+
+    local hudPosition = settingsSection:get("hudPosition") or "bottom"
+    applyPosition(hudPosition)
 
     local stateSection = storage.playerSection("sptLimitsState")
     local trackingMode = stateSection:get("trackingMode")

@@ -72,6 +72,28 @@ for i = 1, maxSlots do
 end
 
 local initialized = false
+local lastPosition = nil
+
+local function applyPosition(position)
+    if position == lastPosition then
+        return
+    end
+    lastPosition = position
+
+    if position == "top" then
+        for i = 1, maxSlots do
+            elements[i].layout.props.relativePosition = util.vector2(1, 0)
+            elements[i].layout.props.anchor = util.vector2(1, 0)
+            elements[i].layout.props.position = util.vector2(baseX, 12 + (i - 1) * slotSpacing)
+        end
+    else
+        for i = 1, maxSlots do
+            elements[i].layout.props.relativePosition = util.vector2(1, 1)
+            elements[i].layout.props.anchor = util.vector2(1, 1)
+            elements[i].layout.props.position = util.vector2(baseX, baseY - (i - 1) * slotSpacing)
+        end
+    end
+end
 
 local function tick()
     local settingsSection = storage.playerSection("sptLimitsPotions")
@@ -98,6 +120,9 @@ local function tick()
         end
         return
     end
+
+    local hudPosition = settingsSection:get("hudPosition") or "bottom"
+    applyPosition(hudPosition)
 
     local slotCount = stateSection:get("slotCount") or 4
     local overflowOccupied = stateSection:get("overflowOccupied") or false
