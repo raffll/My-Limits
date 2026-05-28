@@ -1,6 +1,6 @@
 local storage = require("openmw.storage")
 local async = require("openmw.async")
-local I = require("openmw.interfaces")
+local interfaces = require("openmw.interfaces")
 local config = require("scripts.sptLimits.config")
 
 local l10n = "sptLimits"
@@ -168,7 +168,7 @@ function settings.get(key)
 end
 
 function settings.registerPage()
-    I.Settings.registerPage({
+    interfaces.Settings.registerPage({
         key = "sptLimits",
         l10n = l10n,
         name = "settingsTitle",
@@ -210,7 +210,7 @@ function settings.registerPage()
             return definitions[a.key].order < definitions[b.key].order
         end)
 
-        I.Settings.registerGroup({
+        interfaces.Settings.registerGroup({
             key = group.key,
             page = "sptLimits",
             l10n = l10n,
