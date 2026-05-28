@@ -124,6 +124,7 @@ local definitions = {
 local subscribers = {}
 local previousValues = {}
 local subscribed = false
+local suppressNotifications = false
 
 local groupKeys = { "sptLimitsPotions", "sptLimitsStats", "sptLimitsTraining" }
 
@@ -199,6 +200,9 @@ local function initPreviousValues()
 end
 
 local function handleSectionChange(groupKey)
+    if suppressNotifications then
+        return
+    end
     local section = storage.playerSection(groupKey)
     for key, def in pairs(definitions) do
         if def.group == groupKey then
@@ -228,6 +232,41 @@ function settings.subscribe(callback)
             end))
         end
     end
+end
+
+function settings.syncToStorage()
+    suppressNotifications = true
+    for key, def in pairs(definitions) do
+        local section = storage.playerSection(def.group)
+        section:set(key, def.default)
+    end
+    suppressNotifications = false
+    initPreviousValues()
+end
+
+function settings.saveAll()
+    local saved = {}
+    for key, _ in pairs(definitions) do
+        saved[key] = settings.get(key)
+    end
+    return saved
+end
+
+function settings.loadAll(saved)
+    if not saved then
+        return
+    end
+    suppressNotifications = true
+    for key, def in pairs(definitions) do
+        local value = saved[key]
+        if value == nil then
+            value = def.default
+        end
+        local section = storage.playerSection(def.group)
+        section:set(key, value)
+    end
+    suppressNotifications = false
+    initPreviousValues()
 end
 
 return settings

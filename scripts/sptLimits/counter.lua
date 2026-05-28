@@ -17,20 +17,23 @@ local element = ui.create({
     },
 })
 
+local initialized = false
+
 local function tick()
     local settingsSection = storage.playerSection("sptLimitsPotions")
     local hudCounterEnabled = settingsSection:get("hudCounterEnabled")
     local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
 
-    -- Default to true if nil (first load, no stored settings yet)
-    if hudCounterEnabled == nil then
-        hudCounterEnabled = true
-    end
-    if potionLimitEnabled == nil then
-        potionLimitEnabled = true
+    -- Wait until the player script has written settings at least once
+    if hudCounterEnabled == nil and potionLimitEnabled == nil then
+        if not initialized then
+            return
+        end
+    else
+        initialized = true
     end
 
-    if not hudCounterEnabled or not potionLimitEnabled then
+    if hudCounterEnabled == false or potionLimitEnabled == false then
         element.layout.props.visible = false
         element:update()
         return

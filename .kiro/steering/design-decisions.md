@@ -14,9 +14,9 @@ Do NOT "fix" this as an off-by-one error.
 
 ## Engine Blocks Hotkeys While Collapsed
 
-The engine prevents hotkey usage while the player is in the knocked-out state. This means there is no "double hotkey bypass" scenario — once overdose collapse triggers, the player cannot drink again via hotkey until they recover. There is no death-from-overdose mechanic.
+The engine prevents hotkey usage while the player is in the knocked-out state. This means there is no "double hotkey bypass" scenario — once overdose collapse triggers, the player cannot drink again via hotkey until they recover.
 
-Do NOT add death logic for a second hotkey bypass. It cannot happen.
+The death branch (`potionLimit + 2`) exists as a defensive safeguard in case a future OpenMW version changes hotkey behavior during collapse. It is currently unreachable. Do NOT remove it, but do NOT treat it as active gameplay logic either.
 
 ## Per-Frame Logic is Intentional
 
@@ -141,3 +141,17 @@ Do NOT add deferred checks, retries, or "interface not yet available" guards for
 Values that are purely controlled by `config.lua` toggles (e.g. `hudCounterEnabled`, `potionLimitEnabled`) must NOT be saved in `onSave` or written to storage for persistence purposes. They are read once at load from `config.lua` and that is the single source of truth.
 
 Do NOT add save/load logic, storage fields, or interface methods whose sole purpose is to persist a config-driven toggle across sessions.
+
+
+## Settings Persistence: onSave/onLoad Is the Source of Truth
+
+OpenMW's `storage.playerSection` with `permanentStorage = false` bleeds values across saves within the same session. To guarantee true per-save settings, all user-configurable values are saved in `onSave` (under `data.settings`) and restored in `onLoad` via `settings.loadAll(data.settings)`.
+
+On load:
+- `data.settings` present → restore those values to storage.
+- `data` is `nil` (save predates the mod) → reset all settings to `config.lua` defaults.
+- `data` exists but `data.settings` is missing → leave storage as-is (pre-2.0beta save, storage already holds values from the save file).
+
+We only care about two scenarios: new saves with this mod installed, and old saves that never had this mod. There is no need to handle migration from intermediate mod versions or partial settings states.
+
+Do NOT remove `data.settings` from `onSave`. Do NOT rely solely on `storage.playerSection` for per-save settings persistence.

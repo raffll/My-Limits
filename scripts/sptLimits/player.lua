@@ -253,12 +253,15 @@ local function handleDrinkDetected()
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
-    -- Death branch: currently unreachable because the engine blocks hotkeys while
-    -- collapsed, but kept as a safeguard in case future OpenMW versions change that.
+    -- Death branch: unreachable in current OpenMW (engine blocks hotkeys while
+    -- collapsed). Kept as a safeguard for potential future engine changes.
     if state.drinkCount >= settings.get("potionLimit") + 2 then
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
-    elseif state.drinkCount >= settings.get("potionLimit") + 1 then
+        return
+    end
+
+    if state.drinkCount >= settings.get("potionLimit") + 1 then
         ui.showMessage(L("overdose"))
         state.overdoseCollapse = true
         state.knockedOut = true
@@ -335,6 +338,7 @@ return {
     engineHandlers = {
         onInit = function()
             settings.registerPage()
+            settings.syncToStorage()
             initState()
             sendSettingsToGlobal()
             if settings.get("potionLimitEnabled") then
@@ -346,6 +350,14 @@ return {
         end,
         onLoad = function(data)
             settings.registerPage()
+            if data and data.settings then
+                -- Save includes persisted settings — restore them
+                settings.loadAll(data.settings)
+            else
+                -- No data (save predates the mod) or no settings key (older
+                -- mod version). Reset to defaults to prevent session bleed.
+                settings.syncToStorage()
+            end
             initState()
             if data then
                 state.knockedOut = data.knockedOut or false
@@ -387,6 +399,7 @@ return {
                 overdoseCollapse = state.overdoseCollapse,
                 trainCount = state.trainCount,
                 trainLevel = state.trainLevel,
+                settings = settings.saveAll(),
             }
         end,
         onUpdate = function(dt)
