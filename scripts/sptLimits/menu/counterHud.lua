@@ -170,7 +170,7 @@ local function tick()
         return
     end
 
-    local isOverdose = drinkCount >= potionLimit
+    local isOverdose = drinkCount > potionLimit
 
     if hudCounterMode == "minimal" then
         textElement.layout.props.visible = false
