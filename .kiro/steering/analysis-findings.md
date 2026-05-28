@@ -4,7 +4,7 @@ Tracks issues found during code analysis to prevent circular re-discovery.
 
 ## Confirmed Bug — Fixed or Pending
 
-(none)
+- **`parseIcons` skips empty icon entries** — `string.gmatch(iconsStr, "[^|]+")` skips empty segments between consecutive `|` delimiters. If a potion has no icon (stored as `""`), the concat produces `"icon1||icon3"` and parsing skips the empty middle, shifting subsequent icons. **FIXED** — replaced with manual split that preserves empty entries; empty icons show as bordered placeholder.
 
 ## Dead Code (Confirmed)
 
@@ -36,3 +36,8 @@ Tracks issues found during code analysis to prevent circular re-discovery.
 - `training.onLoad` with `data = nil` sets `trainLevel = 0` — self-corrects on first training attempt via `checkTrainingLevelReset()`.
 - `global.lua` `settingsCache` initialized from config defaults — player sends settings update on first frame per design.
 - `potionSlots.onLoad` overrides `knockedOutRef.value = false` for stat-limit knockouts — one-frame recovery then re-collapse, acceptable per frame-tolerance.
+- `drinkIcons` array can grow beyond `maxSlotDisplay` — display is capped at 11, save data grows but is harmless. Self-clears on cooldown reset.
+- Old saves with `hudCounterEnabled` in `data.settings` — value ignored on upgrade, new `hudCounterMode` defaults to `"full"`. User preference lost but no crash.
+- `drinkIcons` not cleared from storage on `potionTrackingMode` switch — `counter.lua` early-returns when mode is slots, so stale data is invisible. No functional impact.
+- `hudCounterMode` name covers both counter and slot mode display — slightly misleading but functional and consistent with existing naming patterns.
+- `counter.lua` initial element positions overwritten by `applyPosition` on first frame — elements start hidden, no visual artifact.

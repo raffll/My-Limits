@@ -22,28 +22,13 @@ local function getTexture(path)
     return textureCache[path]
 end
 
-local countdownElement = ui.create({
+local textElement = ui.create({
     layer = "HUD",
     type = ui.TYPE.Text,
     props = {
         relativePosition = util.vector2(1, 1),
         anchor = util.vector2(1, 1),
         position = util.vector2(-12, -90 - 32 + 4),
-        text = "",
-        textSize = 16,
-        textColor = normalColor,
-        textFont = "Default",
-        visible = false,
-    },
-})
-
-local limitElement = ui.create({
-    layer = "HUD",
-    type = ui.TYPE.Text,
-    props = {
-        relativePosition = util.vector2(1, 1),
-        anchor = util.vector2(1, 1),
-        position = util.vector2(-12, -90 - 32 + 4 - slotSpacing),
         text = "",
         textSize = 16,
         textColor = normalColor,
@@ -61,7 +46,7 @@ for i = 1, maxIcons do
         props = {
             relativePosition = util.vector2(1, 1),
             anchor = util.vector2(1, 1),
-            position = util.vector2(-12, -90 - 32 + 4 - (i + 1) * slotSpacing),
+            position = util.vector2(-12, -90 - 32 + 4 - i * slotSpacing),
             size = util.vector2(iconSize + 4, iconSize + 4),
             visible = false,
         },
@@ -86,8 +71,16 @@ local function parseIcons(iconsStr)
         return {}
     end
     local icons = {}
-    for part in string.gmatch(iconsStr, "[^|]+") do
-        icons[#icons + 1] = part
+    local pos = 1
+    while true do
+        local sep = iconsStr:find("|", pos, true)
+        if sep then
+            icons[#icons + 1] = iconsStr:sub(pos, sep - 1)
+            pos = sep + 1
+        else
+            icons[#icons + 1] = iconsStr:sub(pos)
+            break
+        end
     end
     return icons
 end
@@ -99,16 +92,13 @@ local function applyPosition(position, mode)
     lastPosition = position
     lastMode = mode
 
-    local iconOffset = mode == "minimal" and 0 or 2
+    local iconOffset = mode == "minimal" and 0 or 1
 
     if position == "top" then
         local topBaseY = 12
-        countdownElement.layout.props.relativePosition = util.vector2(1, 0)
-        countdownElement.layout.props.anchor = util.vector2(1, 0)
-        countdownElement.layout.props.position = util.vector2(-12, topBaseY)
-        limitElement.layout.props.relativePosition = util.vector2(1, 0)
-        limitElement.layout.props.anchor = util.vector2(1, 0)
-        limitElement.layout.props.position = util.vector2(-12, topBaseY + slotSpacing)
+        textElement.layout.props.relativePosition = util.vector2(1, 0)
+        textElement.layout.props.anchor = util.vector2(1, 0)
+        textElement.layout.props.position = util.vector2(-12, topBaseY)
         for i = 1, maxIcons do
             iconElements[i].layout.props.relativePosition = util.vector2(1, 0)
             iconElements[i].layout.props.anchor = util.vector2(1, 0)
@@ -116,12 +106,9 @@ local function applyPosition(position, mode)
         end
     else
         local bottomBaseY = -90 - 32 + 4
-        countdownElement.layout.props.relativePosition = util.vector2(1, 1)
-        countdownElement.layout.props.anchor = util.vector2(1, 1)
-        countdownElement.layout.props.position = util.vector2(-12, bottomBaseY)
-        limitElement.layout.props.relativePosition = util.vector2(1, 1)
-        limitElement.layout.props.anchor = util.vector2(1, 1)
-        limitElement.layout.props.position = util.vector2(-12, bottomBaseY - slotSpacing)
+        textElement.layout.props.relativePosition = util.vector2(1, 1)
+        textElement.layout.props.anchor = util.vector2(1, 1)
+        textElement.layout.props.position = util.vector2(-12, bottomBaseY)
         for i = 1, maxIcons do
             iconElements[i].layout.props.relativePosition = util.vector2(1, 1)
             iconElements[i].layout.props.anchor = util.vector2(1, 1)
@@ -131,13 +118,9 @@ local function applyPosition(position, mode)
 end
 
 local function hideAll()
-    if countdownElement.layout.props.visible then
-        countdownElement.layout.props.visible = false
-        countdownElement:update()
-    end
-    if limitElement.layout.props.visible then
-        limitElement.layout.props.visible = false
-        limitElement:update()
+    if textElement.layout.props.visible then
+        textElement.layout.props.visible = false
+        textElement:update()
     end
     for i = 1, maxIcons do
         if iconElements[i].layout.props.visible then
@@ -187,17 +170,12 @@ local function tick()
     end
 
     if hudCounterMode == "minimal" then
-        countdownElement.layout.props.visible = false
-        countdownElement:update()
-        limitElement.layout.props.visible = false
-        limitElement:update()
+        textElement.layout.props.visible = false
+        textElement:update()
     else
-        countdownElement.layout.props.visible = true
-        countdownElement.layout.props.text = string.format("%.1fs", countdown)
-        countdownElement:update()
-        limitElement.layout.props.visible = true
-        limitElement.layout.props.text = string.format("%d/%d", drinkCount, potionLimit)
-        limitElement:update()
+        textElement.layout.props.visible = true
+        textElement.layout.props.text = string.format("%.1fs %d/%d", countdown, drinkCount, potionLimit)
+        textElement:update()
     end
 
     local displayCount = math.min(#icons, maxIcons)
@@ -209,17 +187,14 @@ local function tick()
                 el:update()
             end
         else
+            el.layout.props.visible = true
             local tex = getTexture(icons[i])
             if tex then
-                el.layout.props.visible = true
                 el.layout.content[1].props.resource = tex
-                el:update()
             else
-                if el.layout.props.visible then
-                    el.layout.props.visible = false
-                    el:update()
-                end
+                el.layout.content[1].props.resource = nil
             end
+            el:update()
         end
     end
 end

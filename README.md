@@ -95,13 +95,12 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
-2.0alpha3
-- Added in-game settings page (Potions, Stats, Training groups).
-- Added Slots tracking mode as an alternative to the Counter mode.
+2.0alpha4
 - Added HUD Display setting (full/minimal/hidden) replacing the old toggle.
 - Added HUD Position setting (bottom/top).
 - Added per-drink icons to counter mode HUD.
-- Bug fixes.
+
+2.0alpha3
 
 2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.
