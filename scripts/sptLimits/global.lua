@@ -47,7 +47,6 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
         return nil
     end
 
-    -- Counter mode (default)
     if playerState.knockedOut then
         if playerState.drinkOverdose then
             player:sendEvent("sptLimitsShowMessage", { text = L("cantDrinkNow") })

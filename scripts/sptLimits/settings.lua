@@ -6,7 +6,6 @@ local config = require("scripts.sptLimits.config")
 local l10n = "sptLimits"
 
 local definitions = {
-    -- Potions group (global potion settings)
     potionLimitEnabled = {
         key = "potionLimitEnabled",
         type = "boolean",
@@ -48,7 +47,6 @@ local definitions = {
         l10nDesc = "settingExcludeSunsDuskDesc",
         order = 3,
     },
-    -- Counter group (counter-mode settings)
     potionLimit = {
         key = "potionLimit",
         type = "number",
@@ -73,7 +71,6 @@ local definitions = {
         l10nDesc = "settingPotionCooldownDesc",
         order = 1,
     },
-    -- Slots group (slots-mode settings)
     potionSlotCount = {
         key = "potionSlotCount",
         type = "number",
@@ -86,7 +83,6 @@ local definitions = {
         l10nDesc = "settingPotionSlotCountDesc",
         order = 0,
     },
-    -- Stats group
     statLimitEnabled = {
         key = "statLimitEnabled",
         type = "boolean",
@@ -121,7 +117,6 @@ local definitions = {
         l10nDesc = "settingSkillCapDesc",
         order = 2,
     },
-    -- Training group
     trainingLimitEnabled = {
         key = "trainingLimitEnabled",
         type = "boolean",
@@ -151,7 +146,8 @@ local previousValues = {}
 local subscribed = false
 local suppressNotifications = false
 
-local groupKeys = { "sptLimitsPotions", "sptLimitsPotionsCounter", "sptLimitsPotionsSlots", "sptLimitsStats", "sptLimitsTraining" }
+local groupKeys =
+    { "sptLimitsPotions", "sptLimitsPotionsCounter", "sptLimitsPotionsSlots", "sptLimitsStats", "sptLimitsTraining" }
 
 local settings = {
     l10n = l10n,

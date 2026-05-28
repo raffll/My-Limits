@@ -35,20 +35,47 @@ local skippedAttributes = {}
 local skippedSkills = {}
 local lastSent = {}
 
--- Maximum possible slot count (potionSlotCount max + 1 overflow)
 local maxSlotIndex = 11
 
 local attributeNames = {
-    "strength", "intelligence", "willpower", "agility",
-    "speed", "endurance", "personality", "luck",
+    "strength",
+    "intelligence",
+    "willpower",
+    "agility",
+    "speed",
+    "endurance",
+    "personality",
+    "luck",
 }
 
 local skillNames = {
-    "alchemy", "longblade", "acrobatics", "bluntweapon", "enchant", "security",
-    "axe", "conjuration", "sneak", "armorer", "alteration", "lightarmor",
-    "mediumarmor", "destruction", "marksman", "heavyarmor", "mysticism",
-    "shortblade", "spear", "restoration", "handtohand", "block", "illusion",
-    "mercantile", "athletics", "unarmored", "speechcraft",
+    "alchemy",
+    "longblade",
+    "acrobatics",
+    "bluntweapon",
+    "enchant",
+    "security",
+    "axe",
+    "conjuration",
+    "sneak",
+    "armorer",
+    "alteration",
+    "lightarmor",
+    "mediumarmor",
+    "destruction",
+    "marksman",
+    "heavyarmor",
+    "mysticism",
+    "shortblade",
+    "spear",
+    "restoration",
+    "handtohand",
+    "block",
+    "illusion",
+    "mercantile",
+    "athletics",
+    "unarmored",
+    "speechcraft",
 }
 
 local function restoreFatigue()
@@ -158,7 +185,6 @@ local function tickSlots(dt)
                 if slot.countdown < 0 then
                     slot.countdown = 0
                 end
-                -- Expire the slot when countdown reaches 0
                 if slot.countdown == 0 then
                     if i <= slotCount then
                         slot.activeSpellId = nil
@@ -172,7 +198,6 @@ local function tickSlots(dt)
                     end
                 end
             end
-            -- If prevCountdown was already 0 (instant-effect), do NOT decrement or clear
         end
     end
 end
@@ -211,7 +236,6 @@ local function writeSlotStorage()
         local slot = state.slots[i]
         local occupied = slot and slot.activeSpellId ~= nil
         local countdown = occupied and slot.countdown or 0
-        -- Write 0 if below display threshold to avoid stale "0.1s"
         if countdown < 0.1 then
             countdown = 0
         end
@@ -375,8 +399,6 @@ local function handleDrinkDetected()
     state.drinkHour = core.getGameTime() / 3600
     state.drinkCount = state.drinkCount + 1
 
-    -- Death branch: unreachable in current OpenMW (engine blocks hotkeys while
-    -- collapsed). Kept as a safeguard for potential future engine changes.
     if state.drinkCount >= settings.get("potionLimit") + 2 then
         ui.showMessage(L("overdoseDeath"))
         types.Actor.stats.dynamic.health(self).current = 0
@@ -444,15 +466,6 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
     end
 end)
 
-local function clearKnockoutIfActive()
-    if state.knockedOut then
-        restoreFatigue()
-        state.knockedOut = false
-        state.overdoseCollapse = false
-        state.drinkOverdose = false
-    end
-end
-
 settings.subscribe(function(key, newValue)
     if key == "trainingLimitEnabled" then
         if not newValue then
@@ -469,9 +482,28 @@ settings.subscribe(function(key, newValue)
             end
         end
     elseif key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
-        if (key == "potionLimitEnabled" or key == "statLimitEnabled") and not newValue then
-            if not settings.get("potionLimitEnabled") and not settings.get("statLimitEnabled") then
-                clearKnockoutIfActive()
+        if key == "potionLimitEnabled" and not newValue and state.knockedOut then
+            local potionCaused = state.overdoseCollapse
+                or (state.potionTrackingMode == "slots" and isOverflowOccupied())
+            if potionCaused then
+                if state.potionTrackingMode == "slots" then
+                    local slotCount = settings.get("potionSlotCount")
+                    local overflow = state.slots[slotCount + 1]
+                    if overflow then
+                        overflow.activeSpellId = nil
+                        overflow.countdown = 0
+                        overflow.icon = nil
+                    end
+                end
+                restoreFatigue()
+                state.knockedOut = false
+                state.overdoseCollapse = false
+                state.drinkOverdose = false
+            end
+        elseif key == "statLimitEnabled" and not newValue and state.knockedOut then
+            if not state.overdoseCollapse and not (state.potionTrackingMode == "slots" and isOverflowOccupied()) then
+                restoreFatigue()
+                state.knockedOut = false
             end
         end
         sendSettingsToGlobal()
@@ -516,29 +548,23 @@ settings.subscribe(function(key, newValue)
                 state.overdoseCollapse = false
             end
 
-            -- Restore fatigue if player was knocked out
             if wasKnockedOut then
                 restoreFatigue()
             end
             state.knownPotionSpellIds = {}
             state.potionSpellIdsInitialized = false
 
-            -- Reset all lastSent values to force fresh writes
             resetLastSent()
 
-            -- Clear storage for the mode we're leaving
             local section = storage.playerSection("sptLimitsState")
             section:set("trackingMode", newValue)
             if newValue == "counter" then
-                -- Leaving slots mode: zero out all slot storage keys
                 clearSlotStorage()
             else
-                -- Leaving counter mode: zero out counter storage keys
                 section:set("drinkCount", 0)
                 section:set("countdown", 0)
             end
 
-            -- Send clean initial state event for the new mode
             if newValue == "slots" then
                 core.sendGlobalEvent("sptLimitsStateUpdate", {
                     knockedOut = false,
@@ -565,22 +591,18 @@ return {
             sendSettingsToGlobal()
             local section = storage.playerSection("sptLimitsState")
             section:set("trackingMode", state.potionTrackingMode)
+            section:set("drinkCount", 0)
+            section:set("countdown", 0)
+            section:set("potionLimit", settings.get("potionLimit"))
             if state.potionTrackingMode == "counter" then
-                section:set("drinkCount", 0)
-                section:set("countdown", 0)
-                section:set("potionLimit", settings.get("potionLimit"))
-                -- Clear stale slot data
                 clearSlotStorage()
             end
         end,
         onLoad = function(data)
             settings.registerPage()
             if data and data.settings then
-                -- Save includes persisted settings — restore them
                 settings.loadAll(data.settings)
             else
-                -- No data (save predates the mod) or no settings key (older
-                -- mod version). Reset to defaults to prevent session bleed.
                 settings.syncToStorage()
             end
             initState()
@@ -599,42 +621,35 @@ return {
                 blockTrainingWindow()
             end
 
-            -- Restore slot data if mode is "slots" and save has slot data
             if state.potionTrackingMode == "slots" and data and data.slots then
                 local slotCount = settings.get("potionSlotCount")
                 local targetSize = slotCount + 1
 
                 if type(data.slots) ~= "table" then
-                    -- Corrupted: not a table → fresh start
                     initSlots()
                 else
                     state.slots = {}
-                    -- Restore entries from save data
                     local sourceLen = #data.slots
                     local restoreCount = math.min(sourceLen, targetSize)
                     for i = 1, restoreCount do
                         local entry = data.slots[i]
                         if type(entry) ~= "table" then
-                            -- Malformed entry → treat as empty
                             state.slots[i] = { activeSpellId = nil, countdown = 0, icon = nil }
                         else
                             local activeSpellId = entry.activeSpellId
                             local countdown = entry.countdown
                             local icon = entry.icon
 
-                            -- Validate activeSpellId: must be a string or nil
                             if activeSpellId ~= nil and type(activeSpellId) ~= "string" then
                                 activeSpellId = nil
                             end
 
-                            -- Validate countdown: must be a number, clamp negatives to 0
                             if type(countdown) ~= "number" then
                                 countdown = 0
                             elseif countdown < 0 then
                                 countdown = 0
                             end
 
-                            -- Validate icon: must be a string or nil
                             if icon ~= nil and type(icon) ~= "string" then
                                 icon = nil
                             end
@@ -642,13 +657,10 @@ return {
                             state.slots[i] = { activeSpellId = activeSpellId, countdown = countdown, icon = icon }
                         end
                     end
-                    -- Pad if too short
                     for i = restoreCount + 1, targetSize do
                         state.slots[i] = { activeSpellId = nil, countdown = 0, icon = nil }
                     end
-                    -- Truncate handled by restoreCount = min(sourceLen, targetSize)
 
-                    -- Validate activeSpellIds against current active spells
                     local activeSpells = types.Actor.activeSpells(self)
                     local activeSpellIdSet = {}
                     for _, spell in pairs(activeSpells) do
@@ -665,19 +677,16 @@ return {
                         end
                     end
 
-                    -- Handle overflow slot state for knockedOut
                     local overflow = state.slots[targetSize]
                     if overflow and overflow.activeSpellId ~= nil then
                         state.knockedOut = true
                     else
-                        -- Overflow spell is gone or empty → not knocked out from overflow
                         if data.knockedOut and not state.overdoseCollapse then
                             state.knockedOut = false
                         end
                     end
                 end
             elseif state.potionTrackingMode == "slots" then
-                -- No slot data in save (counter mode save or nil) → fresh slots
                 initSlots()
             end
 
@@ -698,7 +707,6 @@ return {
             state.potionSpellIdsInitialized = true
             sendSettingsToGlobal()
 
-            -- Write tracking mode and clear stale storage from the inactive mode
             local section = storage.playerSection("sptLimitsState")
             section:set("trackingMode", state.potionTrackingMode)
             if state.potionTrackingMode == "counter" then
@@ -712,7 +720,8 @@ return {
                 for i = 1, slotCount + 1 do
                     local slot = state.slots[i]
                     if slot then
-                        slotsData[i] = { activeSpellId = slot.activeSpellId, countdown = slot.countdown, icon = slot.icon }
+                        slotsData[i] =
+                            { activeSpellId = slot.activeSpellId, countdown = slot.countdown, icon = slot.icon }
                     else
                         slotsData[i] = { activeSpellId = nil, countdown = 0, icon = nil }
                     end
@@ -772,7 +781,6 @@ return {
                         if not isPotionExcluded(spell.id, excludeSunsDusk) then
                             currentIds[spell.activeSpellId] = true
                         elseif not excludedPotions[spell.id] then
-                            -- Potion excluded by Sun's Dusk interface check; sync to global
                             excludedPotions[spell.id] = true
                             core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = spell.id })
                         end
@@ -812,25 +820,20 @@ return {
                 end
 
                 if not state.potionSpellIdsInitialized then
-                    -- First frame: populate knownPotionSpellIds without treating as new drinks
                     for activeSpellId, _ in pairs(currentPotionSpellIds) do
                         state.knownPotionSpellIds[activeSpellId] = true
                     end
                     state.potionSpellIdsInitialized = true
                 else
-                    -- Detect new drinks
                     for activeSpellId, spell in pairs(currentPotionSpellIds) do
                         if not state.knownPotionSpellIds[activeSpellId] then
-                            -- Check if excluded
                             if isPotionExcluded(spell.id, excludeSunsDusk) then
-                                -- Excluded potion: track but don't assign to slot
                                 state.knownPotionSpellIds[activeSpellId] = true
                                 if not excludedPotions[spell.id] then
                                     excludedPotions[spell.id] = true
                                     core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = spell.id })
                                 end
                             else
-                                -- Non-excluded: compute longestDuration and assign
                                 local longestDuration = 0
                                 local icon = nil
                                 if spell.effects then
@@ -845,7 +848,6 @@ return {
                                             end
                                         end
                                     end
-                                    -- If all effects are instant (longestDuration=0), use first effect's icon
                                     if icon == nil then
                                         for _, effect in pairs(spell.effects) do
                                             if effect.id then
@@ -858,20 +860,16 @@ return {
                                         end
                                     end
                                 end
-                                -- Try normal slot first
                                 if not assignDrinkToSlot(activeSpellId, longestDuration, icon) then
-                                    -- All normal slots full — try overflow
                                     if not isOverflowOccupied() then
                                         assignDrinkToOverflow(activeSpellId, longestDuration, icon)
                                     end
-                                    -- Else: all slots occupied, ignore drink
                                 end
                                 state.knownPotionSpellIds[activeSpellId] = true
                             end
                         end
                     end
 
-                    -- Prune knownPotionSpellIds: remove IDs no longer active
                     for id, _ in pairs(state.knownPotionSpellIds) do
                         if not currentPotionSpellIds[id] then
                             state.knownPotionSpellIds[id] = nil
@@ -879,23 +877,19 @@ return {
                     end
                 end
 
-                -- Tick slot countdowns
                 tickSlots(dt)
 
-                -- Validate slots against active spells (clear expired)
                 local activeSpellIdSet = {}
                 for activeSpellId, _ in pairs(currentPotionSpellIds) do
                     activeSpellIdSet[activeSpellId] = true
                 end
                 validateSlots(activeSpellIdSet)
 
-                -- Maintain overdose state
                 if state.knockedOut and isOverflowOccupied() then
                     types.Actor.stats.dynamic.fatigue(self).base = 0
                     types.Actor.stats.dynamic.fatigue(self).current = 0
                 end
 
-                -- Write storage and send state event
                 writeSlotStorage()
                 sendSlotStateEvent()
             end

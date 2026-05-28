@@ -24,7 +24,6 @@ local function tick()
     local hudCounterEnabled = settingsSection:get("hudCounterEnabled")
     local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
 
-    -- Wait until the player script has written settings at least once
     if hudCounterEnabled == nil and potionLimitEnabled == nil then
         if not initialized then
             return

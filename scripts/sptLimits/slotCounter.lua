@@ -3,7 +3,7 @@ local util = require("openmw.util")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
-local maxSlots = 11 -- potionSlotCount max (10) + 1 overflow
+local maxSlots = 11
 local normalColor = util.color.rgb(0.79, 0.65, 0.38)
 local overflowColor = util.color.rgb(0.85, 0.20, 0.20)
 local baseX = -12
@@ -23,7 +23,6 @@ local function getTexture(path)
     return textureCache[path]
 end
 
--- Each slot is a Flex row: [bordered icon][text]
 local elements = {}
 for i = 1, maxSlots do
     elements[i] = ui.create({
@@ -88,7 +87,6 @@ local function tick()
     local stateSection = storage.playerSection("sptLimitsState")
     local trackingMode = stateSection:get("trackingMode")
 
-    -- Hide all if not in slots mode or HUD disabled
     if trackingMode ~= "slots" or hudCounterEnabled == false or potionLimitEnabled == false then
         for i = 1, maxSlots do
             if elements[i].layout.props.visible then
@@ -119,7 +117,6 @@ local function tick()
             if shouldShow then
                 el.layout.props.visible = true
 
-                -- Update icon box
                 local iconBox = el.layout.content[2]
                 local tex = getTexture(iconPath)
                 if tex then
@@ -129,7 +126,6 @@ local function tick()
                     iconBox.props.visible = false
                 end
 
-                -- Update text
                 local textWidget = el.layout.content[1]
                 local color = isOverflow and overflowColor or normalColor
                 textWidget.props.textColor = color
