@@ -1,11 +1,6 @@
 local ui = require("openmw.ui")
 local util = require("openmw.util")
 local storage = require("openmw.storage")
-local config = require("scripts.sptLimits.config")
-
-if not config.potionLimitEnabled or not config.hudCounterEnabled then
-    return {}
-end
 
 local element = ui.create({
     layer = "HUD",
@@ -22,17 +17,54 @@ local element = ui.create({
     },
 })
 
+local initialized = false
+
 local function tick()
+    local settingsSection = storage.playerSection("sptLimitsPotions")
+    local hudCounterMode = settingsSection:get("hudCounterMode")
+    local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
+
+    if hudCounterMode == nil and potionLimitEnabled == nil then
+        if not initialized then
+            return
+        end
+    else
+        initialized = true
+    end
+
+    if hudCounterMode == "hidden" or potionLimitEnabled == false then
+        element.layout.props.visible = false
+        element:update()
+        return
+    end
+
+    local stateSection = storage.playerSection("sptLimitsState")
+    local trackingMode = stateSection:get("trackingMode")
+    if trackingMode == "slots" then
+        element.layout.props.visible = false
+        element:update()
+        return
+    end
+
     local ok, vals = pcall(function()
         return {
-            countdown = storage.playerSection("sptLimitsState"):get("countdown"),
-            drinkCount = storage.playerSection("sptLimitsState"):get("drinkCount"),
+            countdown = stateSection:get("countdown"),
+            drinkCount = stateSection:get("drinkCount"),
+            potionLimit = stateSection:get("potionLimit"),
         }
     end)
-    if ok and vals ~= nil and vals.countdown ~= nil and vals.drinkCount ~= nil then
+
+    if ok and vals and vals.countdown ~= nil and vals.drinkCount ~= nil then
         local hide = vals.drinkCount == 0
         element.layout.props.visible = not hide
-        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, config.potionLimit)
+        local limit = vals.potionLimit or 3
+        local timerPart = ""
+        if hudCounterMode == "detailed" then
+            timerPart = string.format("%.1fs ", vals.countdown)
+        elseif hudCounterMode == "compact" then
+            timerPart = string.format("%ds ", math.floor(vals.countdown))
+        end
+        element.layout.props.text = timerPart .. string.format("%d/%d", vals.drinkCount, limit)
         element:update()
     end
 end

@@ -14,9 +14,9 @@ Do NOT "fix" this as an off-by-one error.
 
 ## Engine Blocks Hotkeys While Collapsed
 
-The engine prevents hotkey usage while the player is in the knocked-out state. This means there is no "double hotkey bypass" scenario — once overdose collapse triggers, the player cannot drink again via hotkey until they recover. There is no death-from-overdose mechanic.
+The engine prevents hotkey usage while the player is in the knocked-out state. This means there is no "double hotkey bypass" scenario — once overdose collapse triggers, the player cannot drink again via hotkey until they recover.
 
-Do NOT add death logic for a second hotkey bypass. It cannot happen.
+The death branch (`potionLimit + 2`) exists as a defensive safeguard in case a future OpenMW version changes hotkey behavior during collapse. It is currently unreachable. Do NOT remove it, but do NOT treat it as active gameplay logic either.
 
 ## Per-Frame Logic is Intentional
 
@@ -91,11 +91,13 @@ Do NOT "fix" this by reordering the calls or adding early-return guards.
 The `interface` block in player.lua uses `version = 1` unless explicitly told otherwise. Do NOT bump the interface version number.
 
 
-## Config Cannot Be Changed Mid-Session
+## Config Defaults vs Runtime Settings
 
-The `config.lua` values (toggles, limits, caps, exclusions) are read once at script load and are never hot-reloaded during gameplay. There is no scenario where `potionLimitEnabled`, `statLimitEnabled`, `trainingLimitEnabled`, or any other config value changes while the game is running.
+The `config.lua` file provides **default values only**. At runtime, all toggles and numeric limits are managed by the settings system (`settings.lua`) and can be changed mid-session via the OpenMW settings UI. The `settings.subscribe` mechanism propagates changes to all consumers (player script, global script via events, HUD via storage).
 
-Do NOT add guards, fallback resets, or cleanup logic for "what if a config toggle changes mid-session" — it cannot happen.
+Only the exclusion lists (`potions`, `attributes`, `skills`) in `config.lua` are truly static — they are read once at script load and cannot be changed mid-session (except via the Lua interface for potions).
+
+Do NOT treat `config.lua` toggles/limits as the runtime source of truth. Always use `settings.get(key)` for current values.
 
 ## Training Window Uses registerWindow + removeMode
 
@@ -136,8 +138,43 @@ OpenMW resolves all script interfaces before gameplay begins. The `interfaces.Su
 Do NOT add deferred checks, retries, or "interface not yet available" guards for `interfaces.SunsDusk`.
 
 
-## Config-Only Toggles Are Never Persisted
+## Config Values Are Defaults, Not Runtime State
 
-Values that are purely controlled by `config.lua` toggles (e.g. `hudCounterEnabled`, `potionLimitEnabled`) must NOT be saved in `onSave` or written to storage for persistence purposes. They are read once at load from `config.lua` and that is the single source of truth.
+The `config.lua` toggles and limits (e.g. `hudCounterEnabled`, `potionLimitEnabled`, `attributeCap`) serve exclusively as **default values** for the settings system. They are referenced in `settings.lua` definitions as `default = config.X`. The actual runtime values live in `storage.playerSection` and are persisted per-save via `onSave`/`onLoad`.
 
-Do NOT add save/load logic, storage fields, or interface methods whose sole purpose is to persist a config-driven toggle across sessions.
+Do NOT read `config.X` directly at runtime for any value that has a corresponding settings definition. Always use `settings.get(key)`.
+
+
+## Settings Persistence: onSave/onLoad Is the Source of Truth
+
+OpenMW's `storage.playerSection` with `permanentStorage = false` bleeds values across saves within the same session. To guarantee true per-save settings, all user-configurable values are saved in `onSave` (under `data.settings`) and restored in `onLoad` via `settings.loadAll(data.settings)`.
+
+On load:
+- `data.settings` present → restore those values to storage.
+- `data` is `nil` (save predates the mod) → reset all settings to `config.lua` defaults.
+- `data` exists but `data.settings` is missing → leave storage as-is (pre-2.0beta save, storage already holds values from the save file).
+
+We only care about two scenarios: new saves with this mod installed, and old saves that never had this mod. There is no need to handle migration from intermediate mod versions or partial settings states.
+
+Do NOT remove `data.settings` from `onSave`. Do NOT rely solely on `storage.playerSection` for per-save settings persistence.
+
+
+## Slot Mode: validateSlots Is the Authority on Slot Lifetime
+
+`tickSlots` only decrements the countdown for display purposes. It does NOT free slots when countdown reaches 0. Only `validateSlots` (which checks whether the `activeSpellId` is still present in the engine's active spells) can free a slot. This prevents slots from opening up before the engine has actually expired the effect.
+
+Do NOT re-add slot-freeing logic to `tickSlots`.
+
+
+## Slot Mode: handleOverflowRecovery Only Clears overdoseCollapse
+
+When the overflow slot's spell expires (detected by `validateSlots`), `handleOverflowRecovery` sets `state.overdoseCollapse = false`. It does NOT set `state.knockedOut = false` or call `restoreFatigue()`. The actual recovery (or continued knockout if a stat limit is active) is handled by `handleKnockoutRecovery` later in the same frame.
+
+Do NOT add `state.knockedOut = false` or `restoreFatigue()` back into `handleOverflowRecovery`.
+
+
+## Re-Enabling potionLimitEnabled Resets Potion Tracking
+
+When `potionLimitEnabled` is toggled from off to on, `state.potionSpellIdsInitialized` is set to `false` and `state.knownPotionSpellIds` is cleared. This forces the next `onUpdate` frame to snapshot all currently active potion spells as "already known" rather than treating them as new drinks. Without this, potions drunk while the limit was disabled would trigger overdose the moment the limit is re-enabled.
+
+Do NOT remove this reset from the settings subscribe handler.

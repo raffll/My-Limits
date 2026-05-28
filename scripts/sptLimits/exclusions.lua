@@ -12,11 +12,11 @@ for _, entry in ipairs(config.potions or {}) do
     end
 end
 
-local function isPotionExcluded(id)
+local function isPotionExcluded(id, excludeSunsDusk)
     if excludedPotions[id] then
         return true
     end
-    if config.excludeSunsDusk and interfaces.SunsDusk and interfaces.SunsDusk.isConsumable then
+    if excludeSunsDusk and interfaces.SunsDusk and interfaces.SunsDusk.isConsumable then
         if interfaces.SunsDusk.isConsumable(id) then
             return true
         end

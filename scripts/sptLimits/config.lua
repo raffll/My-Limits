@@ -1,27 +1,22 @@
 return {
-    -- Toggles (set to false to disable a limit entirely)
     potionLimitEnabled = true,
     statLimitEnabled = true,
     trainingLimitEnabled = true,
-    hudCounterEnabled = true,
+    hudCounterMode = "detailed",
 
-    -- Limits
     attributeCap = 300,
     skillCap = 150,
     potionLimit = 3,
     trainingLimit = 5,
-    potionCooldown = 20, -- seconds
+    potionCooldown = 20,
+    potionTrackingMode = "counter",
+    potionSlotCount = 4,
+    maxSlotDisplay = 11,
 
-    -- Exclude Sun's Dusk survival mod potions from the limit.
     excludeSunsDusk = true,
 
-    -- Potion record IDs that will not count towards the drink limit.
-    -- Supports Lua patterns: "^sd_.*" matches any ID starting with "sd_".
-    -- Plain IDs (no pattern characters) are matched exactly.
     potions = {},
 
-    -- Spell/effect IDs that bypass the attribute limit check.
-    -- While any of these are active, the corresponding attribute will not be checked.
     attributes = {
         strength = {},
         intelligence = {},
@@ -33,8 +28,6 @@ return {
         luck = {},
     },
 
-    -- Spell/effect IDs that bypass the skill limit check.
-    -- While any of these are active, the corresponding skill will not be checked.
     skills = {
         alchemy = {},
         longblade = {},
