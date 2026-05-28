@@ -17,7 +17,8 @@ All settings are configurable in-game via the OpenMW settings menu under **SPT L
 **Potions group:**
 - `Potion Limit` — enable the potion drinking limit (default: on)
 - `Tracking Mode` — choose between Counter (shared cooldown) and Slots (individual per-potion tracking) (default: `counter`)
-- `HUD Counter` — show the potion HUD element (default: on)
+- `HUD Display` — full (timer, limit, icons), minimal (icons only), or hidden (default: `full`)
+- `HUD Position` — bottom (stacks upward from bottom-right) or top (stacks downward from top-right) (default: `bottom`)
 - `Exclude Sun's Dusk Potions` — potions from the Sun's Dusk mod do not count toward the limit (default: on)
 
 **Potions — Counter Mode:**
@@ -56,7 +57,7 @@ If any attribute exceeds the Attribute Cap or any skill exceeds the Skill Cap, y
 - Drinking another potion during cooldown increments the counter and resets the timer.
 - At the limit (default: 3), the inventory UI blocks further drinks.
 - Waiting or sleeping at least 1 game-hour clears the cooldown immediately.
-- HUD counter in the bottom-right shows countdown, drinks, and limit — e.g. `14.2s 2/3`.
+- HUD shows countdown, limit, and one icon per drink consumed — stacked vertically from the anchor corner.
 - **Exception:** Hotkeys bypass the inventory block. Drinking via hotkey past the limit causes overdose collapse.
 
 ## Potion Limit — Slots Mode
@@ -97,6 +98,9 @@ Do whatever you want. Just credit me.
 2.0alpha3
 - Added in-game settings page (Potions, Stats, Training groups).
 - Added Slots tracking mode as an alternative to the Counter mode.
+- Added HUD Display setting (full/minimal/hidden) replacing the old toggle.
+- Added HUD Position setting (bottom/top).
+- Added per-drink icons to counter mode HUD.
 - Bug fixes.
 
 2.0alpha2
