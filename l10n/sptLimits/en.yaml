@@ -20,7 +20,7 @@ settingPotionTrackingModeDesc: "Counter: single shared cooldown. Slots: individu
 counter: "Counter"
 slots: "Slots"
 settingPotionSlotCountName: "Potion Slots"
-settingPotionSlotCountDesc: "Number of potion slots available (slot mode only)."
+settingPotionSlotCountDesc: "Number of potion slots available."
 settingPotionLimitEnabledName: "Potion Limit"
 settingPotionLimitEnabledDesc: "Enable the potion drinking limit."
 settingPotionLimitName: "Max Potions"
