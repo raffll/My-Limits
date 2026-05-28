@@ -12,12 +12,13 @@ content=SPT Limits.omwscripts
 
 ## Configuration
 
-All settings are configurable in-game via the OpenMW settings menu under **SPT Limits**. Changes take effect immediately and are saved per-save. Defaults come from `scripts/sptLimits/config.lua`.
+All settings are configurable in-game via the OpenMW settings menu under **SPT Limits**. Changes take effect immediately and are saved per-save. Defaults come from `scripts/sptLimits/shared/config.lua`.
 
 **Potions group:**
 - `Potion Limit` — enable the potion drinking limit (default: on)
 - `Tracking Mode` — choose between Counter (shared cooldown) and Slots (individual per-potion tracking) (default: `counter`)
-- `HUD Counter` — show the potion HUD element (default: on)
+- `HUD Display` — full (timer, limit, icons), minimal (icons only), or hidden (default: `full`)
+- `HUD Position` — bottom (stacks upward from bottom-right) or top (stacks downward from top-right) (default: `bottom`)
 - `Exclude Sun's Dusk Potions` — potions from the Sun's Dusk mod do not count toward the limit (default: on)
 
 **Potions — Counter Mode:**
@@ -36,7 +37,7 @@ All settings are configurable in-game via the OpenMW settings menu under **SPT L
 - `Training Limit` — enable the per-level training session limit (default: on)
 - `Max Training Sessions` — maximum training sessions allowed per level (default: `5`)
 
-**Config-file only (edit `scripts/sptLimits/config.lua` directly):**
+**Config-file only (edit `scripts/sptLimits/shared/config.lua` directly):**
 - `potions` — potion record IDs that bypass the limit. Supports Lua patterns (e.g. `"^sd_.*"`)
 - `attributes` — per-attribute spell IDs that bypass the cap while active
 - `skills` — per-skill spell IDs that bypass the cap while active (e.g. Scroll of Icarian Flight for Acrobatics)
@@ -56,7 +57,7 @@ If any attribute exceeds the Attribute Cap or any skill exceeds the Skill Cap, y
 - Drinking another potion during cooldown increments the counter and resets the timer.
 - At the limit (default: 3), the inventory UI blocks further drinks.
 - Waiting or sleeping at least 1 game-hour clears the cooldown immediately.
-- HUD counter in the bottom-right shows countdown, drinks, and limit — e.g. `14.2s 2/3`.
+- HUD shows countdown, limit, and one icon per drink consumed — stacked vertically from the anchor corner.
 - **Exception:** Hotkeys bypass the inventory block. Drinking via hotkey past the limit causes overdose collapse.
 
 ## Potion Limit — Slots Mode
@@ -94,6 +95,11 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.0alpha4
+- Added HUD Display setting (full/minimal/hidden) replacing the old toggle.
+- Added HUD Position setting (bottom/top).
+- Added per-drink icons to Counter mode HUD.
+
 2.0alpha3
 - Added in-game settings page (Potions, Stats, Training groups).
 - Added Slots tracking mode as an alternative to the Counter mode.

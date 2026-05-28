@@ -5,12 +5,12 @@ local ui = require("openmw.ui")
 local storage = require("openmw.storage")
 local interfaces = require("openmw.interfaces")
 
-local settings = require("scripts.sptLimits.settings")
-local exclusions = require("scripts.sptLimits.exclusions")
-local statChecker = require("scripts.sptLimits.statChecker")
-local training = require("scripts.sptLimits.training")
-local potionCounter = require("scripts.sptLimits.potionCounter")
-local potionSlots = require("scripts.sptLimits.potionSlots")
+local settings = require("scripts.sptLimits.player.settings")
+local exclusions = require("scripts.sptLimits.shared.exclusions")
+local statChecker = require("scripts.sptLimits.player.statChecker")
+local training = require("scripts.sptLimits.player.training")
+local potionCounter = require("scripts.sptLimits.player.potionCounter")
+local potionSlots = require("scripts.sptLimits.player.potionSlots")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
@@ -64,6 +64,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         potionCounter.state.overdoseCollapse = false
         potionCounter.state.potionSpellIdsInitialized = false
         potionCounter.state.knownPotionSpellIds = {}
+        potionCounter.state.drinkOverdose = false
         potionSlots.state.potionSpellIdsInitialized = false
         potionSlots.state.knownPotionSpellIds = {}
     end
@@ -260,6 +261,7 @@ return {
                 saved.timer = counterData.timer
                 saved.drinkHour = counterData.drinkHour
                 saved.overdoseCollapse = counterData.overdoseCollapse
+                saved.drinkIcons = counterData.drinkIcons
             end
 
             return saved

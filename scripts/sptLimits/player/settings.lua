@@ -1,7 +1,7 @@
 local storage = require("openmw.storage")
 local async = require("openmw.async")
 local interfaces = require("openmw.interfaces")
-local config = require("scripts.sptLimits.config")
+local config = require("scripts.sptLimits.shared.config")
 
 local l10n = "sptLimits"
 
@@ -32,11 +32,22 @@ local definitions = {
         type = "string",
         default = config.hudCounterMode,
         renderer = "select",
-        options = { "detailed", "compact", "minimal", "hidden" },
+        options = { "full", "minimal", "hidden" },
         group = "sptLimitsPotions",
         l10nName = "settingHudCounterModeName",
         l10nDesc = "settingHudCounterModeDesc",
         order = 2,
+    },
+    hudPosition = {
+        key = "hudPosition",
+        type = "string",
+        default = config.hudPosition,
+        renderer = "select",
+        options = { "bottom", "top" },
+        group = "sptLimitsPotions",
+        l10nName = "settingHudPositionName",
+        l10nDesc = "settingHudPositionDesc",
+        order = 3,
     },
     excludeSunsDusk = {
         key = "excludeSunsDusk",
@@ -46,7 +57,7 @@ local definitions = {
         group = "sptLimitsPotions",
         l10nName = "settingExcludeSunsDuskName",
         l10nDesc = "settingExcludeSunsDuskDesc",
-        order = 3,
+        order = 4,
     },
     potionLimit = {
         key = "potionLimit",

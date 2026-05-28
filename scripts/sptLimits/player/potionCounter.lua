@@ -4,8 +4,8 @@ local types = require("openmw.types")
 local ui = require("openmw.ui")
 local storage = require("openmw.storage")
 
-local settings = require("scripts.sptLimits.settings")
-local exclusions = require("scripts.sptLimits.exclusions")
+local settings = require("scripts.sptLimits.player.settings")
+local exclusions = require("scripts.sptLimits.shared.exclusions")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
@@ -19,12 +19,14 @@ local state = {
     overdoseCollapse = false,
     knownPotionSpellIds = {},
     potionSpellIdsInitialized = false,
+    drinkIcons = {},
 }
 
 local lastSent = {
     drinkCount = nil,
     countdown = nil,
     potionLimit = nil,
+    drinkIcons = nil,
     globalKnockedOut = nil,
     globalOverdose = nil,
 }
@@ -33,6 +35,7 @@ local function resetLastSent()
     lastSent.drinkCount = nil
     lastSent.countdown = nil
     lastSent.potionLimit = nil
+    lastSent.drinkIcons = nil
     lastSent.globalKnockedOut = nil
     lastSent.globalOverdose = nil
 end
@@ -51,6 +54,7 @@ local function updatePotionTimer(dt)
         state.drinkOverdose = false
         state.potionSpellIdsInitialized = false
         state.knownPotionSpellIds = {}
+        state.drinkIcons = {}
         return
     end
 
@@ -63,6 +67,7 @@ local function updatePotionTimer(dt)
         state.drinkOverdose = false
         state.potionSpellIdsInitialized = false
         state.knownPotionSpellIds = {}
+        state.drinkIcons = {}
     end
 end
 
@@ -94,7 +99,7 @@ local function detectDrinks(knockedOutRef)
         local rok, rec = pcall(types.Potion.record, spell.id)
         if rok and rec then
             if not isPotionExcluded(spell.id, excludeSunsDusk) then
-                currentIds[spell.activeSpellId] = true
+                currentIds[spell.activeSpellId] = spell
             elseif not excludedPotions[spell.id] then
                 excludedPotions[spell.id] = true
                 core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = spell.id })
@@ -103,11 +108,41 @@ local function detectDrinks(knockedOutRef)
     end
 
     if not state.potionSpellIdsInitialized then
-        state.knownPotionSpellIds = currentIds
+        state.knownPotionSpellIds = {}
+        for id, _ in pairs(currentIds) do
+            state.knownPotionSpellIds[id] = true
+        end
         state.potionSpellIdsInitialized = true
     else
-        for id, _ in pairs(currentIds) do
+        for id, spell in pairs(currentIds) do
             if not state.knownPotionSpellIds[id] then
+                local icon = nil
+                if spell.effects then
+                    local longestDuration = 0
+                    for _, effect in pairs(spell.effects) do
+                        if effect.duration and effect.duration > longestDuration then
+                            longestDuration = effect.duration
+                            if effect.id then
+                                local mgef = core.magic.effects.records[effect.id]
+                                if mgef and mgef.icon then
+                                    icon = mgef.icon
+                                end
+                            end
+                        end
+                    end
+                    if icon == nil then
+                        for _, effect in pairs(spell.effects) do
+                            if effect.id then
+                                local mgef = core.magic.effects.records[effect.id]
+                                if mgef and mgef.icon then
+                                    icon = mgef.icon
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+                state.drinkIcons[#state.drinkIcons + 1] = icon or ""
                 handleDrinkDetected(knockedOutRef)
                 state.knownPotionSpellIds[id] = true
             end
@@ -143,6 +178,11 @@ local function writeStorage()
         section:set("potionLimit", currentPotionLimit)
         lastSent.potionLimit = currentPotionLimit
     end
+    local iconsStr = table.concat(state.drinkIcons, "|")
+    if lastSent.drinkIcons ~= iconsStr then
+        section:set("drinkIcons", iconsStr)
+        lastSent.drinkIcons = iconsStr
+    end
 end
 
 local function sendStateEvent(knockedOut)
@@ -165,6 +205,7 @@ local function reset()
     state.overdoseCollapse = false
     state.knownPotionSpellIds = {}
     state.potionSpellIdsInitialized = false
+    state.drinkIcons = {}
     resetLastSent()
 end
 
@@ -174,11 +215,13 @@ local function onLoad(data)
         state.timer = data.timer or 0
         state.drinkHour = data.drinkHour or 0
         state.overdoseCollapse = data.overdoseCollapse or false
+        state.drinkIcons = data.drinkIcons or {}
     else
         state.drinkCount = 0
         state.timer = 0
         state.drinkHour = 0
         state.overdoseCollapse = false
+        state.drinkIcons = {}
     end
     state.drinkOverdose = (state.drinkCount >= settings.get("potionLimit"))
     state.knownPotionSpellIds = {}
@@ -192,6 +235,7 @@ local function onSave()
         timer = state.timer,
         drinkHour = state.drinkHour,
         overdoseCollapse = state.overdoseCollapse,
+        drinkIcons = state.drinkIcons,
     }
 end
 

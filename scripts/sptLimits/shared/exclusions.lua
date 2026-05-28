@@ -1,5 +1,5 @@
 local interfaces = require("openmw.interfaces")
-local config = require("scripts.sptLimits.config")
+local config = require("scripts.sptLimits.shared.config")
 
 local excludedPotions = {}
 local excludedPotionPatterns = {}
