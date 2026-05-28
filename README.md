@@ -98,7 +98,7 @@ Do whatever you want. Just credit me.
 2.0alpha4
 - Added HUD Display setting (full/minimal/hidden) replacing the old toggle.
 - Added HUD Position setting (bottom/top).
-- Added per-drink icons to counter mode HUD.
+- Added per-drink icons to Counter mode HUD.
 
 2.0alpha3
 - Added in-game settings page (Potions, Stats, Training groups).
