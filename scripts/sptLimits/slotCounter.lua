@@ -75,10 +75,10 @@ local initialized = false
 
 local function tick()
     local settingsSection = storage.playerSection("sptLimitsPotions")
-    local hudCounterEnabled = settingsSection:get("hudCounterEnabled")
+    local hudCounterMode = settingsSection:get("hudCounterMode")
     local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
 
-    if hudCounterEnabled == nil and potionLimitEnabled == nil then
+    if hudCounterMode == nil and potionLimitEnabled == nil then
         if not initialized then
             return
         end
@@ -89,7 +89,7 @@ local function tick()
     local stateSection = storage.playerSection("sptLimitsState")
     local trackingMode = stateSection:get("trackingMode")
 
-    if trackingMode ~= "slots" or hudCounterEnabled == false or potionLimitEnabled == false then
+    if trackingMode ~= "slots" or hudCounterMode == "hidden" or potionLimitEnabled == false then
         for i = 1, maxSlots do
             if elements[i].layout.props.visible then
                 elements[i].layout.props.visible = false
@@ -131,10 +131,20 @@ local function tick()
                 local textWidget = el.layout.content[1]
                 local color = isOverflow and overflowColor or normalColor
                 textWidget.props.textColor = color
-                if countdown >= 0.05 then
-                    textWidget.props.text = string.format("%.1fs ", countdown)
+                if hudCounterMode == "minimal" then
+                    textWidget.props.text = ""
+                elseif countdown >= 0.05 then
+                    if hudCounterMode == "compact" then
+                        textWidget.props.text = string.format("%ds ", math.floor(countdown))
+                    else
+                        textWidget.props.text = string.format("%.1fs ", countdown)
+                    end
                 else
-                    textWidget.props.text = "0.0s "
+                    if hudCounterMode == "compact" then
+                        textWidget.props.text = "0s "
+                    else
+                        textWidget.props.text = "0.0s "
+                    end
                 end
 
                 el:update()

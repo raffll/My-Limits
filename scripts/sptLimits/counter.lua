@@ -21,10 +21,10 @@ local initialized = false
 
 local function tick()
     local settingsSection = storage.playerSection("sptLimitsPotions")
-    local hudCounterEnabled = settingsSection:get("hudCounterEnabled")
+    local hudCounterMode = settingsSection:get("hudCounterMode")
     local potionLimitEnabled = settingsSection:get("potionLimitEnabled")
 
-    if hudCounterEnabled == nil and potionLimitEnabled == nil then
+    if hudCounterMode == nil and potionLimitEnabled == nil then
         if not initialized then
             return
         end
@@ -32,7 +32,7 @@ local function tick()
         initialized = true
     end
 
-    if hudCounterEnabled == false or potionLimitEnabled == false then
+    if hudCounterMode == "hidden" or potionLimitEnabled == false then
         element.layout.props.visible = false
         element:update()
         return
@@ -58,7 +58,13 @@ local function tick()
         local hide = vals.drinkCount == 0
         element.layout.props.visible = not hide
         local limit = vals.potionLimit or 3
-        element.layout.props.text = string.format("%.1fs %d/%d", vals.countdown, vals.drinkCount, limit)
+        local timerPart = ""
+        if hudCounterMode == "detailed" then
+            timerPart = string.format("%.1fs ", vals.countdown)
+        elseif hudCounterMode == "compact" then
+            timerPart = string.format("%ds ", math.floor(vals.countdown))
+        end
+        element.layout.props.text = timerPart .. string.format("%d/%d", vals.drinkCount, limit)
         element:update()
     end
 end

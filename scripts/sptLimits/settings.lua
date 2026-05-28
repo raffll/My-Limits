@@ -27,14 +27,15 @@ local definitions = {
         l10nDesc = "settingPotionTrackingModeDesc",
         order = 1,
     },
-    hudCounterEnabled = {
-        key = "hudCounterEnabled",
-        type = "boolean",
-        default = config.hudCounterEnabled,
-        renderer = "checkbox",
+    hudCounterMode = {
+        key = "hudCounterMode",
+        type = "string",
+        default = config.hudCounterMode,
+        renderer = "select",
+        options = { "detailed", "compact", "minimal", "hidden" },
         group = "sptLimitsPotions",
-        l10nName = "settingHudCounterEnabledName",
-        l10nDesc = "settingHudCounterEnabledDesc",
+        l10nName = "settingHudCounterModeName",
+        l10nDesc = "settingHudCounterModeDesc",
         order = 2,
     },
     excludeSunsDusk = {

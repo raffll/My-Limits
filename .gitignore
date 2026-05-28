@@ -4,3 +4,4 @@ meta.ini
 *.bak
 *.omwscripts.esp
 *.code-workspace
+.kiro/prompt.txt
