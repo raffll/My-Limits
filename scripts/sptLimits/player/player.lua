@@ -261,6 +261,7 @@ return {
                 saved.timer = counterData.timer
                 saved.drinkHour = counterData.drinkHour
                 saved.overdoseCollapse = counterData.overdoseCollapse
+                saved.drinkIcons = counterData.drinkIcons
             end
 
             return saved
