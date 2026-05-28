@@ -84,7 +84,7 @@ Other mods can use `require('openmw.interfaces').sptLimits`:
 ## Compatibility
 
 - Incompatible with mods that override fatigue calculation (uses Str + Wil + Agi + End).
-- Should be compatible with Potion Thrower if loaded after this mod.
+- Should be compatible with Potion Thrower as long as Potion Thrower is loaded after this mod.
 - Other mods can use the Lua interface to exclude their potions/food items.
 
 ## Permissions

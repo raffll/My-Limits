@@ -335,6 +335,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         ui.showMessage(L("recovered"))
         restoreFatigue()
         state.knockedOut = false
+        state.overdoseCollapse = false
         state.potionSpellIdsInitialized = false
         state.knownPotionSpellIds = {}
     end
@@ -443,6 +444,15 @@ interfaces.SkillProgression.addSkillLevelUpHandler(function(skillid, source, opt
     end
 end)
 
+local function clearKnockoutIfActive()
+    if state.knockedOut then
+        restoreFatigue()
+        state.knockedOut = false
+        state.overdoseCollapse = false
+        state.drinkOverdose = false
+    end
+end
+
 settings.subscribe(function(key, newValue)
     if key == "trainingLimitEnabled" then
         if not newValue then
@@ -459,7 +469,31 @@ settings.subscribe(function(key, newValue)
             end
         end
     elseif key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
+        if (key == "potionLimitEnabled" or key == "statLimitEnabled") and not newValue then
+            if not settings.get("potionLimitEnabled") and not settings.get("statLimitEnabled") then
+                clearKnockoutIfActive()
+            end
+        end
         sendSettingsToGlobal()
+    elseif key == "potionSlotCount" then
+        if state.potionTrackingMode == "slots" then
+            local wasKnockedOut = state.knockedOut
+            state.knockedOut = false
+            state.overdoseCollapse = false
+            initSlots()
+            state.knownPotionSpellIds = {}
+            state.potionSpellIdsInitialized = false
+            clearSlotStorage()
+            resetLastSent()
+            if wasKnockedOut then
+                restoreFatigue()
+            end
+            core.sendGlobalEvent("sptLimitsStateUpdate", {
+                knockedOut = false,
+                allNormalSlotsFull = false,
+                potionTrackingMode = "slots",
+            })
+        end
     elseif key == "potionTrackingMode" then
         if newValue ~= state.potionTrackingMode then
             local wasKnockedOut = state.knockedOut
