@@ -2,7 +2,7 @@ return {
     potionLimitEnabled = true,
     statLimitEnabled = true,
     trainingLimitEnabled = true,
-    hudCounterMode = "detailed",
+    hudCounterMode = "full",
 
     attributeCap = 300,
     skillCap = 150,

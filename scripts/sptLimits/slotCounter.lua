@@ -134,17 +134,9 @@ local function tick()
                 if hudCounterMode == "minimal" then
                     textWidget.props.text = ""
                 elseif countdown >= 0.05 then
-                    if hudCounterMode == "compact" then
-                        textWidget.props.text = string.format("%ds ", math.floor(countdown))
-                    else
-                        textWidget.props.text = string.format("%.1fs ", countdown)
-                    end
+                    textWidget.props.text = string.format("%.1fs ", countdown)
                 else
-                    if hudCounterMode == "compact" then
-                        textWidget.props.text = "0s "
-                    else
-                        textWidget.props.text = "0.0s "
-                    end
+                    textWidget.props.text = "0.0s "
                 end
 
                 el:update()
