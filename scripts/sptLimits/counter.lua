@@ -79,6 +79,7 @@ end
 
 local initialized = false
 local lastPosition = nil
+local lastMode = nil
 
 local function parseIcons(iconsStr)
     if not iconsStr or iconsStr == "" then
@@ -91,11 +92,14 @@ local function parseIcons(iconsStr)
     return icons
 end
 
-local function applyPosition(position)
-    if position == lastPosition then
+local function applyPosition(position, mode)
+    if position == lastPosition and mode == lastMode then
         return
     end
     lastPosition = position
+    lastMode = mode
+
+    local iconOffset = mode == "minimal" and 0 or 2
 
     if position == "top" then
         local topBaseY = 12
@@ -108,7 +112,7 @@ local function applyPosition(position)
         for i = 1, maxIcons do
             iconElements[i].layout.props.relativePosition = util.vector2(1, 0)
             iconElements[i].layout.props.anchor = util.vector2(1, 0)
-            iconElements[i].layout.props.position = util.vector2(-12, topBaseY + (i + 1) * slotSpacing)
+            iconElements[i].layout.props.position = util.vector2(-12, topBaseY + (i - 1 + iconOffset) * slotSpacing)
         end
     else
         local bottomBaseY = -90 - 32 + 4
@@ -121,7 +125,7 @@ local function applyPosition(position)
         for i = 1, maxIcons do
             iconElements[i].layout.props.relativePosition = util.vector2(1, 1)
             iconElements[i].layout.props.anchor = util.vector2(1, 1)
-            iconElements[i].layout.props.position = util.vector2(-12, bottomBaseY - (i + 1) * slotSpacing)
+            iconElements[i].layout.props.position = util.vector2(-12, bottomBaseY - (i - 1 + iconOffset) * slotSpacing)
         end
     end
 end
@@ -162,7 +166,7 @@ local function tick()
     end
 
     local hudPosition = settingsSection:get("hudPosition") or "bottom"
-    applyPosition(hudPosition)
+    applyPosition(hudPosition, hudCounterMode)
 
     local stateSection = storage.playerSection("sptLimitsState")
     local trackingMode = stateSection:get("trackingMode")
