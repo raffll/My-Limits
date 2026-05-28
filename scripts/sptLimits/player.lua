@@ -35,6 +35,61 @@ local skippedAttributes = {}
 local skippedSkills = {}
 local lastSent = {}
 
+-- Maximum possible slot count (potionSlotCount max + 1 overflow)
+local maxSlotIndex = 11
+
+local attributeNames = {
+    "strength", "intelligence", "willpower", "agility",
+    "speed", "endurance", "personality", "luck",
+}
+
+local skillNames = {
+    "alchemy", "longblade", "acrobatics", "bluntweapon", "enchant", "security",
+    "axe", "conjuration", "sneak", "armorer", "alteration", "lightarmor",
+    "mediumarmor", "destruction", "marksman", "heavyarmor", "mysticism",
+    "shortblade", "spear", "restoration", "handtohand", "block", "illusion",
+    "mercantile", "athletics", "unarmored", "speechcraft",
+}
+
+local function restoreFatigue()
+    local attrs = types.Actor.stats.attributes
+    local baseMax = attrs.strength(self).modified
+        + attrs.willpower(self).modified
+        + attrs.agility(self).modified
+        + attrs.endurance(self).modified
+    types.Actor.stats.dynamic.fatigue(self).base = baseMax
+    types.Actor.stats.dynamic.fatigue(self).current = 0
+end
+
+local function resetLastSent()
+    lastSent.drinkCount = nil
+    lastSent.countdown = nil
+    lastSent.potionLimit = nil
+    lastSent.globalKnockedOut = nil
+    lastSent.globalOverdose = nil
+    lastSent.slotTrackingMode = nil
+    lastSent.slotCount = nil
+    lastSent.occupiedSlots = nil
+    lastSent.overflowOccupied = nil
+    lastSent.slotKnockedOut = nil
+    lastSent.slotAllFull = nil
+    for i = 1, maxSlotIndex do
+        lastSent["slot" .. i .. "Countdown"] = nil
+        lastSent["slot" .. i .. "Icon"] = nil
+    end
+end
+
+local function clearSlotStorage()
+    local section = storage.playerSection("sptLimitsState")
+    for i = 1, maxSlotIndex do
+        section:set("slot" .. i .. "Countdown", 0)
+        section:set("slot" .. i .. "Icon", "")
+    end
+    section:set("occupiedSlots", 0)
+    section:set("overflowOccupied", false)
+    section:set("slotCount", 0)
+end
+
 local function initSlots()
     local slotCount = settings.get("potionSlotCount")
     state.slots = {}
@@ -89,13 +144,7 @@ end
 
 local function handleOverflowRecovery()
     state.knockedOut = false
-    local attrs = types.Actor.stats.attributes
-    local baseMax = attrs.strength(self).modified
-        + attrs.willpower(self).modified
-        + attrs.agility(self).modified
-        + attrs.endurance(self).modified
-    types.Actor.stats.dynamic.fatigue(self).base = baseMax
-    types.Actor.stats.dynamic.fatigue(self).current = 0
+    restoreFatigue()
 end
 
 local function tickSlots(dt)
@@ -221,21 +270,7 @@ local function initState()
         initSlots()
     end
 
-    lastSent.drinkCount = nil
-    lastSent.countdown = nil
-    lastSent.potionLimit = nil
-    lastSent.globalKnockedOut = nil
-    lastSent.globalOverdose = nil
-    lastSent.slotTrackingMode = nil
-    lastSent.slotCount = nil
-    lastSent.occupiedSlots = nil
-    lastSent.overflowOccupied = nil
-    lastSent.slotKnockedOut = nil
-    lastSent.slotAllFull = nil
-    for i = 1, 11 do
-        lastSent["slot" .. i .. "Countdown"] = nil
-        lastSent["slot" .. i .. "Icon"] = nil
-    end
+    resetLastSent()
 end
 
 local function hasExcludedSpellActive(spellSet)
@@ -261,115 +296,20 @@ end
 
 local function checkAttributes(cap)
     local attrs = types.Actor.stats.attributes
-    if not shouldSkipAttribute("strength") and attrs.strength(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("intelligence") and attrs.intelligence(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("willpower") and attrs.willpower(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("agility") and attrs.agility(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("speed") and attrs.speed(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("endurance") and attrs.endurance(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("personality") and attrs.personality(self).modified > cap then
-        return true
-    end
-    if not shouldSkipAttribute("luck") and attrs.luck(self).modified > cap then
-        return true
+    for _, name in ipairs(attributeNames) do
+        if not shouldSkipAttribute(name) and attrs[name](self).modified > cap then
+            return true
+        end
     end
     return false
 end
 
 local function checkSkills(cap)
     local skills = types.NPC.stats.skills
-    if not shouldSkipSkill("alchemy") and skills.alchemy(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("longblade") and skills.longblade(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("acrobatics") and skills.acrobatics(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("bluntweapon") and skills.bluntweapon(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("enchant") and skills.enchant(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("security") and skills.security(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("axe") and skills.axe(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("conjuration") and skills.conjuration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("sneak") and skills.sneak(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("armorer") and skills.armorer(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("alteration") and skills.alteration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("lightarmor") and skills.lightarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mediumarmor") and skills.mediumarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("destruction") and skills.destruction(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("marksman") and skills.marksman(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("heavyarmor") and skills.heavyarmor(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mysticism") and skills.mysticism(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("shortblade") and skills.shortblade(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("spear") and skills.spear(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("restoration") and skills.restoration(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("handtohand") and skills.handtohand(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("block") and skills.block(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("illusion") and skills.illusion(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("mercantile") and skills.mercantile(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("athletics") and skills.athletics(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("unarmored") and skills.unarmored(self).modified > cap then
-        return true
-    end
-    if not shouldSkipSkill("speechcraft") and skills.speechcraft(self).modified > cap then
-        return true
+    for _, name in ipairs(skillNames) do
+        if not shouldSkipSkill(name) and skills[name](self).modified > cap then
+            return true
+        end
     end
     return false
 end
@@ -393,13 +333,7 @@ local function handleKnockoutRecovery(limitAttribute, limitSkill)
         types.Actor.stats.dynamic.fatigue(self).current = 0
     elseif state.knockedOut and not anyLimit then
         ui.showMessage(L("recovered"))
-        local attrs = types.Actor.stats.attributes
-        local baseMax = attrs.strength(self).modified
-            + attrs.willpower(self).modified
-            + attrs.agility(self).modified
-            + attrs.endurance(self).modified
-        types.Actor.stats.dynamic.fatigue(self).base = baseMax
-        types.Actor.stats.dynamic.fatigue(self).current = 0
+        restoreFatigue()
         state.knockedOut = false
         state.potionSpellIdsInitialized = false
         state.knownPotionSpellIds = {}
@@ -550,46 +484,20 @@ settings.subscribe(function(key, newValue)
 
             -- Restore fatigue if player was knocked out
             if wasKnockedOut then
-                local attrs = types.Actor.stats.attributes
-                local baseMax = attrs.strength(self).modified
-                    + attrs.willpower(self).modified
-                    + attrs.agility(self).modified
-                    + attrs.endurance(self).modified
-                types.Actor.stats.dynamic.fatigue(self).base = baseMax
-                types.Actor.stats.dynamic.fatigue(self).current = 0
+                restoreFatigue()
             end
             state.knownPotionSpellIds = {}
             state.potionSpellIdsInitialized = false
 
             -- Reset all lastSent values to force fresh writes
-            lastSent.drinkCount = nil
-            lastSent.countdown = nil
-            lastSent.potionLimit = nil
-            lastSent.globalKnockedOut = nil
-            lastSent.globalOverdose = nil
-            lastSent.slotTrackingMode = nil
-            lastSent.slotCount = nil
-            lastSent.occupiedSlots = nil
-            lastSent.overflowOccupied = nil
-            lastSent.slotKnockedOut = nil
-            lastSent.slotAllFull = nil
-            for i = 1, 11 do
-                lastSent["slot" .. i .. "Countdown"] = nil
-                lastSent["slot" .. i .. "Icon"] = nil
-            end
+            resetLastSent()
 
             -- Clear storage for the mode we're leaving
             local section = storage.playerSection("sptLimitsState")
             section:set("trackingMode", newValue)
             if newValue == "counter" then
                 -- Leaving slots mode: zero out all slot storage keys
-                for i = 1, 11 do
-                    section:set("slot" .. i .. "Countdown", 0)
-                    section:set("slot" .. i .. "Icon", "")
-                end
-                section:set("occupiedSlots", 0)
-                section:set("overflowOccupied", false)
-                section:set("slotCount", 0)
+                clearSlotStorage()
             else
                 -- Leaving counter mode: zero out counter storage keys
                 section:set("drinkCount", 0)
@@ -628,13 +536,7 @@ return {
                 section:set("countdown", 0)
                 section:set("potionLimit", settings.get("potionLimit"))
                 -- Clear stale slot data
-                for i = 1, 11 do
-                    section:set("slot" .. i .. "Countdown", 0)
-                    section:set("slot" .. i .. "Icon", "")
-                end
-                section:set("occupiedSlots", 0)
-                section:set("overflowOccupied", false)
-                section:set("slotCount", 0)
+                clearSlotStorage()
             end
         end,
         onLoad = function(data)
@@ -766,13 +668,7 @@ return {
             local section = storage.playerSection("sptLimitsState")
             section:set("trackingMode", state.potionTrackingMode)
             if state.potionTrackingMode == "counter" then
-                for i = 1, 11 do
-                    section:set("slot" .. i .. "Countdown", 0)
-                    section:set("slot" .. i .. "Icon", "")
-                end
-                section:set("occupiedSlots", 0)
-                section:set("overflowOccupied", false)
-                section:set("slotCount", 0)
+                clearSlotStorage()
             end
         end,
         onSave = function()
