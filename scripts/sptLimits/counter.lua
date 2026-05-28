@@ -39,8 +39,15 @@ local function tick()
         return
     end
 
+    local stateSection = storage.playerSection("sptLimitsState")
+    local trackingMode = stateSection:get("trackingMode")
+    if trackingMode == "slots" then
+        element.layout.props.visible = false
+        element:update()
+        return
+    end
+
     local ok, vals = pcall(function()
-        local stateSection = storage.playerSection("sptLimitsState")
         return {
             countdown = stateSection:get("countdown"),
             drinkCount = stateSection:get("drinkCount"),

@@ -18,6 +18,8 @@ local settingsCache = {
 local playerState = {
     knockedOut = false,
     drinkOverdose = false,
+    allNormalSlotsFull = false,
+    potionTrackingMode = "counter",
 }
 
 interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
@@ -33,6 +35,19 @@ interfaces.ItemUsage.addHandlerForType(types.Potion, function(potion, player)
         return nil
     end
 
+    if playerState.potionTrackingMode == "slots" then
+        if playerState.knockedOut then
+            player:sendEvent("sptLimitsShowMessage", { text = L("cantDrinkNow") })
+            return false
+        end
+        if playerState.allNormalSlotsFull then
+            player:sendEvent("sptLimitsShowMessage", { text = L("cantDrinkMore") })
+            return false
+        end
+        return nil
+    end
+
+    -- Counter mode (default)
     if playerState.knockedOut then
         if playerState.drinkOverdose then
             player:sendEvent("sptLimitsShowMessage", { text = L("cantDrinkNow") })
@@ -103,6 +118,8 @@ return {
             if data then
                 playerState.knockedOut = data.knockedOut or false
                 playerState.drinkOverdose = data.drinkOverdose or false
+                playerState.allNormalSlotsFull = data.allNormalSlotsFull or false
+                playerState.potionTrackingMode = data.potionTrackingMode or "counter"
             end
         end,
         sptLimitsSettingsUpdate = function(data)

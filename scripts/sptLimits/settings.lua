@@ -6,7 +6,7 @@ local config = require("scripts.sptLimits.config")
 local l10n = "sptLimits"
 
 local definitions = {
-    -- Potions group
+    -- Potions group (global potion settings)
     potionLimitEnabled = {
         key = "potionLimitEnabled",
         type = "boolean",
@@ -17,29 +17,16 @@ local definitions = {
         l10nDesc = "settingPotionLimitEnabledDesc",
         order = 0,
     },
-    potionLimit = {
-        key = "potionLimit",
-        type = "number",
-        default = config.potionLimit,
-        min = 1,
-        max = 99,
-        renderer = "number",
+    potionTrackingMode = {
+        key = "potionTrackingMode",
+        type = "string",
+        default = config.potionTrackingMode,
+        renderer = "select",
+        options = { "counter", "slots" },
         group = "sptLimitsPotions",
-        l10nName = "settingPotionLimitName",
-        l10nDesc = "settingPotionLimitDesc",
+        l10nName = "settingPotionTrackingModeName",
+        l10nDesc = "settingPotionTrackingModeDesc",
         order = 1,
-    },
-    potionCooldown = {
-        key = "potionCooldown",
-        type = "number",
-        default = config.potionCooldown,
-        min = 1,
-        max = 300,
-        renderer = "number",
-        group = "sptLimitsPotions",
-        l10nName = "settingPotionCooldownName",
-        l10nDesc = "settingPotionCooldownDesc",
-        order = 2,
     },
     hudCounterEnabled = {
         key = "hudCounterEnabled",
@@ -49,7 +36,7 @@ local definitions = {
         group = "sptLimitsPotions",
         l10nName = "settingHudCounterEnabledName",
         l10nDesc = "settingHudCounterEnabledDesc",
-        order = 3,
+        order = 2,
     },
     excludeSunsDusk = {
         key = "excludeSunsDusk",
@@ -59,7 +46,45 @@ local definitions = {
         group = "sptLimitsPotions",
         l10nName = "settingExcludeSunsDuskName",
         l10nDesc = "settingExcludeSunsDuskDesc",
-        order = 4,
+        order = 3,
+    },
+    -- Counter group (counter-mode settings)
+    potionLimit = {
+        key = "potionLimit",
+        type = "number",
+        default = config.potionLimit,
+        min = 1,
+        max = 99,
+        renderer = "number",
+        group = "sptLimitsPotionsCounter",
+        l10nName = "settingPotionLimitName",
+        l10nDesc = "settingPotionLimitDesc",
+        order = 0,
+    },
+    potionCooldown = {
+        key = "potionCooldown",
+        type = "number",
+        default = config.potionCooldown,
+        min = 1,
+        max = 300,
+        renderer = "number",
+        group = "sptLimitsPotionsCounter",
+        l10nName = "settingPotionCooldownName",
+        l10nDesc = "settingPotionCooldownDesc",
+        order = 1,
+    },
+    -- Slots group (slots-mode settings)
+    potionSlotCount = {
+        key = "potionSlotCount",
+        type = "number",
+        default = config.potionSlotCount,
+        min = 1,
+        max = 10,
+        renderer = "number",
+        group = "sptLimitsPotionsSlots",
+        l10nName = "settingPotionSlotCountName",
+        l10nDesc = "settingPotionSlotCountDesc",
+        order = 0,
     },
     -- Stats group
     statLimitEnabled = {
@@ -126,7 +151,7 @@ local previousValues = {}
 local subscribed = false
 local suppressNotifications = false
 
-local groupKeys = { "sptLimitsPotions", "sptLimitsStats", "sptLimitsTraining" }
+local groupKeys = { "sptLimitsPotions", "sptLimitsPotionsCounter", "sptLimitsPotionsSlots", "sptLimitsStats", "sptLimitsTraining" }
 
 local settings = {
     l10n = l10n,
@@ -156,6 +181,8 @@ function settings.registerPage()
 
     local groups = {
         { key = "sptLimitsPotions", name = "settingsPotionsTitle" },
+        { key = "sptLimitsPotionsCounter", name = "settingsPotionsCounterTitle" },
+        { key = "sptLimitsPotionsSlots", name = "settingsPotionsSlotsTitle" },
         { key = "sptLimitsStats", name = "settingsStatsTitle" },
         { key = "sptLimitsTraining", name = "settingsTrainingTitle" },
     }
@@ -173,6 +200,12 @@ function settings.registerPage()
                 }
                 if def.renderer == "number" then
                     entry.argument = { min = def.min, max = def.max }
+                elseif def.renderer == "select" then
+                    local items = {}
+                    for _, opt in ipairs(def.options) do
+                        items[#items + 1] = opt
+                    end
+                    entry.argument = { l10n = l10n, items = items }
                 end
                 groupSettings[#groupSettings + 1] = entry
             end

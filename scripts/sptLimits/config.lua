@@ -11,6 +11,8 @@ return {
     potionLimit = 3,
     trainingLimit = 5,
     potionCooldown = 20, -- seconds
+    potionTrackingMode = "counter",
+    potionSlotCount = 4,
 
     -- Exclude Sun's Dusk survival mod potions from the limit.
     excludeSunsDusk = true,
