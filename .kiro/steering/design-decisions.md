@@ -91,11 +91,13 @@ Do NOT "fix" this by reordering the calls or adding early-return guards.
 The `interface` block in player.lua uses `version = 1` unless explicitly told otherwise. Do NOT bump the interface version number.
 
 
-## Config Cannot Be Changed Mid-Session
+## Config Defaults vs Runtime Settings
 
-The `config.lua` values (toggles, limits, caps, exclusions) are read once at script load and are never hot-reloaded during gameplay. There is no scenario where `potionLimitEnabled`, `statLimitEnabled`, `trainingLimitEnabled`, or any other config value changes while the game is running.
+The `config.lua` file provides **default values only**. At runtime, all toggles and numeric limits are managed by the settings system (`settings.lua`) and can be changed mid-session via the OpenMW settings UI. The `settings.subscribe` mechanism propagates changes to all consumers (player script, global script via events, HUD via storage).
 
-Do NOT add guards, fallback resets, or cleanup logic for "what if a config toggle changes mid-session" — it cannot happen.
+Only the exclusion lists (`potions`, `attributes`, `skills`) in `config.lua` are truly static — they are read once at script load and cannot be changed mid-session (except via the Lua interface for potions).
+
+Do NOT treat `config.lua` toggles/limits as the runtime source of truth. Always use `settings.get(key)` for current values.
 
 ## Training Window Uses registerWindow + removeMode
 
@@ -136,11 +138,11 @@ OpenMW resolves all script interfaces before gameplay begins. The `interfaces.Su
 Do NOT add deferred checks, retries, or "interface not yet available" guards for `interfaces.SunsDusk`.
 
 
-## Config-Only Toggles Are Never Persisted
+## Config Values Are Defaults, Not Runtime State
 
-Values that are purely controlled by `config.lua` toggles (e.g. `hudCounterEnabled`, `potionLimitEnabled`) must NOT be saved in `onSave` or written to storage for persistence purposes. They are read once at load from `config.lua` and that is the single source of truth.
+The `config.lua` toggles and limits (e.g. `hudCounterEnabled`, `potionLimitEnabled`, `attributeCap`) serve exclusively as **default values** for the settings system. They are referenced in `settings.lua` definitions as `default = config.X`. The actual runtime values live in `storage.playerSection` and are persisted per-save via `onSave`/`onLoad`.
 
-Do NOT add save/load logic, storage fields, or interface methods whose sole purpose is to persist a config-driven toggle across sessions.
+Do NOT read `config.X` directly at runtime for any value that has a corresponding settings definition. Always use `settings.get(key)`.
 
 
 ## Settings Persistence: onSave/onLoad Is the Source of Truth

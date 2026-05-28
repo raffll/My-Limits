@@ -384,10 +384,11 @@ return {
 
             state.knownPotionSpellIds = {}
             local activeSpells = types.Actor.activeSpells(self)
+            local excludeSunsDusk = settings.get("excludeSunsDusk")
             for _, spell in pairs(activeSpells) do
                 local rok, rec = pcall(types.Potion.record, spell.id)
                 if rok and rec then
-                    if not isPotionExcluded(spell.id) then
+                    if not isPotionExcluded(spell.id, excludeSunsDusk) then
                         state.knownPotionSpellIds[spell.activeSpellId] = true
                     elseif not excludedPotions[spell.id] then
                         excludedPotions[spell.id] = true
@@ -437,10 +438,11 @@ return {
             if settings.get("potionLimitEnabled") then
                 local currentIds = {}
                 local activeSpells = types.Actor.activeSpells(self)
+                local excludeSunsDusk = settings.get("excludeSunsDusk")
                 for _, spell in pairs(activeSpells) do
                     local rok, rec = pcall(types.Potion.record, spell.id)
                     if rok and rec then
-                        if not isPotionExcluded(spell.id) then
+                        if not isPotionExcluded(spell.id, excludeSunsDusk) then
                             currentIds[spell.activeSpellId] = true
                         elseif not excludedPotions[spell.id] then
                             -- Potion excluded by Sun's Dusk interface check; sync to global

@@ -12,30 +12,32 @@ content=SPT Limits.omwscripts
 
 ## Configuration
 
-All settings are in `scripts/sptLimits/config.lua`. Edit the file directly.
+All settings are configurable in-game via the OpenMW settings menu under **SPT Limits**. Changes take effect immediately and are saved per-save. Defaults come from `scripts/sptLimits/config.lua`.
 
-**Toggles:**
-- `potionLimitEnabled` — Enable potion consumption limit (default: `true`).
-- `statLimitEnabled` — Enable attribute/skill cap enforcement (default: `true`).
-- `trainingLimitEnabled` — Enable training session limit (default: `true`).
-- `hudCounterEnabled` — Show the potion cooldown HUD counter (default: `true`).
+**Potions group:**
+- `Potion Limit` — Enable the potion drinking limit (default: on).
+- `Max Potions` — Maximum number of potions allowed before the cooldown resets (default: `3`).
+- `Potion Cooldown` — Seconds before the potion counter resets (default: `20`).
+- `HUD Counter` — Show the potion drink counter on the HUD (default: on).
+- `Exclude Sun's Dusk Potions` — Potions from the Sun's Dusk mod do not count toward the limit (default: on).
 
-**Limits:**
-- `attributeCap` — Maximum allowed attribute value (default: `300`).
-- `skillCap` — Maximum allowed skill value (default: `150`).
-- `potionLimit` — Potions allowed per cooldown window (default: `3`).
-- `trainingLimit` — Training sessions allowed per level (default: `5`).
-- `potionCooldown` — Cooldown window in seconds (default: `20`).
+**Stats group:**
+- `Stat Limit` — Enable attribute and skill caps (default: on).
+- `Attribute Cap` — Maximum value for any attribute (default: `300`).
+- `Skill Cap` — Maximum value for any skill (default: `150`).
 
-**Exclusions:**
-- `excludeSunsDusk` — Automatically exclude Sun's Dusk survival mod potions from the limit (default: `true`).
+**Training group:**
+- `Training Limit` — Enable the per-level training session limit (default: on).
+- `Max Training Sessions` — Maximum training sessions allowed per level (default: `5`).
+
+**Config-file only (edit `scripts/sptLimits/config.lua` directly):**
 - `potions` — Potion record IDs that bypass the limit. Supports Lua patterns (e.g. `"^sd_.*"`).
 - `attributes` — Per-attribute spell IDs that bypass the cap while active.
 - `skills` — Per-skill spell IDs that bypass the cap while active (e.g. Scroll of Icarian Flight for Acrobatics).
 
 ## Stat Cap
 
-If any attribute exceeds `attributeCap` or any skill exceeds `skillCap`, your character collapses (fatigue drops to 0). To recover, wait for the fortify effect to expire or dispel it.
+If any attribute exceeds the Attribute Cap or any skill exceeds the Skill Cap, your character collapses (fatigue drops to 0). To recover, wait for the fortify effect to expire or dispel it.
 
 - While collapsed, you can't create potions, enchant, or repair.
 - For most vanilla items, waiting 1 hour is enough.
@@ -44,11 +46,11 @@ If any attribute exceeds `attributeCap` or any skill exceeds `skillCap`, your ch
 
 ## Potion Limit
 
-- Each potion drunk starts a 20-second cooldown timer.
+- Each potion drunk starts a cooldown timer (default: 20 seconds).
 - Drinking another potion during cooldown increments the counter and resets the timer.
 - At the limit (default: 3), the inventory UI blocks further drinks.
 - Waiting or sleeping at least 1 hour clears the cooldown immediately.
-- HUD counter in the bottom-right shows: `countdown drinks/limit`.
+- HUD counter in the bottom-right shows countdown, drinks, and limit — e.g. `14.2s 2/3`.
 - **Exception:** Hotkeys bypass the inventory block. Drinking via hotkey past the limit causes overdose collapse.
 
 ## Training Limit
@@ -77,8 +79,10 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
-2.0beta
+2.0alpha3
+- Added in-game settings page (Potions, Stats, Training groups).
 - Fixed HUD counter showing stale values from a previous save when starting a new game.
+- Fixed excludeSunsDusk setting toggle not being respected by hotkey drink detection.
 
 2.0alpha2
 - HUD counter can be toggled off via hudCounterEnabled.
