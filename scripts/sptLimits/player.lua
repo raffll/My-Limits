@@ -42,7 +42,7 @@ end
 
 local function handleKnockoutRecovery(limitAttribute, limitSkill)
     local anyLimit = limitAttribute or limitSkill or potionCounter.state.overdoseCollapse
-    if state.potionTrackingMode == "slots" and potionSlots.isOverflowOccupied() then
+    if state.potionTrackingMode == "slots" and potionSlots.areAllSlotsFull() then
         anyLimit = true
     end
 
@@ -113,7 +113,7 @@ settings.subscribe(function(key, newValue)
         end
         if key == "potionLimitEnabled" and not newValue and state.knockedOut then
             local potionCaused = potionCounter.state.overdoseCollapse
-                or (state.potionTrackingMode == "slots" and potionSlots.isOverflowOccupied())
+                or (state.potionTrackingMode == "slots" and potionSlots.areAllSlotsFull())
             if potionCaused then
                 if state.potionTrackingMode == "slots" then
                     local slotCount = settings.get("potionSlotCount")
@@ -132,7 +132,7 @@ settings.subscribe(function(key, newValue)
         elseif key == "statLimitEnabled" and not newValue and state.knockedOut then
             if
                 not potionCounter.state.overdoseCollapse
-                and not (state.potionTrackingMode == "slots" and potionSlots.isOverflowOccupied())
+                and not (state.potionTrackingMode == "slots" and potionSlots.areAllSlotsFull())
             then
                 restoreFatigue()
                 state.knockedOut = false

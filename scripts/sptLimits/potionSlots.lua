@@ -36,6 +36,7 @@ local function resetLastSent()
     lastSent.overflowOccupied = nil
     lastSent.slotKnockedOut = nil
     lastSent.slotAllFull = nil
+    lastSent.slotNormalFull = nil
     for i = 1, maxSlotIndex do
         lastSent["slot" .. i .. "Countdown"] = nil
         lastSent["slot" .. i .. "Icon"] = nil
@@ -72,6 +73,16 @@ local function getOccupiedNormalCount()
     return count
 end
 
+local function areAllSlotsFull()
+    local slotCount = settings.get("potionSlotCount")
+    for i = 1, slotCount + 1 do
+        if state.slots[i] and state.slots[i].activeSpellId == nil then
+            return false
+        end
+    end
+    return true
+end
+
 local function isOverflowOccupied()
     local slotCount = settings.get("potionSlotCount")
     local overflow = state.slots[slotCount + 1]
@@ -80,7 +91,7 @@ end
 
 local function assignDrinkToSlot(activeSpellId, longestDuration, icon)
     local slotCount = settings.get("potionSlotCount")
-    for i = 1, slotCount do
+    for i = 1, slotCount + 1 do
         if state.slots[i] and state.slots[i].activeSpellId == nil then
             state.slots[i].activeSpellId = activeSpellId
             state.slots[i].countdown = longestDuration
@@ -91,15 +102,7 @@ local function assignDrinkToSlot(activeSpellId, longestDuration, icon)
     return false
 end
 
-local function assignDrinkToOverflow(activeSpellId, longestDuration, icon, knockedOutRef)
-    local slotCount = settings.get("potionSlotCount")
-    local overflow = state.slots[slotCount + 1]
-    if overflow == nil then
-        return
-    end
-    overflow.activeSpellId = activeSpellId
-    overflow.countdown = longestDuration
-    overflow.icon = icon
+local function triggerOverdoseCollapse(knockedOutRef)
     knockedOutRef.value = true
     types.Actor.stats.dynamic.fatigue(self).current = -1
     ui.showMessage(L("overdose"))
@@ -181,15 +184,22 @@ local function writeStorage(knockedOut)
 end
 
 local function sendStateEvent(knockedOut)
-    local allFull = (getOccupiedNormalCount() == settings.get("potionSlotCount"))
-    if lastSent.slotKnockedOut ~= knockedOut or lastSent.slotAllFull ~= allFull then
+    local normalFull = (getOccupiedNormalCount() == settings.get("potionSlotCount"))
+    local allFull = areAllSlotsFull()
+    if
+        lastSent.slotKnockedOut ~= knockedOut
+        or lastSent.slotAllFull ~= allFull
+        or lastSent.slotNormalFull ~= normalFull
+    then
         core.sendGlobalEvent("sptLimitsStateUpdate", {
             knockedOut = knockedOut,
-            allNormalSlotsFull = allFull,
+            allNormalSlotsFull = normalFull,
+            allSlotsFull = allFull,
             potionTrackingMode = "slots",
         })
         lastSent.slotKnockedOut = knockedOut
         lastSent.slotAllFull = allFull
+        lastSent.slotNormalFull = normalFull
     end
 end
 
@@ -244,9 +254,7 @@ local function detectDrinks(knockedOutRef)
                     end
                 end
                 if not assignDrinkToSlot(activeSpellId, longestDuration, icon) then
-                    if not isOverflowOccupied() then
-                        assignDrinkToOverflow(activeSpellId, longestDuration, icon, knockedOutRef)
-                    end
+                    triggerOverdoseCollapse(knockedOutRef)
                 end
                 state.knownPotionSpellIds[activeSpellId] = true
             end
@@ -273,7 +281,7 @@ local function onUpdate(dt, knockedOutRef)
     end
     validateSlots(activeSpellIdSet)
 
-    if knockedOutRef.value and isOverflowOccupied() then
+    if knockedOutRef.value and areAllSlotsFull() then
         types.Actor.stats.dynamic.fatigue(self).base = 0
         types.Actor.stats.dynamic.fatigue(self).current = 0
     end
@@ -349,8 +357,15 @@ local function onLoad(data, knockedOutRef)
                 end
             end
 
-            local overflow = state.slots[targetSize]
-            if overflow and overflow.activeSpellId ~= nil then
+            local allFull = true
+            for i = 1, targetSize do
+                local slot = state.slots[i]
+                if slot.activeSpellId == nil then
+                    allFull = false
+                    break
+                end
+            end
+            if allFull then
                 knockedOutRef.value = true
             end
         end
@@ -379,6 +394,7 @@ return {
     state = state,
     initSlots = initSlots,
     isOverflowOccupied = isOverflowOccupied,
+    areAllSlotsFull = areAllSlotsFull,
     getOccupiedNormalCount = getOccupiedNormalCount,
     clearStorage = clearStorage,
     reset = reset,
