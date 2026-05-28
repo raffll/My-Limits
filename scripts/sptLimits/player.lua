@@ -175,13 +175,13 @@ settings.subscribe(function(key, newValue)
             end
 
             local section = storage.playerSection("sptLimitsState")
-            section:set("trackingMode", newValue)
             if newValue == "counter" then
                 potionSlots.clearStorage()
             else
                 section:set("drinkCount", 0)
                 section:set("countdown", 0)
             end
+            section:set("trackingMode", newValue)
 
             if newValue == "slots" then
                 core.sendGlobalEvent("sptLimitsStateUpdate", {
