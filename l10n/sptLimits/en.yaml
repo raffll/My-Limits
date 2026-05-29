@@ -48,5 +48,7 @@ settingSkillCapDesc: "Maximum value for any skill."
 
 settingTrainingLimitEnabledName: "Training Limit"
 settingTrainingLimitEnabledDesc: "Enable the per-level training session limit."
+settingCustomTrainingWindowName: "Custom Training Window"
+settingCustomTrainingWindowDesc: "Replace the built-in Training window with a custom Lua implementation. Requires a game restart to take effect. Once enabled, permanently replaces the built-in Training window for the session."
 settingTrainingLimitName: "Max Training Sessions"
 settingTrainingLimitDesc: "Maximum training sessions allowed per level."

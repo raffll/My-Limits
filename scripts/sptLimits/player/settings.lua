@@ -139,6 +139,16 @@ local definitions = {
         l10nDesc = "settingTrainingLimitEnabledDesc",
         order = 0,
     },
+    customTrainingWindow = {
+        key = "customTrainingWindow",
+        type = "boolean",
+        default = config.customTrainingWindow,
+        renderer = "checkbox",
+        group = "sptLimitsTraining",
+        l10nName = "settingCustomTrainingWindowName",
+        l10nDesc = "settingCustomTrainingWindowDesc",
+        order = 2,
+    },
     trainingLimit = {
         key = "trainingLimit",
         type = "number",
@@ -149,7 +159,7 @@ local definitions = {
         group = "sptLimitsTraining",
         l10nName = "settingTrainingLimitName",
         l10nDesc = "settingTrainingLimitDesc",
-        order = 1,
+        order = 3,
     },
 }
 
