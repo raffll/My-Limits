@@ -213,7 +213,7 @@ local function buildWindow()
             trainerValue = skill.trainerValue,
         }
 
-        local textColor = affordable and util.color.rgb(0.8, 0.7, 0.5) or util.color.rgb(0.4, 0.4, 0.4)
+        local textColor = affordable and util.color.rgb(0.78, 0.61, 0.39) or util.color.rgb(0.4, 0.4, 0.4)
 
         skillRows[i] = {
             type = ui.TYPE.Text,
@@ -228,111 +228,103 @@ local function buildWindow()
         }
     end
 
-    local contentChildren = {
-        {
-            type = ui.TYPE.Text,
-            props = {
-                text = core.getGMST("sServiceTrainingTitle"),
-                textSize = 18,
-                textColor = util.color.rgb(1, 1, 1),
-                textAlignH = ui.ALIGNMENT.Center,
+    local innerContent = {
+        type = ui.TYPE.Widget,
+        props = {
+            size = util.vector2(308, 192),
+        },
+        content = ui.content({
+            {
+                type = ui.TYPE.Text,
+                props = {
+                    text = core.getGMST("sServiceTrainingTitle"),
+                    textSize = 18,
+                    textColor = util.color.rgb(1, 1, 1),
+                    textAlignH = ui.ALIGNMENT.Center,
+                    position = util.vector2(0, 0),
+                    relativeSize = util.vector2(1, 0),
+                    size = util.vector2(0, 24),
+                },
             },
-        },
-        {
-            type = ui.TYPE.Text,
-            props = {
-                text = core.getGMST("sTrainingServiceTitle"),
-                textSize = 16,
-                textColor = util.color.rgb(0.8, 0.7, 0.5),
+            {
+                type = ui.TYPE.Text,
+                props = {
+                    text = core.getGMST("sTrainingServiceTitle"),
+                    textSize = 16,
+                    textColor = util.color.rgb(0.78, 0.61, 0.39),
+                    position = util.vector2(2, 22),
+                },
             },
-        },
-        {
-            type = ui.TYPE.Widget,
-            props = {
-                size = util.vector2(0, 8),
+            {
+                template = I.MWUI.templates.box,
+                props = {
+                    position = util.vector2(0, 40),
+                    size = util.vector2(308, 115),
+                },
+                content = ui.content({
+                    {
+                        type = ui.TYPE.Flex,
+                        props = {
+                            position = util.vector2(4, 4),
+                        },
+                        content = ui.content(skillRows),
+                    },
+                }),
             },
-        },
-        {
-            type = ui.TYPE.Flex,
-            content = ui.content(skillRows),
-        },
-        {
-            type = ui.TYPE.Widget,
-            props = {
-                size = util.vector2(0, 8),
+            {
+                type = ui.TYPE.Text,
+                props = {
+                    text = goldText,
+                    textSize = 16,
+                    textColor = util.color.rgb(0.78, 0.61, 0.39),
+                    position = util.vector2(2, 161),
+                },
             },
-        },
-        {
-            type = ui.TYPE.Text,
-            props = {
-                text = goldText,
-                textSize = 16,
-                textColor = util.color.rgb(0.8, 0.7, 0.5),
+            {
+                template = I.MWUI.templates.box,
+                props = {
+                    position = util.vector2(250, 159),
+                },
+                content = ui.content({
+                    {
+                        type = ui.TYPE.Text,
+                        props = {
+                            text = core.getGMST("sOK") or "OK",
+                            textSize = 16,
+                            textColor = util.color.rgb(0.78, 0.61, 0.39),
+                        },
+                        events = {
+                            mouseClick = async:callback(function()
+                                interfaces.UI.removeMode("Training")
+                            end),
+                        },
+                    },
+                }),
             },
-        },
+        }),
     }
 
     if settings.get("trainingLimitEnabled") then
-        contentChildren[#contentChildren + 1] = {
+        innerContent.content:add({
             type = ui.TYPE.Text,
             props = {
                 text = state.trainCount .. "/" .. settings.get("trainingLimit"),
                 textSize = 16,
-                textColor = util.color.rgb(0.8, 0.7, 0.5),
+                textColor = util.color.rgb(0.78, 0.61, 0.39),
+                position = util.vector2(2, 178),
             },
-        }
+        })
     end
-
-    contentChildren[#contentChildren + 1] = {
-        type = ui.TYPE.Widget,
-        props = {
-            size = util.vector2(0, 8),
-        },
-    }
-    contentChildren[#contentChildren + 1] = {
-        type = ui.TYPE.Text,
-        props = {
-            text = core.getGMST("sOK") or "OK",
-            textSize = 16,
-            textColor = util.color.rgb(0.8, 0.7, 0.5),
-        },
-        events = {
-            mouseClick = async:callback(function()
-                interfaces.UI.removeMode("Training")
-            end),
-        },
-    }
 
     windowState.element = ui.create({
         layer = "Windows",
+        template = I.MWUI.templates.boxSolidThick,
         props = {
-            size = util.vector2(320, 220),
             anchor = util.vector2(0.5, 0.5),
             relativePosition = util.vector2(0.5, 0.5),
         },
         content = ui.content({
-            {
-                type = ui.TYPE.Image,
-                props = {
-                    resource = ui.texture({ path = "black" }),
-                    relativeSize = util.vector2(1, 1),
-                    alpha = 0.85,
-                },
-            },
-            {
-                template = I.MWUI.templates.bordersThick,
-                props = {
-                    relativeSize = util.vector2(1, 1),
-                },
-            },
-            {
-                type = ui.TYPE.Flex,
-                props = {
-                    position = util.vector2(12, 8),
-                    size = util.vector2(296, 0),
-                },
-                content = ui.content(contentChildren),
-            },
+            innerContent,
         }),
     })
 end
