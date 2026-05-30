@@ -1,6 +1,6 @@
 $Name = "SPT Limits"
 
-$tes3conv = "..\..\..\..\tes3conv\tes3conv.exe"
+$tes3conv = "..\..\..\tes3conv\tes3conv.exe"
 & $tes3conv "$Name.json" "$Name.esp" -o
 
 if (Test-Path "$Name.zip") {
