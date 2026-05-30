@@ -1,3 +1,3 @@
-Analyze towards bugs, dead code, save/load, switching settings, code quality, exclusions, keep tracking your changes in steering to prevent circular findings, check functions/variable names, don't code, check readme and gui description.
+Analyze towards bugs, dead code, save/load, switching settings, code quality, exclusions, keep tracking your changes in steering to prevent circular findings, check functions/variable names, don't code, check readme and gui description, check esp.
 
 Stats, Potions, and Training Limits enforces configurable caps on attributes, skills, potion consumption, and training sessions per level in OpenMW. Potions can be tracked in Counter mode (shared cooldown timer) or in an Oblivion-like Slots mode where each drink occupies an individual slot that frees up when its effect expires.

@@ -274,6 +274,10 @@ return {
                 return
             end
 
+            if settings.get("trainingLimitEnabled") then
+                training.checkTrainingLevelReset()
+            end
+
             if not settings.get("statLimitEnabled") and not settings.get("potionLimitEnabled") then
                 return
             end
@@ -318,11 +322,6 @@ return {
         sptLimitsShowMessage = function(data)
             if data and data.text then
                 ui.showMessage(data.text)
-            end
-        end,
-        UiModeChanged = function(data)
-            if training and training.onUiModeChanged then
-                training.onUiModeChanged(data)
             end
         end,
     },

@@ -12,15 +12,11 @@ local state = {
     trainLevel = 0,
 }
 
-local blocked = false
-
 local function blockTrainingWindow()
-    blocked = true
     core.sendGlobalEvent("sptLimitsTrainBlock", { blocked = true })
 end
 
 local function unblockTrainingWindow()
-    blocked = false
     core.sendGlobalEvent("sptLimitsTrainBlock", { blocked = false })
 end
 
@@ -68,23 +64,6 @@ local function onSettingChanged(key, newValue)
     end
 end
 
-local function onUiModeChanged(data)
-    if not data then
-        return
-    end
-    if not settings.get("trainingLimitEnabled") then
-        return
-    end
-    checkTrainingLevelReset()
-    if blocked and data.newMode == "Training" then
-        if interfaces.UI and interfaces.UI.removeMode then
-            interfaces.UI.removeMode("Training")
-            interfaces.UI.removeMode("Dialogue")
-        end
-        ui.showMessage(L("trainLimitReached"))
-    end
-end
-
 local function onLoad(data)
     if data then
         state.trainCount = data.trainCount or 0
@@ -103,6 +82,6 @@ end
 return {
     state = state,
     onSettingChanged = onSettingChanged,
-    onUiModeChanged = onUiModeChanged,
     onLoad = onLoad,
+    checkTrainingLevelReset = checkTrainingLevelReset,
 }

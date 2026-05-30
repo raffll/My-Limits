@@ -143,7 +143,7 @@ return {
         end,
         sptLimitsTrainBlock = function(data)
             if data then
-                mwscriptGlobals.spttrainblocked = data.blocked and 1 or 0
+                mwscriptGlobals.sptTrainBlocked = data.blocked and 1 or 0
             end
         end,
     },
