@@ -47,3 +47,7 @@ Tracks issues found during code analysis to prevent circular re-discovery.
 - Slot-mode overdose flow: overflow slot IS assigned by `assignDrinkToSlot` (it's the `slotCount+1` slot). Overdose only triggers on the drink AFTER overflow is filled (when `assignDrinkToSlot` returns false). `areAllSlotsFull()` correctly returns true because overflow was assigned on the previous drink. NOT a bug.
 - `potionCounter.state.drinkOverdose` in recovery branch — was redundant (recalculated every frame) but made explicit for clarity. Not a bug either way.
 - Duplicated icon-extraction logic between `potionCounter.detectDrinks` and `potionSlots.detectDrinks` — code quality preference, not a bug. Could be shared utility but not required.
+- `potionSlots.sendStateEvent` sends `allSlotsFull` in event data but `global.lua` never reads it — dead data in the payload, harmless. Global only needs `allNormalSlotsFull` and `knockedOut` for its blocking logic.
+- `handleKnockoutRecovery` recovery branch clears both `potionCounter` and `potionSlots` state unconditionally regardless of active mode — defensive no-op writes, harmless.
+- `potionSlots.onLoad` sets `knockedOutRef.value = true` without zeroing fatigue — first `onUpdate` frame enters maintain branch and zeros it. Acceptable per frame-tolerance.
+- `settingPotionCooldownDesc` says "Seconds" without specifying game-time — OpenMW convention, players understand settings operate in game-time. Not incorrect.
