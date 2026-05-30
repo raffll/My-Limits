@@ -1,13 +1,14 @@
 # Stats, Potions, and Training Limits (OpenMW)
 
-Introduces configurable limits on attributes, skills, potion consumption, and training sessions. OpenMW only, pure Lua, rewritten from scratch.
+Introduces configurable limits on attributes, skills, potion consumption, and training sessions. OpenMW only, rewritten from scratch.
 
 ## Installation
 
-Requires OpenMW 0.49+. Copy `SPT Limits.omwscripts`, the `scripts/` folder, and the `l10n/` folder into your data path. Add to `openmw.cfg`:
+Requires OpenMW 0.49+. Copy `SPT Limits.omwscripts`, `SPT Limits.esp`, the `scripts/` folder, and the `l10n/` folder into your data path. Add to `openmw.cfg`:
 
 ```
 content=SPT Limits.omwscripts
+content=SPT Limits.esp
 ```
 
 ## Configuration
@@ -71,7 +72,7 @@ If any attribute exceeds the Attribute Cap or any skill exceeds the Skill Cap, y
 
 ## Training Limit
 
-You can train 5 times per level (configurable). The counter resets on level up. Once reached, the Training window is suppressed with a message.
+You can train 5 times per level (configurable). The counter resets on level up. Once reached, trainers refuse service with a dialogue message.
 
 ## Lua Interface
 
@@ -95,6 +96,10 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.0beta
+- Training limit now uses Service Refusal dialogue instead of closing the Training window.
+- Added ESP plugin with a global variable for training blocking.
+
 2.0alpha5
 - Fixed training limit blocking.
 
@@ -112,7 +117,7 @@ Do whatever you want. Just credit me.
 - HUD counter can be toggled off via hudCounterEnabled.
 
 2.0alpha
-- Complete rewrite to pure OpenMW Lua.
+- Complete rewrite to OpenMW Lua.
 - Configuration moved to config.lua.
 - Progressive limits for stats and potions removed.
 - Counter now works while in real time menu.

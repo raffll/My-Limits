@@ -1,0 +1,79 @@
+[
+  {
+    "type": "Header",
+    "flags": "",
+    "version": 1.3,
+    "file_type": "Esp",
+    "author": "SPT Limits",
+    "description": "Global variable and service refusal for training limit blocking.",
+    "num_objects": 3,
+    "masters": [
+      [
+        "Morrowind.esm",
+        79837557
+      ]
+    ]
+  },
+  {
+    "type": "GlobalVariable",
+    "flags": "",
+    "id": "sptTrainBlocked",
+    "value": {
+      "type": "Short",
+      "data": 0
+    }
+  },
+  {
+    "type": "Dialogue",
+    "flags": "",
+    "id": "Service Refusal",
+    "dialogue_type": "Persuasion"
+  },
+  {
+    "type": "DialogueInfo",
+    "flags": "",
+    "id": "100000000000000001",
+    "prev_id": "",
+    "next_id": "",
+    "data": {
+      "dialogue_type": "Persuasion",
+      "disposition": 0,
+      "speaker_rank": -1,
+      "speaker_sex": "Any",
+      "player_rank": -1
+    },
+    "speaker_id": "",
+    "speaker_race": "",
+    "speaker_class": "",
+    "speaker_faction": "",
+    "speaker_cell": "",
+    "player_faction": "",
+    "sound_path": "",
+    "text": "I have nothing more to teach you today. Come back after you have gained more experience.",
+    "filters": [
+      {
+        "index": 0,
+        "filter_type": "Function",
+        "function": "Choice",
+        "comparison": "Equal",
+        "id": "",
+        "value": {
+          "type": "Integer",
+          "data": 4
+        }
+      },
+      {
+        "index": 1,
+        "filter_type": "Global",
+        "function": "Global",
+        "comparison": "GreaterEqual",
+        "id": "sptTrainBlocked",
+        "value": {
+          "type": "Float",
+          "data": 1.0
+        }
+      }
+    ],
+    "script_text": ""
+  }
+]

@@ -1,10 +1,13 @@
 local core = require("openmw.core")
 local interfaces = require("openmw.interfaces")
 local types = require("openmw.types")
+local world = require("openmw.world")
 
 local config = require("scripts.sptLimits.shared.config")
 local exclusions = require("scripts.sptLimits.shared.exclusions")
 local L = core.l10n("sptLimits")
+
+local mwscriptGlobals = world.mwscript.getGlobalVariables()
 
 local excludedPotions = exclusions.excludedPotions
 local isPotionExcluded = exclusions.isPotionExcluded
@@ -136,6 +139,11 @@ return {
         sptLimitsIncludePotion = function(data)
             if data and data.recordId then
                 excludedPotions[data.recordId] = nil
+            end
+        end,
+        sptLimitsTrainBlock = function(data)
+            if data then
+                mwscriptGlobals.sptTrainBlocked = data.blocked and 1 or 0
             end
         end,
     },

@@ -8,9 +8,10 @@ local interfaces = require("openmw.interfaces")
 local settings = require("scripts.sptLimits.player.settings")
 local exclusions = require("scripts.sptLimits.shared.exclusions")
 local statChecker = require("scripts.sptLimits.player.statChecker")
-local training = require("scripts.sptLimits.player.training")
 local potionCounter = require("scripts.sptLimits.player.potionCounter")
 local potionSlots = require("scripts.sptLimits.player.potionSlots")
+
+local training = require("scripts.sptLimits.player.training")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
@@ -103,7 +104,9 @@ local function initKnownPotionSpells()
 end
 
 settings.subscribe(function(key, newValue)
-    training.onSettingChanged(key, newValue)
+    if training then
+        training.onSettingChanged(key, newValue)
+    end
 
     if key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
         if key == "potionLimitEnabled" and newValue then
@@ -247,8 +250,8 @@ return {
         onSave = function()
             local saved = {
                 knockedOut = state.knockedOut,
-                trainCount = training.state.trainCount,
-                trainLevel = training.state.trainLevel,
+                trainCount = training and training.state.trainCount or 0,
+                trainLevel = training and training.state.trainLevel or 0,
                 settings = settings.saveAll(),
             }
 
@@ -269,6 +272,10 @@ return {
         onUpdate = function(dt)
             if not types.Player.isCharGenFinished(self) then
                 return
+            end
+
+            if settings.get("trainingLimitEnabled") then
+                training.checkTrainingLevelReset()
             end
 
             if not settings.get("statLimitEnabled") and not settings.get("potionLimitEnabled") then
@@ -316,9 +323,6 @@ return {
             if data and data.text then
                 ui.showMessage(data.text)
             end
-        end,
-        UiModeChanged = function(data)
-            training.onUiModeChanged(data)
         end,
     },
     interfaceName = "sptLimits",
