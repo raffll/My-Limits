@@ -5,3 +5,4 @@ meta.ini
 *.omwscripts.esp
 *.code-workspace
 .kiro/prompt.txt
+.kiro/resources/
