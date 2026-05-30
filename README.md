@@ -96,7 +96,7 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
-2.0alpha6
+2.0beta
 - Training limit now uses Service Refusal dialogue instead of closing the Training window.
 - Added ESP plugin with a global variable for training blocking.
 
