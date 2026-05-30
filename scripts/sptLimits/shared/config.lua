@@ -2,7 +2,6 @@ return {
     potionLimitEnabled = true,
     statLimitEnabled = true,
     trainingLimitEnabled = true,
-    customTrainingWindow = true,
     hudCounterMode = "full",
     hudPosition = "bottom",
 

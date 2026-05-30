@@ -11,7 +11,7 @@ local statChecker = require("scripts.sptLimits.player.statChecker")
 local potionCounter = require("scripts.sptLimits.player.potionCounter")
 local potionSlots = require("scripts.sptLimits.player.potionSlots")
 
-local training
+local training = require("scripts.sptLimits.player.training")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
@@ -209,12 +209,6 @@ return {
         onInit = function()
             settings.registerPage()
             settings.syncToStorage()
-            print("[SPT] onInit customTrainingWindow = " .. tostring(settings.get("customTrainingWindow")))
-            if settings.get("customTrainingWindow") then
-                training = require("scripts.sptLimits.player.trainingWindow")
-            else
-                training = require("scripts.sptLimits.player.training")
-            end
             initState()
             sendSettingsToGlobal()
             local section = storage.playerSection("sptLimitsState")
@@ -229,12 +223,6 @@ return {
                 settings.loadAll(data.settings)
             else
                 settings.syncToStorage()
-            end
-            print("[SPT] onLoad customTrainingWindow = " .. tostring(settings.get("customTrainingWindow")))
-            if settings.get("customTrainingWindow") then
-                training = require("scripts.sptLimits.player.trainingWindow")
-            else
-                training = require("scripts.sptLimits.player.training")
             end
             initState()
 
@@ -284,10 +272,6 @@ return {
         onUpdate = function(dt)
             if not types.Player.isCharGenFinished(self) then
                 return
-            end
-
-            if training and training.onUpdate then
-                training.onUpdate(dt)
             end
 
             if not settings.get("statLimitEnabled") and not settings.get("potionLimitEnabled") then
