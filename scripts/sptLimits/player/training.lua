@@ -16,10 +16,12 @@ local blocked = false
 
 local function blockTrainingWindow()
     blocked = true
+    core.sendGlobalEvent("sptLimitsTrainBlock", { blocked = true })
 end
 
 local function unblockTrainingWindow()
     blocked = false
+    core.sendGlobalEvent("sptLimitsTrainBlock", { blocked = false })
 end
 
 local function checkTrainingLevelReset()
@@ -93,6 +95,8 @@ local function onLoad(data)
     end
     if settings.get("trainingLimitEnabled") and state.trainCount >= settings.get("trainingLimit") then
         blockTrainingWindow()
+    else
+        unblockTrainingWindow()
     end
 end
 

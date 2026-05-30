@@ -149,7 +149,7 @@ local definitions = {
         group = "sptLimitsTraining",
         l10nName = "settingTrainingLimitName",
         l10nDesc = "settingTrainingLimitDesc",
-        order = 1,
+        order = 3,
     },
 }
 

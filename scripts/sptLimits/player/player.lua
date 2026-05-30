@@ -8,9 +8,10 @@ local interfaces = require("openmw.interfaces")
 local settings = require("scripts.sptLimits.player.settings")
 local exclusions = require("scripts.sptLimits.shared.exclusions")
 local statChecker = require("scripts.sptLimits.player.statChecker")
-local training = require("scripts.sptLimits.player.training")
 local potionCounter = require("scripts.sptLimits.player.potionCounter")
 local potionSlots = require("scripts.sptLimits.player.potionSlots")
+
+local training = require("scripts.sptLimits.player.training")
 local L = core.l10n("sptLimits")
 
 local excludedPotions = exclusions.excludedPotions
@@ -103,7 +104,9 @@ local function initKnownPotionSpells()
 end
 
 settings.subscribe(function(key, newValue)
-    training.onSettingChanged(key, newValue)
+    if training then
+        training.onSettingChanged(key, newValue)
+    end
 
     if key == "potionLimitEnabled" or key == "statLimitEnabled" or key == "excludeSunsDusk" then
         if key == "potionLimitEnabled" and newValue then
@@ -247,8 +250,8 @@ return {
         onSave = function()
             local saved = {
                 knockedOut = state.knockedOut,
-                trainCount = training.state.trainCount,
-                trainLevel = training.state.trainLevel,
+                trainCount = training and training.state.trainCount or 0,
+                trainLevel = training and training.state.trainLevel or 0,
                 settings = settings.saveAll(),
             }
 
@@ -318,7 +321,9 @@ return {
             end
         end,
         UiModeChanged = function(data)
-            training.onUiModeChanged(data)
+            if training and training.onUiModeChanged then
+                training.onUiModeChanged(data)
+            end
         end,
     },
     interfaceName = "sptLimits",
