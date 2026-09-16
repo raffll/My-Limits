@@ -96,6 +96,12 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.1
+- Sulphur Pool potions no longer count toward the potion limit or cause overdose death.
+- Added Text HUD display mode showing the timer and count without icons.
+- HUD Position now offers four corners (bottom-right, bottom-left, top-right, top-left).
+- Added Bank Unused Sessions option to carry leftover training sessions to later levels.
+
 2.0beta
 - Training limit now uses Service Refusal dialogue instead of closing the Training window.
 - Added ESP plugin with a global variable for training blocking.

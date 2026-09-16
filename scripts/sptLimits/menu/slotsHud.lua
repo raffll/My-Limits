@@ -80,18 +80,19 @@ local function applyPosition(position)
     end
     lastPosition = position
 
-    if position == "top" then
-        for i = 1, maxSlots do
-            elements[i].layout.props.relativePosition = util.vector2(1, 0)
-            elements[i].layout.props.anchor = util.vector2(1, 0)
-            elements[i].layout.props.position = util.vector2(baseX, 12 + (i - 1) * slotSpacing)
-        end
-    else
-        for i = 1, maxSlots do
-            elements[i].layout.props.relativePosition = util.vector2(1, 1)
-            elements[i].layout.props.anchor = util.vector2(1, 1)
-            elements[i].layout.props.position = util.vector2(baseX, baseY - (i - 1) * slotSpacing)
-        end
+    local isTop = position == "topRight" or position == "topLeft"
+    local isLeft = position == "bottomLeft" or position == "topLeft"
+
+    local anchorX = isLeft and 0 or 1
+    local offsetX = isLeft and 12 or baseX
+    local anchorY = isTop and 0 or 1
+    local startY = isTop and 12 or baseY
+    local direction = isTop and 1 or -1
+
+    for i = 1, maxSlots do
+        elements[i].layout.props.relativePosition = util.vector2(anchorX, anchorY)
+        elements[i].layout.props.anchor = util.vector2(anchorX, anchorY)
+        elements[i].layout.props.position = util.vector2(offsetX, startY + direction * (i - 1) * slotSpacing)
     end
 end
 
@@ -121,7 +122,7 @@ local function tick()
         return
     end
 
-    local hudPosition = settingsSection:get("hudPosition") or "bottom"
+    local hudPosition = settingsSection:get("hudPosition") or "bottomRight"
     applyPosition(hudPosition)
 
     local slotCount = stateSection:get("slotCount") or 4
@@ -146,7 +147,7 @@ local function tick()
 
                 local iconBox = el.layout.content[2]
                 local tex = getTexture(iconPath)
-                if tex then
+                if tex and hudCounterMode ~= "text" then
                     iconBox.props.visible = true
                     iconBox.content[1].props.resource = tex
                 else

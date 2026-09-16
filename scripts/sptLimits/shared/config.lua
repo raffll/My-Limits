@@ -2,8 +2,9 @@ return {
     potionLimitEnabled = true,
     statLimitEnabled = true,
     trainingLimitEnabled = true,
+    trainingBankingEnabled = false,
     hudCounterMode = "full",
-    hudPosition = "bottom",
+    hudPosition = "bottomRight",
 
     attributeCap = 300,
     skillCap = 150,

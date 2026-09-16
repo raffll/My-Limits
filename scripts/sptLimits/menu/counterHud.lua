@@ -93,28 +93,24 @@ local function applyPosition(position, mode)
     lastPosition = position
     lastMode = mode
 
-    local iconOffset = mode == "minimal" and 0 or 1
+    local isTop = position == "topRight" or position == "topLeft"
+    local isLeft = position == "bottomLeft" or position == "topLeft"
 
-    if position == "top" then
-        local topBaseY = 12
-        textElement.layout.props.relativePosition = util.vector2(1, 0)
-        textElement.layout.props.anchor = util.vector2(1, 0)
-        textElement.layout.props.position = util.vector2(-12, topBaseY)
-        for i = 1, maxIcons do
-            iconElements[i].layout.props.relativePosition = util.vector2(1, 0)
-            iconElements[i].layout.props.anchor = util.vector2(1, 0)
-            iconElements[i].layout.props.position = util.vector2(-12, topBaseY + (i - 1 + iconOffset) * slotSpacing)
-        end
-    else
-        local bottomBaseY = -90 - 32 + 4
-        textElement.layout.props.relativePosition = util.vector2(1, 1)
-        textElement.layout.props.anchor = util.vector2(1, 1)
-        textElement.layout.props.position = util.vector2(-12, bottomBaseY)
-        for i = 1, maxIcons do
-            iconElements[i].layout.props.relativePosition = util.vector2(1, 1)
-            iconElements[i].layout.props.anchor = util.vector2(1, 1)
-            iconElements[i].layout.props.position = util.vector2(-12, bottomBaseY - (i - 1 + iconOffset) * slotSpacing)
-        end
+    local iconOffset = mode == "minimal" and 0 or 1
+    local anchorX = isLeft and 0 or 1
+    local offsetX = isLeft and 12 or -12
+    local anchorY = isTop and 0 or 1
+    local baseY = isTop and 12 or (-90 - 32 + 4)
+    local direction = isTop and 1 or -1
+
+    textElement.layout.props.relativePosition = util.vector2(anchorX, anchorY)
+    textElement.layout.props.anchor = util.vector2(anchorX, anchorY)
+    textElement.layout.props.position = util.vector2(offsetX, baseY)
+    for i = 1, maxIcons do
+        iconElements[i].layout.props.relativePosition = util.vector2(anchorX, anchorY)
+        iconElements[i].layout.props.anchor = util.vector2(anchorX, anchorY)
+        iconElements[i].layout.props.position =
+            util.vector2(offsetX, baseY + direction * (i - 1 + iconOffset) * slotSpacing)
     end
 end
 
@@ -149,7 +145,7 @@ local function tick()
         return
     end
 
-    local hudPosition = settingsSection:get("hudPosition") or "bottom"
+    local hudPosition = settingsSection:get("hudPosition") or "bottomRight"
     applyPosition(hudPosition, hudCounterMode)
 
     local stateSection = storage.playerSection("sptLimitsState")
@@ -182,7 +178,7 @@ local function tick()
         textElement:update()
     end
 
-    local displayCount = math.min(#icons, maxIcons)
+    local displayCount = hudCounterMode == "text" and 0 or math.min(#icons, maxIcons)
     for i = 1, maxIcons do
         local el = iconElements[i]
         if i > displayCount then
