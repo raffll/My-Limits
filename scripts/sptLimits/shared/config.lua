@@ -16,7 +16,10 @@ return {
 
     excludeSunsDusk = true,
 
-    potions = {},
+    potions = {
+        "T_Var_Sulphur_Weapon",
+        "T_Var_Sulphur_Armor"
+    },
 
     attributes = {
         strength = {},

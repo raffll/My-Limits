@@ -133,12 +133,12 @@ return {
         end,
         sptLimitsExcludePotion = function(data)
             if data and data.recordId then
-                excludedPotions[data.recordId] = true
+                excludedPotions[data.recordId:lower()] = true
             end
         end,
         sptLimitsIncludePotion = function(data)
             if data and data.recordId then
-                excludedPotions[data.recordId] = nil
+                excludedPotions[data.recordId:lower()] = nil
             end
         end,
         sptLimitsTrainBlock = function(data)

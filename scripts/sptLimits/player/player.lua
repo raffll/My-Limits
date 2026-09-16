@@ -333,13 +333,13 @@ return {
         end,
         excludePotion = function(recordId)
             if recordId then
-                excludedPotions[recordId] = true
+                excludedPotions[recordId:lower()] = true
                 core.sendGlobalEvent("sptLimitsExcludePotion", { recordId = recordId })
             end
         end,
         includePotion = function(recordId)
             if recordId then
-                excludedPotions[recordId] = nil
+                excludedPotions[recordId:lower()] = nil
                 core.sendGlobalEvent("sptLimitsIncludePotion", { recordId = recordId })
             end
         end,

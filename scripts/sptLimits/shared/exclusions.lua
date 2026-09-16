@@ -6,14 +6,15 @@ local excludedPotionPatterns = {}
 
 for _, entry in ipairs(config.potions or {}) do
     if entry:find("[%%%[%]%.%+%-%*%?%^%$%(%)]") then
-        table.insert(excludedPotionPatterns, entry)
+        table.insert(excludedPotionPatterns, entry:lower())
     else
-        excludedPotions[entry] = true
+        excludedPotions[entry:lower()] = true
     end
 end
 
 local function isPotionExcluded(id, excludeSunsDusk)
-    if excludedPotions[id] then
+    local lowerId = id:lower()
+    if excludedPotions[lowerId] then
         return true
     end
     if excludeSunsDusk and interfaces.SunsDusk and interfaces.SunsDusk.isConsumable then
@@ -22,7 +23,7 @@ local function isPotionExcluded(id, excludeSunsDusk)
         end
     end
     for _, pattern in ipairs(excludedPotionPatterns) do
-        if id:match(pattern) then
+        if lowerId:match(pattern) then
             return true
         end
     end
