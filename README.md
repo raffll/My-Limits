@@ -17,9 +17,9 @@ All settings are configurable in-game via the OpenMW settings menu under **SPT L
 
 **Potions group:**
 - `Potion Limit` — enable the potion drinking limit (default: on)
-- `Tracking Mode` — choose between Counter (shared cooldown) and Slots (individual per-potion tracking) (default: `counter`)
-- `HUD Display` — full (timer, limit, icons), minimal (icons only), or hidden (default: `full`)
-- `HUD Position` — bottom (stacks upward from bottom-right) or top (stacks downward from top-right) (default: `bottom`)
+- `Tracking Mode` — choose between Counter (shared cooldown) and Slots (individual per-potion tracking) (default: Counter)
+- `HUD Display` — Full (timer, limit, icons), Icons (icons only), Text (timer and limit only), or Hidden (default: Full)
+- `HUD Position` — Bottom Right, Bottom Left, Top Right, or Top Left corner; top corners stack downward, bottom corners stack upward (default: Bottom Right)
 - `Exclude Sun's Dusk Potions` — potions from the Sun's Dusk mod do not count toward the limit (default: on)
 
 **Potions — Counter Mode:**
@@ -96,6 +96,12 @@ Do whatever you want. Just credit me.
 ## Changelog
 
 ```
+2.1
+- Sulphur Pool potions (Tamriel Rebuilt) no longer count toward the potion limit or cause overdose death.
+- Rune Bow and Helm potions (Tamriel Rebuilt) no longer count toward the potion limit.
+- Added Text HUD display mode showing the timer and count without icons.
+- HUD Position now offers four corners (bottom-right, bottom-left, top-right, top-left).
+
 2.0beta
 - Training limit now uses Service Refusal dialogue instead of closing the Training window.
 - Added ESP plugin with a global variable for training blocking.

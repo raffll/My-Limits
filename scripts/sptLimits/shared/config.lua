@@ -3,7 +3,7 @@ return {
     statLimitEnabled = true,
     trainingLimitEnabled = true,
     hudCounterMode = "full",
-    hudPosition = "bottom",
+    hudPosition = "bottomRight",
 
     attributeCap = 300,
     skillCap = 150,
@@ -16,7 +16,12 @@ return {
 
     excludeSunsDusk = true,
 
-    potions = {},
+    potions = {
+        "T_Var_Sulphur_Weapon",
+        "T_Var_Sulphur_Armor",
+        "T_Imp_Rune_Sidri",
+        "T_Imp_Rune_Sidri2"
+    },
 
     attributes = {
         strength = {},

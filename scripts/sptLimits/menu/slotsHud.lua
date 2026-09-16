@@ -73,6 +73,7 @@ end
 
 local initialized = false
 local lastPosition = nil
+local isLeftSide = false
 
 local function applyPosition(position)
     if position == lastPosition then
@@ -80,18 +81,32 @@ local function applyPosition(position)
     end
     lastPosition = position
 
-    if position == "top" then
-        for i = 1, maxSlots do
-            elements[i].layout.props.relativePosition = util.vector2(1, 0)
-            elements[i].layout.props.anchor = util.vector2(1, 0)
-            elements[i].layout.props.position = util.vector2(baseX, 12 + (i - 1) * slotSpacing)
+    local isTop = position == "topRight" or position == "topLeft"
+    local isLeft = position == "bottomLeft" or position == "topLeft"
+    isLeftSide = isLeft
+
+    local anchorX = isLeft and 0 or 1
+    local offsetX = isLeft and 12 or baseX
+    local anchorY = isTop and 0 or 1
+    local startY = isTop and 12 or baseY
+    local direction = isTop and 1 or -1
+
+    for i = 1, maxSlots do
+        local el = elements[i]
+        el.layout.props.relativePosition = util.vector2(anchorX, anchorY)
+        el.layout.props.anchor = util.vector2(anchorX, anchorY)
+        el.layout.props.position = util.vector2(offsetX, startY + direction * (i - 1) * slotSpacing)
+
+        local content = el.layout.content
+        local textWidget = content["text"]
+        local iconBox = content["iconBox"]
+        if isLeft then
+            el.layout.content = ui.content({ iconBox, textWidget })
+        else
+            el.layout.content = ui.content({ textWidget, iconBox })
         end
-    else
-        for i = 1, maxSlots do
-            elements[i].layout.props.relativePosition = util.vector2(1, 1)
-            elements[i].layout.props.anchor = util.vector2(1, 1)
-            elements[i].layout.props.position = util.vector2(baseX, baseY - (i - 1) * slotSpacing)
-        end
+
+        el:update()
     end
 end
 
@@ -121,7 +136,7 @@ local function tick()
         return
     end
 
-    local hudPosition = settingsSection:get("hudPosition") or "bottom"
+    local hudPosition = settingsSection:get("hudPosition") or "bottomRight"
     applyPosition(hudPosition)
 
     local slotCount = stateSection:get("slotCount") or 4
@@ -144,24 +159,32 @@ local function tick()
             if shouldShow then
                 el.layout.props.visible = true
 
-                local iconBox = el.layout.content[2]
+                local iconBox = el.layout.content["iconBox"]
                 local tex = getTexture(iconPath)
-                if tex then
+                local iconVisible = tex and hudCounterMode ~= "text"
+                if iconVisible then
                     iconBox.props.visible = true
+                    iconBox.props.size = util.vector2(iconSize + 4, iconSize + 4)
                     iconBox.content[1].props.resource = tex
                 else
                     iconBox.props.visible = false
+                    iconBox.props.size = util.vector2(0, iconSize + 4)
                 end
 
-                local textWidget = el.layout.content[1]
+                local textWidget = el.layout.content["text"]
                 local color = isOverflow and overflowColor or normalColor
                 textWidget.props.textColor = color
                 if hudCounterMode == "minimal" then
                     textWidget.props.text = ""
-                elseif countdown >= 0.05 then
-                    textWidget.props.text = string.format("%.1fs ", countdown)
                 else
-                    textWidget.props.text = "0.0s "
+                    local seconds = countdown >= 0.05 and countdown or 0
+                    if iconVisible and isLeftSide then
+                        textWidget.props.text = string.format(" %.1fs", seconds)
+                    elseif iconVisible then
+                        textWidget.props.text = string.format("%.1fs ", seconds)
+                    else
+                        textWidget.props.text = string.format("%.1fs", seconds)
+                    end
                 end
 
                 el:update()

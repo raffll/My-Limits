@@ -32,7 +32,7 @@ local definitions = {
         type = "string",
         default = config.hudCounterMode,
         renderer = "select",
-        options = { "full", "minimal", "hidden" },
+        options = { "full", "minimal", "text", "hidden" },
         group = "sptLimitsPotions",
         l10nName = "settingHudCounterModeName",
         l10nDesc = "settingHudCounterModeDesc",
@@ -43,7 +43,7 @@ local definitions = {
         type = "string",
         default = config.hudPosition,
         renderer = "select",
-        options = { "bottom", "top" },
+        options = { "bottomRight", "bottomLeft", "topRight", "topLeft" },
         group = "sptLimitsPotions",
         l10nName = "settingHudPositionName",
         l10nDesc = "settingHudPositionDesc",
@@ -149,7 +149,7 @@ local definitions = {
         group = "sptLimitsTraining",
         l10nName = "settingTrainingLimitName",
         l10nDesc = "settingTrainingLimitDesc",
-        order = 3,
+        order = 1,
     },
 }
 
@@ -177,6 +177,17 @@ function settings.get(key)
         value = math.max(def.min, math.min(def.max, value))
     end
     return value
+end
+
+function settings.migrate()
+    local def = definitions.hudPosition
+    local section = storage.playerSection(def.group)
+    local value = section:get("hudPosition")
+    if value == "bottom" then
+        section:set("hudPosition", "bottomRight")
+    elseif value == "top" then
+        section:set("hudPosition", "topRight")
+    end
 end
 
 function settings.registerPage()
