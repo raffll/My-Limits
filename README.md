@@ -97,7 +97,8 @@ Do whatever you want. Just credit me.
 
 ```
 2.1
-- Sulphur Pool potions no longer count toward the potion limit or cause overdose death.
+- Sulphur Pool potions (Tamriel Rebuilt) no longer count toward the potion limit or cause overdose death.
+- Rune Bow and Helm potions (Tamriel Rebuilt) no longer count toward the potion limit.
 - Added Text HUD display mode showing the timer and count without icons.
 - HUD Position now offers four corners (bottom-right, bottom-left, top-right, top-left).
 - Added Bank Unused Sessions option to carry leftover training sessions to later levels.

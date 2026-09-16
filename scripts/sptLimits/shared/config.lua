@@ -19,7 +19,9 @@ return {
 
     potions = {
         "T_Var_Sulphur_Weapon",
-        "T_Var_Sulphur_Armor"
+        "T_Var_Sulphur_Armor",
+        "T_Imp_Rune_Sidri",
+        "T_Imp_Rune_Sidri2"
     },
 
     attributes = {
