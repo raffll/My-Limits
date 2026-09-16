@@ -224,6 +224,7 @@ return {
             else
                 settings.syncToStorage()
             end
+            settings.migrate()
             initState()
 
             if data then
@@ -252,7 +253,6 @@ return {
                 knockedOut = state.knockedOut,
                 trainCount = training and training.state.trainCount or 0,
                 trainLevel = training and training.state.trainLevel or 0,
-                trainBanked = training and training.state.banked or 0,
                 settings = settings.saveAll(),
             }
 

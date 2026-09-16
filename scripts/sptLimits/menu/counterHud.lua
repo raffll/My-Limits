@@ -96,7 +96,7 @@ local function applyPosition(position, mode)
     local isTop = position == "topRight" or position == "topLeft"
     local isLeft = position == "bottomLeft" or position == "topLeft"
 
-    local iconOffset = mode == "minimal" and 0 or 1
+    local iconOffset = (mode == "minimal" or mode == "text") and 0 or 1
     local anchorX = isLeft and 0 or 1
     local offsetX = isLeft and 12 or -12
     local anchorY = isTop and 0 or 1

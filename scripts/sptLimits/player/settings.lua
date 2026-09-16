@@ -149,16 +149,6 @@ local definitions = {
         group = "sptLimitsTraining",
         l10nName = "settingTrainingLimitName",
         l10nDesc = "settingTrainingLimitDesc",
-        order = 3,
-    },
-    trainingBankingEnabled = {
-        key = "trainingBankingEnabled",
-        type = "boolean",
-        default = config.trainingBankingEnabled,
-        renderer = "checkbox",
-        group = "sptLimitsTraining",
-        l10nName = "settingTrainingBankingEnabledName",
-        l10nDesc = "settingTrainingBankingEnabledDesc",
         order = 1,
     },
 }
@@ -187,6 +177,17 @@ function settings.get(key)
         value = math.max(def.min, math.min(def.max, value))
     end
     return value
+end
+
+function settings.migrate()
+    local def = definitions.hudPosition
+    local section = storage.playerSection(def.group)
+    local value = section:get("hudPosition")
+    if value == "bottom" then
+        section:set("hudPosition", "bottomRight")
+    elseif value == "top" then
+        section:set("hudPosition", "topRight")
+    end
 end
 
 function settings.registerPage()
